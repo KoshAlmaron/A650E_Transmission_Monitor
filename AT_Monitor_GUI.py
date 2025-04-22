@@ -11,6 +11,38 @@ import threading
 import math
 
 ATModeChar = ('I', 'P', 'R', 'N', 'D', 'D4', 'D3', 'L2', 'L', 'E', 'M')
+
+Parameters = (('uint16_t', 'DrumRPM')
+				, ('uint16_t', 'OutputRPM')
+				, ('uint8_t', 'CarSpeed')
+				, ('uint16_t', 'SpdTimerVal')
+				, ('int16_t', 'OilTemp')
+				, ('uint16_t', 'TPS')
+				, ('uint16_t', 'InstTPS')
+				, ('uint8_t', 'SLT')
+				, ('uint8_t', 'SLN')
+				, ('uint8_t', 'SLU')
+				, ('uint8_t', 'S1')
+				, ('uint8_t', 'S2')
+				, ('uint8_t', 'S3')
+				, ('uint8_t', 'S4')
+				, ('uint8_t', 'Selector')
+				, ('uint8_t', 'ATMode')
+				, ('int8_t', 'Gear')
+				, ('int8_t', 'GearChange')
+				, ('uint8_t', 'Break')
+				, ('uint8_t', 'EngineWork')
+				, ('uint8_t', 'SlipDetected')
+				, ('uint8_t', 'Glock')
+				, ('uint8_t', 'GearUpSpeed')
+				, ('uint8_t', 'GearDownSpeed')
+				, ('uint8_t', 'GearChangeTPS')
+				, ('uint8_t', 'GearChangeSLT')
+				, ('uint8_t', 'GearChangeSLN')
+				, ('uint8_t', 'GearChangeSLU')
+				, ('uint8_t', 'LastStep')
+				, ('uint16_t', 'LastPDRTime'))
+
 BackGroundColor = "#d0d0d0"
 LogFolder = os.getcwd() + os.sep + 'LOGS' + os.sep
 Baudrate = 115200
@@ -40,31 +72,22 @@ class _uart:
 		self.SerialRead = threading.Thread(target = self.read_port, daemon = True).start()
 		
 		self.NewData = 1
-		
 		self.byteCount = 0
+		self.PacketSize = 0
 		# Первоначальное заполнение словаря.
-		self.TCU['DrumRPM'] = 0
-		self.TCU['OutputRPM'] = 0
-		self.TCU['CarSpeed'] = 0
-		self.TCU['SpdTimerVal'] = 0
-		self.TCU['OilTemp'] = 0
-		self.TCU['TPS'] = 0
-		self.TCU['SLT'] = 0
-		self.TCU['SLN'] = 0
-		self.TCU['SLU'] = 0
-		self.TCU['S1'] = 0
-		self.TCU['S2'] = 0
-		self.TCU['S3'] = 0
-		self.TCU['S4'] = 0
-		self.TCU['Selector'] = 0
-		self.TCU['ATMode'] = 0
-		self.TCU['Gear'] = 0
-		self.TCU['GearChange'] = 0
-		self.TCU['Break'] = 0
-		self.TCU['EngineWork'] = 0
-		self.TCU['SlipDetected'] = 0
-		self.TCU['Glock'] = 0
-
+		for Key in Parameters:
+			self.TCU[Key[1]] = 0
+			
+		# Определение длины пакета.
+		for Key in Parameters:
+			if Key[0] == 'int8_t':
+				self.PacketSize += 1
+			elif Key[0] == 'uint8_t':
+				self.PacketSize += 1
+			elif Key[0] == 'int16_t':
+				self.PacketSize += 2
+			elif Key[0] == 'uint16_t':
+				self.PacketSize += 2
 	# Логирование
 	def to_log(self, EmrtyLine = 0):
 		Date = datetime.now().strftime("%Y-%m-%d")
@@ -74,8 +97,8 @@ class _uart:
 		if not os.path.isfile(LogFile):
 			File = codecs.open(LogFile, 'w', 'utf8')
 			Text = 'Date\tTime\t'
-			for Key in self.TCU.keys():
-				Text += Key + '\t'
+			for Key in Parameters:
+				Text += Key[1] + '\t'
 			File.write(Text + '\n')
 			File.close()
 			EmrtyLine = 0
@@ -84,8 +107,8 @@ class _uart:
 		Time = datetime.now().strftime("%H:%M:%S")
 		Time += datetime.now().strftime(".%f")[:4]
 		Text = Date + '\t' + Time + '\t'
-		for Key in self.TCU.keys():
-			Text += str(self.TCU[Key]) + '\t'
+		for Key in Parameters:
+			Text += str(self.TCU[Key[1]]) + '\t'
 
 		File = codecs.open(LogFile, 'a', 'utf8')
 		if EmrtyLine == 1:
@@ -122,27 +145,23 @@ class _uart:
 			return 0
 		
 	def data_update(self):
-		self.TCU['DrumRPM'] = self.get_uint16(0)
-		self.TCU['OutputRPM'] = self.get_uint16(2)
-		self.TCU['CarSpeed'] = self.get_uint8(4)
-		self.TCU['SpdTimerVal'] = self.get_uint16(5)
-		self.TCU['OilTemp'] = self.get_int16(7)
-		self.TCU['TPS'] = self.get_uint16(9)
-		self.TCU['SLT'] = self.get_uint8(11)
-		self.TCU['SLN'] = self.get_uint8(12)
-		self.TCU['SLU'] = self.get_uint8(13)
-		self.TCU['S1'] = self.get_uint8(14)
-		self.TCU['S2'] = self.get_uint8(15)
-		self.TCU['S3'] = self.get_uint8(16)
-		self.TCU['S4'] = self.get_uint8(17)
-		self.TCU['Selector'] = self.get_uint8(18)
-		self.TCU['ATMode'] = self.get_uint8(19)
-		self.TCU['Gear'] = self.get_int8(20)
-		self.TCU['GearChange'] = self.get_int8(21)
-		self.TCU['Break'] = self.get_uint8(22)
-		self.TCU['EngineWork'] = self.get_uint8(23)
-		self.TCU['SlipDetected'] = self.get_uint8(24)
-		self.TCU['Glock'] = self.get_uint8(25)
+		ByteNumber = 0
+		for Key in Parameters:
+			Value = 0
+			if Key[0] == 'int8_t':
+				Value = self.get_int8(ByteNumber)
+				ByteNumber += 1
+			elif Key[0] == 'uint8_t':
+				Value = self.get_uint8(ByteNumber)
+				ByteNumber += 1
+			elif Key[0] == 'int16_t':
+				Value = self.get_int16(ByteNumber)
+				ByteNumber += 2
+			elif Key[0] == 'uint16_t':
+				Value = self.get_uint16(ByteNumber)
+				ByteNumber += 2
+			self.TCU[Key[1]] = Value
+
 		self.to_log()
 		self.NewData = 1
 	
@@ -154,7 +173,6 @@ class _uart:
 			return Value
 	def get_uint8(self, N):
 		return int.from_bytes(self.DataArray[N] + b'\x00', byteorder = 'little', signed = False)
-
 	def get_int16(self, N):
 		return int.from_bytes(self.DataArray[N] + self.DataArray[N + 1], byteorder = 'little', signed = True)
 	def get_uint16(self, N):
@@ -182,9 +200,9 @@ class _uart:
 						if Byte == b'\x84':
 							Byte = b'\x0a'
 					if Replace == 0 and Byte == b'\x0d':
-						if self.byteCount == 26:
+						if self.byteCount == self.PacketSize:
 							self.data_update()
-						self.Begin = 0
+							self.Begin = 0
 					else:
 						self.DataArray.append(Byte)
 						self.byteCount += 1
@@ -265,7 +283,7 @@ class _window:
 		self.S4.update(Uart.TCU['S4'])
 		
 		self.OIL.update(Uart.TCU['OilTemp'])
-		self.TPS.update(Uart.TCU['TPS'])
+		self.TPS.update(Uart.TCU['InstTPS'])
 		self.SPD.update(Uart.TCU['CarSpeed'])
 		
 		self.BRK.update(Uart.TCU['Break'])
@@ -375,7 +393,6 @@ class _TextIndicator:
 	def update(self, Text):
 		self.Box.itemconfig(self.TextVal, text = str(Text))
 
-			
 # Светофор.
 class _LightIndicator:
 	def __init__(self, root,Name, x, y, Color):
@@ -496,11 +513,11 @@ class _Graph:
 		self.ComboboxArray = []
 		for i in range(len(self.Colors)):
 			self.ComboboxArray.append(self.add_listbox(i, Names))
-		self.ComboboxArray[0].current(5)
-		self.ComboboxArray[1].current(6)
-		self.ComboboxArray[2].current(8)
-		self.ComboboxArray[3].current(10)
-		self.ComboboxArray[4].current(12)
+		self.ComboboxArray[0].current(0)
+		self.ComboboxArray[1].current(0)
+		self.ComboboxArray[2].current(0)
+		self.ComboboxArray[3].current(0)
+		self.ComboboxArray[4].current(0)
 
 	def add_listbox(self, n, Names):
 		Combobox_1 = ttk.Combobox(values = Names, state = "readonly", width = 9, foreground = self.Colors[n])
@@ -581,11 +598,12 @@ def loop():
 	global WindowUpdate
 	global DataUpdate
 
-	if Uart.PortReading == 1:
+	if Uart.NewData == 1:
 		MainWindow.update_graph_data()
+		Uart.NewData = 0
 	
 	PortUpdate += 1
-	if PortUpdate >= 40:
+	if PortUpdate >= 25:
 		PortUpdate = 0
 		MainWindow.port_update()
 
@@ -594,7 +612,7 @@ def loop():
 		WindowUpdate = 0
 		MainWindow.update()
 
-	MainWindow.root.after(25, loop)
+	MainWindow.root.after(40, loop)
 
 MainWindow.root.after(1, loop)
 MainWindow.root.mainloop()
