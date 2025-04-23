@@ -30,6 +30,9 @@ Parameters = (('uint16_t', 'DrumRPM')
 				, ('uint8_t', 'ATMode')
 				, ('int8_t', 'Gear')
 				, ('int8_t', 'GearChange')
+				, ('uint8_t', 'GearStep')
+				, ('uint8_t', 'LastStep')
+				, ('uint8_t', 'Gear2State')
 				, ('uint8_t', 'Break')
 				, ('uint8_t', 'EngineWork')
 				, ('uint8_t', 'SlipDetected')
@@ -40,7 +43,6 @@ Parameters = (('uint16_t', 'DrumRPM')
 				, ('uint8_t', 'GearChangeSLT')
 				, ('uint8_t', 'GearChangeSLN')
 				, ('uint8_t', 'GearChangeSLU')
-				, ('uint8_t', 'LastStep')
 				, ('uint16_t', 'LastPDRTime'))
 
 BackGroundColor = "#d0d0d0"
@@ -200,9 +202,9 @@ class _uart:
 						if Byte == b'\x84':
 							Byte = b'\x0a'
 					if Replace == 0 and Byte == b'\x0d':
-						if self.byteCount == self.PacketSize:
-							self.data_update()
-							self.Begin = 0
+						#if self.byteCount == self.PacketSize:
+						self.data_update()
+						self.Begin = 0
 					else:
 						self.DataArray.append(Byte)
 						self.byteCount += 1
