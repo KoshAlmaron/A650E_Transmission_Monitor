@@ -12,16 +12,15 @@ import math
 
 ATModeChar = ('I', 'P', 'R', 'N', 'D', 'D4', 'D3', 'L2', 'L', 'E', 'M')
 
-Parameters = (('uint16_t', 'DrumRPM')
+Parameters = (	  ('uint16_t', 'DrumRPM')
 				, ('uint16_t', 'OutputRPM')
 				, ('uint8_t', 'CarSpeed')
-				, ('uint16_t', 'SpdTimerVal')
 				, ('int16_t', 'OilTemp')
 				, ('uint16_t', 'TPS')
 				, ('uint16_t', 'InstTPS')
-				, ('uint8_t', 'SLT')
-				, ('uint8_t', 'SLN')
-				, ('uint8_t', 'SLU')
+				, ('uint16_t', 'SLT')
+				, ('uint16_t', 'SLN')
+				, ('uint16_t', 'SLU')
 				, ('uint8_t', 'S1')
 				, ('uint8_t', 'S2')
 				, ('uint8_t', 'S3')
@@ -40,10 +39,13 @@ Parameters = (('uint16_t', 'DrumRPM')
 				, ('uint8_t', 'GearUpSpeed')
 				, ('uint8_t', 'GearDownSpeed')
 				, ('uint8_t', 'GearChangeTPS')
-				, ('uint8_t', 'GearChangeSLT')
-				, ('uint8_t', 'GearChangeSLN')
-				, ('uint8_t', 'GearChangeSLU')
-				, ('uint16_t', 'LastPDRTime'))
+				, ('uint16_t', 'GearChangeSLT')
+				, ('uint16_t', 'GearChangeSLN')
+				, ('uint16_t', 'GearChangeSLU')
+				, ('uint16_t', 'LastPDRTime')
+				, ('uint16_t', 'CycleTime_x10')
+				, ('uint8_t', 'DebugMode'))
+
 
 BackGroundColor = "#d0d0d0"
 LogFolder = os.getcwd() + os.sep + 'LOGS' + os.sep
@@ -61,6 +63,7 @@ class _uart:
 		self.DataArray = []
 		# Папка с логами.
 		self.LogFolder = Folder
+		self.LogFile = ''
 		
 		# Порт и скорость.
 		self.Serial = serial.Serial()
@@ -92,12 +95,9 @@ class _uart:
 				self.PacketSize += 2
 	# Логирование
 	def to_log(self, EmrtyLine = 0):
-		Date = datetime.now().strftime("%Y-%m-%d")
-		LogFile = self.LogFolder + 'AT_log_' + Date + '.log'
-
 		# Проверка наличия файла лога.
-		if not os.path.isfile(LogFile):
-			File = codecs.open(LogFile, 'w', 'utf8')
+		if not os.path.isfile(self.LogFile):
+			File = codecs.open(self.LogFile, 'w', 'utf8')
 			Text = 'Date\tTime\t'
 			for Key in Parameters:
 				Text += Key[1] + '\t'
@@ -112,7 +112,7 @@ class _uart:
 		for Key in Parameters:
 			Text += str(self.TCU[Key[1]]) + '\t'
 
-		File = codecs.open(LogFile, 'a', 'utf8')
+		File = codecs.open(self.LogFile, 'a', 'utf8')
 		if EmrtyLine == 1:
 			File.write('\n')
 		else:
@@ -128,6 +128,7 @@ class _uart:
 	def port_open(self):
 		self.Serial.port = MainWindow.PortBox.get()
 		self.Serial.open()
+		self.LogFile = self.LogFolder + 'AT_log_' + datetime.now().strftime("%Y-%m-%d_%H-%M") + '.log'
 		self.to_log(1)
 		self.PortReading = 1
 
@@ -231,7 +232,7 @@ class _window:
 		ComPorts = Uart.get_com_ports()
 		self.PortBox = ttk.Combobox(values = ComPorts, state = "readonly", width = 23)
 
-		self.PortBox.current(0)
+		#self.PortBox.current(0)
 		self.PortBox.place(x = 25, y = Height-50)
 
 		self.OpenBtn = Button(text = "Старт", width = 5, bg = "#54fa9b", command = self.start)
@@ -249,10 +250,10 @@ class _window:
 		self.canv = Canvas(self.root, width = Width, height = Height - 90, bg = BackGroundColor)
 		self.canv.place(x = 0, y = 0)
 
-		#				       Name x, y min max, 	color
-		self.SLT = _LineMeter(self.root, 'SLT', 30, 30, 0, 255, '#1000fd')
-		self.SLN = _LineMeter(self.root, 'SLN', 160, 30, 0, 255, '#1000fd')
-		self.SLU = _LineMeter(self.root, 'SLU', 290, 30, 0, 255, '#1000fd')
+		#				       			  Name  x,  y min max, 	color
+		self.SLT = _LineMeter(self.root, 'SLT', 30, 30, 0, 1023, '#1000fd')
+		self.SLN = _LineMeter(self.root, 'SLN', 160, 30, 0, 1023, '#1000fd')
+		self.SLU = _LineMeter(self.root, 'SLU', 290, 30, 0, 1023, '#1000fd')
 		
 		self.S1 = _LightIndicator(self.root, 'S1', 20, 360, '#00bd00')
 		self.S2 = _LightIndicator(self.root, 'S2', 110, 360, '#00ad00')
@@ -498,7 +499,7 @@ class _Graph:
 		self.Box = Canvas(root, width = self.w + 55, height = self.h, bg = BackGroundColor, bd = 0, highlightthickness = 0, relief = 'ridge')
 		self.Box.place(x = self.x, y = self.y)
 		
-		self.GraphNames = (('---', 100), ('DrumRPM', 6000), ('OutputRPM', 6000), ('CarSpeed' , 150), ('TPS', 100), ('SLT', 255), ('SLN', 255), ('SLU', 255), ('S1', 2), ('S2', 2), ('S3', 2), ('S4', 2), ('Gear', 5))
+		self.GraphNames = (('---', 100), ('DrumRPM', 6000), ('OutputRPM', 6000), ('CarSpeed' , 150), ('TPS', 100), ('SLT', 1023), ('SLN', 1023), ('SLU', 1023), ('S1', 2), ('S2', 2), ('S3', 2), ('S4', 2), ('Gear', 5))
 		Names = []
 		for Name in self.GraphNames:
 			Names.append(Name[0])
