@@ -119,14 +119,18 @@ class _uart:
 			File.write(Text + '\n')
 		File.close()
 
-	def get_com_ports(self):
+	def get_com_ports(self, Mode):
 		Ports = []
 		for Port in serial.tools.list_ports.comports():
-			Ports.append(Port.device)
+			if Mode == 0:
+				Ports.append(Port.device)
+			else:
+				Ports.append(Port)
 		return Ports
 
 	def port_open(self):
-		self.Serial.port = MainWindow.PortBox.get()
+		print(MainWindow.PortBox.get().split(' - ')[0])
+		self.Serial.port = MainWindow.PortBox.get().split(' - ')[0]
 		self.Serial.open()
 		self.LogFile = self.LogFolder + 'AT_log_' + datetime.now().strftime("%Y-%m-%d_%H-%M") + '.log'
 		self.to_log(1)
@@ -139,10 +143,10 @@ class _uart:
 
 	def port_status(self):
 		# Закрывает отвалившееся соединение.
-		if self.Serial.is_open and self.Serial.port not in self.get_com_ports():
+		if self.Serial.is_open and self.Serial.port not in self.get_com_ports(0):
 			self.PortReading = 0
 			self.port_close()
-		if self.Serial.port in self.get_com_ports() and self.Serial.is_open:
+		if self.Serial.port in self.get_com_ports(0) and self.Serial.is_open:
 			return 1
 		else:
 			return 0
@@ -229,20 +233,20 @@ class _window:
 		MainFont = font.Font(size = 16)
 		self.root.option_add("*Font", MainFont)
 
-		ComPorts = Uart.get_com_ports()
-		self.PortBox = ttk.Combobox(values = ComPorts, state = "readonly", width = 23)
+		ComPorts = Uart.get_com_ports(1)
+		self.PortBox = ttk.Combobox(values = ComPorts, state = "readonly", width = 40)
 
 		#self.PortBox.current(0)
 		self.PortBox.place(x = 25, y = Height-50)
 
 		self.OpenBtn = Button(text = "Старт", width = 5, bg = "#54fa9b", command = self.start)
-		self.OpenBtn.place(x = 380, y = Height-55)
+		self.OpenBtn.place(x = 680, y = Height-55)
 
 		self.CloseBtn = Button(text = "Стоп", width = 5, bg = "#fb7b72", command = self.stop)
-		self.CloseBtn.place(x = 500, y = Height-55)
+		self.CloseBtn.place(x = 800, y = Height-55)
 
 		self.ExitBtn = Button(text = "Выход", width = 5, bg = "#f1e71f", command = self.quit)
-		self.ExitBtn.place(x = 750, y = Height-55)
+		self.ExitBtn.place(x = 1100, y = Height-55)
 
 		self.PortState = ttk.Label(text = "Порт закрыт", width = 15, anchor = CENTER, relief = "raised", background = "#fb7b72")
 		self.PortState.place(x = 25, y = Height-80)
@@ -307,7 +311,7 @@ class _window:
 	def update_graph_data(self):
 		self.MainGraph.update_data()
 	def port_update(self):
-		ComPorts = Uart.get_com_ports()
+		ComPorts = Uart.get_com_ports(1)
 		self.PortBox.config(values = ComPorts)
 
 		if Uart.port_status():
