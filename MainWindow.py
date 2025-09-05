@@ -1,231 +1,23 @@
-import serial
-import serial.tools.list_ports
-import codecs
-import time
-import os
-from datetime import datetime
 from tkinter import *
 from tkinter import ttk
 from tkinter import font
-import threading
 import math
 
 ATModeChar = ('I', 'P', 'R', 'N', 'D', 'D4', 'D3', 'L2', 'L', 'E', 'M')
-
-Parameters = (	  ('uint16_t', 'DrumRPM')
-				, ('uint16_t', 'OutputRPM')
-				, ('uint8_t', 'CarSpeed')
-				, ('int16_t', 'OilTemp')
-				, ('uint16_t', 'TPS')
-				, ('uint16_t', 'InstTPS')
-				, ('uint16_t', 'SLT')
-				, ('uint16_t', 'SLN')
-				, ('uint16_t', 'SLU')
-				, ('uint8_t', 'S1')
-				, ('uint8_t', 'S2')
-				, ('uint8_t', 'S3')
-				, ('uint8_t', 'S4')
-				, ('uint8_t', 'Selector')
-				, ('uint8_t', 'ATMode')
-				, ('int8_t', 'Gear')
-				, ('int8_t', 'GearChange')
-				, ('uint8_t', 'GearStep')
-				, ('uint8_t', 'LastStep')
-				, ('uint8_t', 'Gear2State')
-				, ('uint8_t', 'Break')
-				, ('uint8_t', 'EngineWork')
-				, ('uint8_t', 'SlipDetected')
-				, ('uint8_t', 'Glock')
-				, ('uint8_t', 'GearUpSpeed')
-				, ('uint8_t', 'GearDownSpeed')
-				, ('uint8_t', 'GearChangeTPS')
-				, ('uint16_t', 'GearChangeSLT')
-				, ('uint16_t', 'GearChangeSLN')
-				, ('uint16_t', 'GearChangeSLU')
-				, ('uint16_t', 'LastPDRTime')
-				, ('uint16_t', 'CycleTime_x10')
-				, ('uint8_t', 'DebugMode'))
-
-
 BackGroundColor = "#d0d0d0"
-LogFolder = os.getcwd() + os.sep + 'LOGS' + os.sep
-Baudrate = 115200
-
-
-# Прием данных по UART
-class _uart:
-	def __init__(self, Folder, Baudrate):
-		# Словарь с параметрами.
-		self.TCU = {}
-		# Флаг начала пакета.
-		self.Begin = 0
-		# Массив байт.
-		self.DataArray = []
-		# Папка с логами.
-		self.LogFolder = Folder
-		self.LogFile = ''
-		
-		# Порт и скорость.
-		self.Serial = serial.Serial()
-		self.Serial.baudrate = Baudrate
-		
-		# Проверка наличия папки.
-		if not os.path.isdir(self.LogFolder):
-			os.mkdir(self.LogFolder)
-		
-		self.PortReading = 0
-		self.SerialRead = threading.Thread(target = self.read_port, daemon = True).start()
-		
-		self.NewData = 1
-		self.byteCount = 0
-		self.PacketSize = 0
-		# Первоначальное заполнение словаря.
-		for Key in Parameters:
-			self.TCU[Key[1]] = 0
-			
-		# Определение длины пакета.
-		for Key in Parameters:
-			if Key[0] == 'int8_t':
-				self.PacketSize += 1
-			elif Key[0] == 'uint8_t':
-				self.PacketSize += 1
-			elif Key[0] == 'int16_t':
-				self.PacketSize += 2
-			elif Key[0] == 'uint16_t':
-				self.PacketSize += 2
-	# Логирование
-	def to_log(self, EmrtyLine = 0):
-		# Проверка наличия файла лога.
-		if not os.path.isfile(self.LogFile):
-			File = codecs.open(self.LogFile, 'w', 'utf8')
-			Text = 'Date\tTime\t'
-			for Key in Parameters:
-				Text += Key[1] + '\t'
-			File.write(Text + '\n')
-			File.close()
-			EmrtyLine = 0
-
-		Date = datetime.now().strftime("%d.%m.%Y")
-		Time = datetime.now().strftime("%H:%M:%S")
-		Time += datetime.now().strftime(".%f")[:4]
-		Text = Date + '\t' + Time + '\t'
-		for Key in Parameters:
-			Text += str(self.TCU[Key[1]]) + '\t'
-
-		File = codecs.open(self.LogFile, 'a', 'utf8')
-		if EmrtyLine == 1:
-			File.write('\n')
-		else:
-			File.write(Text + '\n')
-		File.close()
-
-	def get_com_ports(self, Mode):
-		Ports = []
-		for Port in serial.tools.list_ports.comports():
-			if Mode == 0:
-				Ports.append(Port.device)
-			else:
-				Ports.append(Port)
-		return Ports
-
-	def port_open(self):
-		print(MainWindow.PortBox.get().split(' - ')[0])
-		self.Serial.port = MainWindow.PortBox.get().split(' - ')[0]
-		self.Serial.open()
-		self.LogFile = self.LogFolder + 'AT_log_' + datetime.now().strftime("%Y-%m-%d_%H-%M") + '.log'
-		self.to_log(1)
-		self.PortReading = 1
-
-	def port_close(self):
-		self.PortReading = 0
-		time.sleep(0.2)
-		self.Serial.close()
-
-	def port_status(self):
-		# Закрывает отвалившееся соединение.
-		if self.Serial.is_open and self.Serial.port not in self.get_com_ports(0):
-			self.PortReading = 0
-			self.port_close()
-		if self.Serial.port in self.get_com_ports(0) and self.Serial.is_open:
-			return 1
-		else:
-			return 0
-		
-	def data_update(self):
-		ByteNumber = 0
-		for Key in Parameters:
-			Value = 0
-			if Key[0] == 'int8_t':
-				Value = self.get_int8(ByteNumber)
-				ByteNumber += 1
-			elif Key[0] == 'uint8_t':
-				Value = self.get_uint8(ByteNumber)
-				ByteNumber += 1
-			elif Key[0] == 'int16_t':
-				Value = self.get_int16(ByteNumber)
-				ByteNumber += 2
-			elif Key[0] == 'uint16_t':
-				Value = self.get_uint16(ByteNumber)
-				ByteNumber += 2
-			self.TCU[Key[1]] = Value
-
-		self.to_log()
-		self.NewData = 1
-	
-	def get_int8(self, N):
-		Value = int.from_bytes(self.DataArray[N] + b'\x00', byteorder = 'little', signed = True)
-		if Value > 128:
-			return 128 - Value
-		else:
-			return Value
-	def get_uint8(self, N):
-		return int.from_bytes(self.DataArray[N] + b'\x00', byteorder = 'little', signed = False)
-	def get_int16(self, N):
-		return int.from_bytes(self.DataArray[N] + self.DataArray[N + 1], byteorder = 'little', signed = True)
-	def get_uint16(self, N):
-		return int.from_bytes(self.DataArray[N] + self.DataArray[N + 1], byteorder = 'little', signed = False)
-	
-	def read_port(self):
-		while True:
-			if self.PortReading == 1:
-				Byte = self.Serial.read()
-				#print(Byte)
-				if self.Begin == 0:
-					if Byte == b'\x40':
-						self.DataArray.clear()
-						self.Begin = 1
-						self.byteCount = 0
-				elif self.Begin == 1:
-					Replace = 0 
-					if Byte == b'\x0a':
-						Byte = self.Serial.read()
-						Replace = 1
-						if Byte == b'\x82':
-							Byte = b'\x40'
-						if Byte == b'\x83':
-							Byte = b'\x0d'
-						if Byte == b'\x84':
-							Byte = b'\x0a'
-					if Replace == 0 and Byte == b'\x0d':
-						#if self.byteCount == self.PacketSize:
-						self.data_update()
-						self.Begin = 0
-					else:
-						self.DataArray.append(Byte)
-						self.byteCount += 1
-			else:
-				time.sleep(0.2)
 # Главное окно.
-class _window:
-	def __init__(self):
+class _MainWindow:
+	def __init__(self, Ver, Uart):
 		self.root = Tk()
+		self.Uart = Uart
+		self.EditTables = 0
 
 		Width = 1300
 		Height = 700
 		OffsetX = (self.root.winfo_screenwidth() - Width) // 2
 		OffsetY = 0
 
-		self.root.title('Мониторинг работы АКПП')
+		self.root.title('Мониторинг работы АКПП (' + Ver + ')')
 		self.root.geometry(f'{Width}x{Height}+{OffsetX}+{OffsetY}')
 		#self.root.protocol("WM_DELETE_WINDOW", quit)
 		self.root.configure(background = BackGroundColor)
@@ -233,20 +25,29 @@ class _window:
 		MainFont = font.Font(size = 16)
 		self.root.option_add("*Font", MainFont)
 
-		ComPorts = Uart.get_com_ports(1)
+		ComPorts = self.Uart.get_com_ports(1)
 		self.PortBox = ttk.Combobox(values = ComPorts, state = "readonly", width = 40)
 
-		#self.PortBox.current(0)
+		ActivePort = -1
+		for N, Port in enumerate(ComPorts):
+			if Port[0] == '/dev/ttyUSB0':
+				ActivePort = N
+		if ActivePort >= 0:
+			self.PortBox.current(ActivePort)
+
 		self.PortBox.place(x = 25, y = Height-50)
 
 		self.OpenBtn = Button(text = "Старт", width = 5, bg = "#54fa9b", command = self.start)
-		self.OpenBtn.place(x = 680, y = Height-55)
+		self.OpenBtn.place(x = 630, y = Height-55)
 
 		self.CloseBtn = Button(text = "Стоп", width = 5, bg = "#fb7b72", command = self.stop)
-		self.CloseBtn.place(x = 800, y = Height-55)
+		self.CloseBtn.place(x = 750, y = Height-55)
+
+		self.EditBtn = Button(text = "Таблицы", width = 8, bg = "#1e90ff", command = self.edit_tables, state='normal')
+		self.EditBtn.place(x = 925, y = Height-55)
 
 		self.ExitBtn = Button(text = "Выход", width = 5, bg = "#f1e71f", command = self.quit)
-		self.ExitBtn.place(x = 1100, y = Height-55)
+		self.ExitBtn.place(x = 1150, y = Height-55)
 
 		self.PortState = ttk.Label(text = "Порт закрыт", width = 15, anchor = CENTER, relief = "raised", background = "#fb7b72")
 		self.PortState.place(x = 25, y = Height-80)
@@ -279,29 +80,31 @@ class _window:
 		
 		self.MainGraph = _Graph(self.root, 450, 230)
 
-	def update(self):
-		self.SLT.update(Uart.TCU['SLT'])
-		self.SLN.update(Uart.TCU['SLN'])
-		self.SLU.update(Uart.TCU['SLU'])
+		#self.edit_tables()
 
-		self.S1.update(Uart.TCU['S1'])
-		self.S2.update(Uart.TCU['S2'])
-		self.S3.update(Uart.TCU['S3'])
-		self.S4.update(Uart.TCU['S4'])
+	def update(self):
+		self.SLT.update(self.Uart.TCU['SLT'])
+		self.SLN.update(self.Uart.TCU['SLN'])
+		self.SLU.update(self.Uart.TCU['SLU'])
+
+		self.S1.update(self.Uart.TCU['S1'])
+		self.S2.update(self.Uart.TCU['S2'])
+		self.S3.update(self.Uart.TCU['S3'])
+		self.S4.update(self.Uart.TCU['S4'])
 		
-		self.OIL.update(Uart.TCU['OilTemp'])
-		self.TPS.update(Uart.TCU['InstTPS'])
-		self.SPD.update(Uart.TCU['CarSpeed'])
+		self.OIL.update(self.Uart.TCU['OilTemp'])
+		self.TPS.update(self.Uart.TCU['InstTPS'])
+		self.SPD.update(self.Uart.TCU['CarSpeed'])
 		
-		self.BRK.update(Uart.TCU['Break'])
-		self.ENG.update(Uart.TCU['EngineWork'])
-		self.LCK.update(Uart.TCU['Glock'])
-		self.SLP.update(Uart.TCU['SlipDetected'])
+		self.BRK.update(self.Uart.TCU['Break'])
+		self.ENG.update(self.Uart.TCU['EngineWork'])
+		self.LCK.update(self.Uart.TCU['Glock'])
+		self.SLP.update(self.Uart.TCU['SlipDetected'])
 		
-		self.Selector.update(ATModeChar[Uart.TCU['Selector']])
-		self.ATMode.update(ATModeChar[Uart.TCU['ATMode']])
+		self.Selector.update(ATModeChar[self.Uart.TCU['Selector']])
+		self.ATMode.update(ATModeChar[self.Uart.TCU['ATMode']])
 		
-		Gear = Uart.TCU['Gear']
+		Gear = self.Uart.TCU['Gear']
 		if Gear == 0:
 			Gear = 'N'
 		self.Gear.update(Gear)
@@ -311,24 +114,29 @@ class _window:
 	def update_graph_data(self):
 		self.MainGraph.update_data()
 	def port_update(self):
-		ComPorts = Uart.get_com_ports(1)
+		ComPorts = self.Uart.get_com_ports(1)
 		self.PortBox.config(values = ComPorts)
 
-		if Uart.port_status():
+		if self.Uart.port_status():
 			self.PortState.config(background = "#54fa9b", text = 'Порт открыт')
+			#self.EditBtn.config(state='normal')
 		else:
 			self.PortState.config(background = "#fb7b72", text = 'Порт закрыт')
+			#self.EditBtn.config(state='disabled')
+
+	def edit_tables(self):
+		self.EditTables = 1
 
 	def start(self):
-		Uart.port_open()
+		self.Uart.port_open(self.PortBox.get())
 	def stop(self):
-		Uart.port_close()
-		for key in Uart.TCU:
-			Uart.TCU[key] = 0
+		self.Uart.port_close()
+		for key in self.Uart.TCU:
+			self.Uart.TCU[key] = 0
 		self.update()
 		self.port_update()
 	def quit(self):
-		Uart.PortReading = 0
+		self.Uart.PortReading = 0
 		self.root.destroy()
 		exit()
 
@@ -399,6 +207,10 @@ class _TextIndicator:
 		self.TextVal = self.Box.create_text(self.w / 2, self.h // 2, font = "Serif 20 bold", justify = CENTER, fill = 'black', text = '')
 	def update(self, Text):
 		self.Box.itemconfig(self.TextVal, text = str(Text))
+		if Text == 'E':
+			self.Box.itemconfig(self.Oval, fill = '#ff4040')
+		else:
+			self.Box.itemconfig(self.Oval, fill = self.Color)
 
 # Светофор.
 class _LightIndicator:
@@ -424,6 +236,7 @@ class _LightIndicator:
 			self.Box.itemconfig(self.Oval, fill = self.OnColor)
 		else:
 			self.Box.itemconfig(self.Oval, fill = self.OffColor)
+
 # Круговая шкала
 class _RoundMeter:
 	def __init__(self, root, Name, x, y, min, max, Color):
@@ -503,7 +316,7 @@ class _Graph:
 		self.Box = Canvas(root, width = self.w + 55, height = self.h, bg = BackGroundColor, bd = 0, highlightthickness = 0, relief = 'ridge')
 		self.Box.place(x = self.x, y = self.y)
 		
-		self.GraphNames = (('---', 100), ('DrumRPM', 6000), ('OutputRPM', 6000), ('CarSpeed' , 150), ('TPS', 100), ('SLT', 1023), ('SLN', 1023), ('SLU', 1023), ('S1', 2), ('S2', 2), ('S3', 2), ('S4', 2), ('Gear', 5))
+		self.GraphNames = (('---', 100), ('DrumRPM', 6000), ('OutputRPM', 6000), ('CarSpeed' , 150), ('InstTPS', 100), ('TPS', 100), ('SLT', 1023), ('SLN', 1023), ('SLU', 1023), ('S1', 2), ('S2', 2), ('S3', 2), ('S4', 2), ('Gear', 5))
 		Names = []
 		for Name in self.GraphNames:
 			Names.append(Name[0])
@@ -548,7 +361,7 @@ class _Graph:
 			if Name != '---':
 				if len(self.GraphArrays[i]) >= self.w - self.Border * 2:
 					self.GraphArrays[i].pop(0)
-				CurrentY = round(Uart.TCU[Name] / self.GraphNames[Index][1] * (self.h - self.Border * 2))
+				CurrentY = round(self.Uart.TCU[Name] / self.GraphNames[Index][1] * (self.h - self.Border * 2))
 				self.GraphArrays[i].append(CurrentY)
 				
 	def update(self):
@@ -592,35 +405,4 @@ class _Graph:
 				y = y // 2
 				y = y * 2
 				
-				self.Box.create_text(x, y, font = "Verdana 10", justify = CENTER, fill = self.Colors[i], text = str(Uart.TCU[Name]))
-
-Uart = _uart(LogFolder, Baudrate)
-MainWindow = _window()
-
-PortUpdate = 0
-WindowUpdate = 0
-
-def loop():
-	global PortUpdate
-	global WindowUpdate
-	global DataUpdate
-
-	if Uart.NewData == 1:
-		MainWindow.update_graph_data()
-		Uart.NewData = 0
-	
-	PortUpdate += 1
-	if PortUpdate >= 25:
-		PortUpdate = 0
-		MainWindow.port_update()
-
-	WindowUpdate += 1
-	if WindowUpdate >= 4:
-		WindowUpdate = 0
-		MainWindow.update()
-
-	MainWindow.root.after(40, loop)
-
-MainWindow.root.after(1, loop)
-MainWindow.root.mainloop()
-	
+				self.Box.create_text(x, y, font = "Verdana 10", justify = CENTER, fill = self.Colors[i], text = str(self.Uart.TCU[Name]))
