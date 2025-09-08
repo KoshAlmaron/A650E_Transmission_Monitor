@@ -108,6 +108,8 @@ class _TableEditWindow:
 
 		self.SaveBtn = Button(self.root, text = "Сохранить в EEPROM", width = 18, bg = "#cdcd00", command = self.write_eeprom, font = ("Helvetica", 12, 'bold'))
 		self.SaveBtn.place(x = 450, y = 8)
+		# Индикатор ответа ЭБУ.
+		self.Answer = _LightIndicator(self.root, 'A', 263, 12)
 
 		self.ExportBtn = Button(self.root, text = "Экспорт", width = 8, bg = "#6495ED", command = self.to_excel, font = ("Helvetica", 12, 'bold'))
 		self.ExportBtn.place(x = 700, y = 8)
@@ -173,12 +175,12 @@ class _TableEditWindow:
 			if self.OnLine.get() == 1 and Result == 2:
 				self.write_table()
 
-
 	def get_table(self):
+		self.Answer.update(1)
 		self.Uart.send_command(0xc1, self.TableBox.current(), [])
 
 	def read_table(self):
-		print('Поучена таблица', self.Uart.TableNumber)
+		#print('Поучена таблица', self.Uart.TableNumber)
 		if self.Uart.TableNumber == self.TableBox.current():
 			if len(self.Uart.TableData) == len(self.get_array_x()):
 				
@@ -192,14 +194,17 @@ class _TableEditWindow:
 						self.Cells[i].delete(0, END)
 						self.Cells[i].insert(0, self.Uart.TableData[i])
 				self.MainGraph.update_data(self.Cells)
+				self.Answer.update(0)
 
 	def write_table(self):
+		self.Answer.update(1)
 		Data = []
 		for Cell in self.Cells:
 			Data.append(int(Cell.get()))
 		self.Uart.send_command(0xc8, self.TableBox.current(), Data)
 	
 	def write_eeprom(self):
+		self.Answer.update(1)
 		self.Uart.send_command(0xee, self.TableBox.current(), [])
 
 	def value_check(self, event):
@@ -526,3 +531,29 @@ class _Graph:
 
 	def get_tcu_data(self, Parameter):
 		return self.Uart.TCU[Parameter]
+
+
+# Светофор.
+class _LightIndicator:
+	def __init__(self, root, Name, x, y):
+		self.x = x
+		self.y = y
+		self.w = 25
+		self.h = 25
+		self.Name = Name
+		self.StartColor = "#d0d0d0"
+		self.OffColor = "#00ff33"
+		self.OnColor = "#ff3333"
+		
+		# Холст.
+		self.Box = Canvas(root, width = self.w, height = self.h, bg = BackGroundColor, bd = 0, highlightthickness = 0, relief = 'ridge')
+		self.Box.place(x = self.x, y = self.y)
+		# Круг
+		self.Oval = self.Box.create_oval(0, 0, self.w - 1, self.h - 1, width = 2, fill = self.StartColor)
+		# Название.
+		self.Box.create_text(self.w / 2, self.h // 2, font = "Verdana 12 bold", justify = CENTER, fill = 'black', text = self.Name)
+	def update(self, Value):
+		if Value > 0:
+			self.Box.itemconfig(self.Oval, fill = self.OnColor)
+		else:
+			self.Box.itemconfig(self.Oval, fill = self.OffColor)

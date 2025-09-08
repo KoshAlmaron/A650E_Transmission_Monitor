@@ -214,7 +214,7 @@ class _TextIndicator:
 
 # Светофор.
 class _LightIndicator:
-	def __init__(self, root,Name, x, y, Color):
+	def __init__(self, root, Name, x, y, Color):
 		self.x = x
 		self.y = y
 		self.w = 70
