@@ -79,7 +79,7 @@ class _TableEditWindow:
 		self.Labels = []
 		self.DataTCU = {}
 
-		self.Width = 1150
+		self.Width = 1180
 		self.Height = 650
 		self.OffsetX = 20
 		self.OffsetY = 0
@@ -121,15 +121,15 @@ class _TableEditWindow:
 		self.ExitBtn.place(x = 950, y = 8)
 
 		self.TableBox = ttk.Combobox(self.root, values = TablesList, state = "readonly", width = 22, font = ("Helvetica", 16))
-		self.TableBox.place(x = 15, y = 125)
+		self.TableBox.place(x = 35, y = 125)
 		self.TableBox.current(0)
 		self.TableBox.bind("<<ComboboxSelected>>", self.table_selected_event)
 
 		self.TableName = ttk.Label(self.root, text = TablesData[self.TableBox.current()]['Name'], width = 70, anchor = 'w', relief = "flat", background = BackGroundColor, font = "Verdana 12 bold")
-		self.TableName.place(x = 320, y = 127)
+		self.TableName.place(x = 350, y = 127)
 
 		# График.
-		self.MainGraph = _Graph(self.root, 15, 160, Uart)
+		self.MainGraph = _Graph(self.root, 35, 160, Uart)
 		self.draw_table()
 		self.MainGraph.redraw(self.TableBox.current(), self.get_array_x())
 		if self.Uart.port_status():
@@ -137,10 +137,40 @@ class _TableEditWindow:
 		self.MainGraph.update_data(self.Cells)
 
 		# Значения TCU Data
-		self.draw_labels()
+		self.draw_labels(37, 57)
+
+		self.draw_graph_buttons(160 + 400 / 2)
 
 		# Обнаружение нажатия кнопок.
 		self.root.bind("<Key>", self.key_pressed)
+
+	def draw_graph_buttons(self, Y):
+		X = 5
+		H = 13
+
+		Button(self.root, text = "0", width = 1, bg = "#bcbcbc", command = lambda: self.move_graph(0), font = ("Helvetica", 10, 'bold'), border="2px").place(x = X, y = Y - H, width = 25, height = 25)
+
+		Button(self.root, text = "+", width = 1, bg = "#bcbcbc", command = lambda: self.move_graph(1), font = ("Helvetica", 10, 'bold'), border="2px").place(x = X, y = Y - H - 40, width = 25, height = 25)
+		Button(self.root, text = "-", width = 1, bg = "#bcbcbc", command = lambda: self.move_graph(-1), font = ("Helvetica", 10, 'bold'), border="2px").place(x = X, y = Y - H + 40, width = 25, height = 25)
+
+
+	def move_graph(self, Where):
+		N = self.TableBox.current()
+		Step = TablesData[N]['Step']
+		for Cell in self.Cells:
+			Value = int(Cell.get())
+			if Where == 0:
+				Value = 0
+			elif Where == 1:
+				Value += Step
+			elif Where == -1:
+				Value -= Step
+			Cell.delete(0, END)
+			Cell.insert(0, str(Value))
+
+		self.value_check('')
+		if self.OnLine.get() == 1:
+			self.write_table()		
 
 	def on_closing(self):
 		self.WindowOpen = 0
@@ -259,6 +289,7 @@ class _TableEditWindow:
 	def draw_table(self):
 		W = 4
 		Y = 600
+		X = 35
 		Space = 52.5
 		if self.get_array_x() == TempGrid:
 			Space = 35
@@ -270,27 +301,26 @@ class _TableEditWindow:
 				Default = 0
 
 			Cell.insert(0, Default)
-			Cell.place(x = 15 + Space * Col, y = Y)
+			Cell.place(x = X + Space * Col, y = Y)
 			Cell.bind("<FocusOut>", self.value_check)
 			self.Cells.append(Cell)	
 
 			Label = ttk.Label(self.root, text = Value, width = W, anchor = CENTER, relief = "flat", background = BackGroundColor)
-			Label.place(x = 17 + Space * Col, y = Y + 25)
+			Label.place(x = X + 2 + Space * Col, y = Y + 25)
 			self.Labels.append(Label)	
 
 		self.Width = 36 * len(self.get_array_x())
 		#self.root.geometry(f'{self.Width}x{self.Height}+{self.OffsetX}+{self.OffsetY}')
 
-	def draw_labels(self):
-		Y = 57
-		Space = self.Width / (len(LabelsTCU) - 3)
+	def draw_labels(self, X, Y):
+		Space = self.Width / (len(LabelsTCU) - 1) + 34
 
 		for Col, Name in  enumerate(LabelsTCU):
 			Label = ttk.Label(self.root, text = Name[0], width = 12, anchor = CENTER, relief = "flat", background = BackGroundColor, font = "Verdana 12")
-			Label.place(x = 17 + Space * Col, y = Y)
+			Label.place(x = X + Space * Col, y = Y)
 			
 			Value = ttk.Label(self.root, text = self.get_tcu_data(Name[1]), width = 11, anchor = CENTER, relief = "ridge", background = BackGroundColor, font = "Verdana 12 bold")
-			Value.place(x = 17 + Space * Col, y = Y + 20)
+			Value.place(x = X + Space * Col, y = Y + 20)
 			self.DataTCU[Name[1]] = Value
 
 	def update_labels(self):
@@ -390,7 +420,14 @@ class _Graph:
 	def print_h_line(self, Value, Min, Max, Leght):
 		ly = self.h - ((Value - Min)  / (Max - Min)) * (self.h - self.Border * 2) - self.Border
 		self.Box.create_line(self.w - 1, ly, self.w + Leght, ly, fill = 'black', width = 2)
-		self.Box.create_line(2, ly, self.w - 2, ly, fill = '#cacfca', width = 2, dash = 2)
+
+		Fill = '#cacfca'
+		Width = 2
+		if Value == 0:
+			Fill = '#000000'
+			Width = 3
+
+		self.Box.create_line(2, ly, self.w - 2, ly, fill = Fill, width = Width, dash = 2)
 
 		Str = str(Value)
 		self.Box.create_text(self.w + Leght + len(Str) * 5 + 4, ly, font = "Verdana 12", justify = CENTER, fill = 'black', text = Str)
@@ -531,7 +568,6 @@ class _Graph:
 
 	def get_tcu_data(self, Parameter):
 		return self.Uart.TCU[Parameter]
-
 
 # Светофор.
 class _LightIndicator:
