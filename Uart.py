@@ -77,9 +77,9 @@ class _uart:
 		self.PortReading = 0
 		self.SerialRead = threading.Thread(target = self.read_port, daemon = True).start()
 		
-		self.NewData = 1
+		self.NewData = 1			# Флаг, получен новый пакет данных (0x71).
 		self.PacketType = 0
-		self.TableNumber = 0
+		self.TableNumber = -1		# Флаг и номер, получена новая таблица (0xc2).
 		self.ByteCount = 0
 		self.PacketSize = 1 		# +1 байт типа пакета.
 		# Первоначальное заполнение словаря.
@@ -157,12 +157,12 @@ class _uart:
 	def data_update(self):
 		self.NewData = 0
 		self.PacketType = hex(self.get_uint8(0))
-		self.TableNumber = -1
 		ByteNumber = 1
 
-		# if self.PacketType != '0x71':
-		# 	print(self.PacketType, self.ByteCount)
-		# 	print(self.PacketType, self.get_uint8(ByteNumber) , self.ByteCount, self.PacketSize)
+		#if self.PacketType != '0x71':
+		#	print(self.PacketType, self.ByteCount)
+		#	print(self.DataArray)
+		#	print(self.PacketType, self.get_uint8(ByteNumber) , self.ByteCount, self.PacketSize)
 		
 		# 0x71 - Пакет с параметрами ЭБУ.
 		if self.PacketType == '0x71' and self.ByteCount == self.PacketSize:
@@ -183,11 +183,14 @@ class _uart:
 				self.TCU[Key[1]] = Value
 			self.to_log()
 			self.NewData = 1
-		elif self.PacketType == '0xc2':
+		elif self.PacketType == '0xc2' and 	self.TableNumber == -1:
 			self.TableNumber = self.get_uint8(ByteNumber)
 
 			ByteNumber += 1
 			N = self.TableNumber
+
+			#print('0xc2')
+			#print(self.ByteCount,  Tables[N][2] * 2 + 2)
 
 			if self.ByteCount == Tables[N][2] * 2 + 2:
 				self.TableData = []
@@ -197,7 +200,10 @@ class _uart:
 					elif Tables[N][1] == 'int16_t':
 						self.TableData.append(self.get_int16(ByteNumber))
 					ByteNumber += 2
-				self.NewData = 1
+				#print(self.TableNumber)
+			else:
+				self.TableNumber = -1 # Таблица не гожая.
+
 
 	def get_int8(self, N):
 		Value = int.from_bytes(self.DataArray[N] + b'\x00', byteorder = 'little', signed = True)
@@ -228,7 +234,8 @@ class _uart:
 			for Val in Data:
 				for Byte in Val.to_bytes(2, 'big', signed = Signed):
 					self.add_byte(Command, Byte)
-		if Type == 0xee:
+		
+		if Type in (0xcc, 0xee):
 			Command.append(Type)	# Дополнительно вставляем тип пакета.
 
 		Command.append(0x0d)	# Конец пакета.
@@ -255,7 +262,6 @@ class _uart:
 			if self.PortReading == 1:
 				Byte = self.Serial.read()
 				#print(Byte)
-				
 				if self.Begin == 0:
 					if Byte == b'\x40':
 						self.DataArray = []

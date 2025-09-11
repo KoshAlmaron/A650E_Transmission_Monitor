@@ -1,4 +1,4 @@
-Ver = '2025-09-05'
+Ver = '2025-09-11'
 
 import os
 
@@ -34,13 +34,12 @@ def loop():
 			MainWindow.EditTables = 0
 			TableEditWindow.window_close()
 			TableEditWindow = None
-		if Uart.NewData == 1 and Uart.PacketType == '0xc2':
+		if Uart.TableNumber > -1:
 			TableEditWindow.read_table()
 			TableEditWindow.value_check('')
+			Uart.TableNumber = -1
 
-			Uart.NewData = 0
-
-	if Uart.NewData == 1 and Uart.PacketType == '0x71':
+	if Uart.NewData == 1:
 		MainWindow.update_graph_data()
 		Uart.NewData = 0
 	
@@ -56,6 +55,7 @@ def loop():
 
 		if MainWindow.EditTables == 2:
 			TableEditWindow.update_labels()
+
 
 	MainWindow.root.after(40, loop)
 

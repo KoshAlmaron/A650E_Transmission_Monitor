@@ -80,7 +80,7 @@ class _TableEditWindow:
 		self.DataTCU = {}
 
 		self.Width = 1180
-		self.Height = 650
+		self.Height = 680
 		self.OffsetX = 20
 		self.OffsetY = 0
 
@@ -99,37 +99,40 @@ class _TableEditWindow:
 
 		self.OnLine = IntVar()
 		self.OnLineChk = Checkbutton(self.root, text='Онлайн', variable = self.OnLine, onvalue = 1, offvalue = 0, font = ("Helvetica", 14, 'bold'))
-		self.OnLineChk.place(x = 25, y = 14)
+		self.OnLineChk.place(x = 25, y = 28)
 
 		self.ReadBtn = Button(self.root, text = "Считать", width = 8, bg = "#4caa00", command = self.get_table, font = ("Helvetica", 12, 'bold'))
 		self.ReadBtn.place(x = 150, y = 8)
 		self.WriteBtn = Button(self.root, text = "Записать", width = 8, bg = "#cd5500", command = self.write_table, font = ("Helvetica", 12, 'bold'), state = 'disabled')
-		self.WriteBtn.place(x = 300, y = 8)
+		self.WriteBtn.place(x = 150, y = 45)
 
-		self.SaveBtn = Button(self.root, text = "Сохранить в EEPROM", width = 18, bg = "#cdcd00", command = self.write_eeprom, font = ("Helvetica", 12, 'bold'))
-		self.SaveBtn.place(x = 450, y = 8)
 		# Индикатор ответа ЭБУ.
-		self.Answer = _LightIndicator(self.root, 'A', 263, 12)
+		self.Answer = _LightIndicator(self.root, 'A', 263, 28)
+
+		self.EReadBtn = Button(self.root, text = "Считать из EEPROM", width = 19, bg = "#adff2f", command = self.read_eeprom, font = ("Helvetica", 12, 'bold'))
+		self.EReadBtn.place(x = 350, y = 8)
+		self.ESaveBtn = Button(self.root, text = "Сохранить в EEPROM", width = 19, bg = "#ff8c00", command = self.write_eeprom, font = ("Helvetica", 12, 'bold'))
+		self.ESaveBtn.place(x = 350, y = 45)
+
 
 		self.ExportBtn = Button(self.root, text = "Экспорт", width = 8, bg = "#6495ED", command = self.to_excel, font = ("Helvetica", 12, 'bold'))
-		self.ExportBtn.place(x = 700, y = 8)
-
+		self.ExportBtn.place(x = 650, y = 8)
 		self.ImportBtn = Button(self.root, text = "Импорт", width = 8, bg = "#BC8F8F", command = self.from_excel, font = ("Helvetica", 12, 'bold'))
-		self.ImportBtn.place(x = 825, y = 8)
+		self.ImportBtn.place(x = 650, y = 45)
 
-		self.ExitBtn = Button(self.root, text = "Закрыть", width = 12, bg = "#f1e71f", command = self.on_closing, font = ("Helvetica", 12, 'bold'))
-		self.ExitBtn.place(x = 950, y = 8)
+		self.ExitBtn = Button(self.root, text = "Закрыть", width = 12, bg = "#cd853f", command = self.on_closing, font = ("Helvetica", 12, 'bold'))
+		self.ExitBtn.place(x = 900, y = 8)
 
 		self.TableBox = ttk.Combobox(self.root, values = TablesList, state = "readonly", width = 22, font = ("Helvetica", 16))
-		self.TableBox.place(x = 35, y = 125)
+		self.TableBox.place(x = 35, y = 155)
 		self.TableBox.current(0)
 		self.TableBox.bind("<<ComboboxSelected>>", self.table_selected_event)
 
 		self.TableName = ttk.Label(self.root, text = TablesData[self.TableBox.current()]['Name'], width = 70, anchor = 'w', relief = "flat", background = BackGroundColor, font = "Verdana 12 bold")
-		self.TableName.place(x = 350, y = 127)
+		self.TableName.place(x = 350, y = 157)
 
 		# График.
-		self.MainGraph = _Graph(self.root, 35, 160, Uart)
+		self.MainGraph = _Graph(self.root, 35, 190, Uart)
 		self.draw_table()
 		self.MainGraph.redraw(self.TableBox.current(), self.get_array_x())
 		if self.Uart.port_status():
@@ -137,9 +140,9 @@ class _TableEditWindow:
 		self.MainGraph.update_data(self.Cells)
 
 		# Значения TCU Data
-		self.draw_labels(37, 57)
+		self.draw_labels(37, 87)
 
-		self.draw_graph_buttons(160 + 400 / 2)
+		self.draw_graph_buttons(190 + 400 / 2)
 
 		# Обнаружение нажатия кнопок.
 		self.root.bind("<Key>", self.key_pressed)
@@ -152,7 +155,6 @@ class _TableEditWindow:
 
 		Button(self.root, text = "+", width = 1, bg = "#bcbcbc", command = lambda: self.move_graph(1), font = ("Helvetica", 10, 'bold'), border="2px").place(x = X, y = Y - H - 40, width = 25, height = 25)
 		Button(self.root, text = "-", width = 1, bg = "#bcbcbc", command = lambda: self.move_graph(-1), font = ("Helvetica", 10, 'bold'), border="2px").place(x = X, y = Y - H + 40, width = 25, height = 25)
-
 
 	def move_graph(self, Where):
 		N = self.TableBox.current()
@@ -199,7 +201,7 @@ class _TableEditWindow:
 		return TablesData[self.TableBox.current()]['ArrayX']
 
 	def key_pressed(self, event):
-		Result = self.MainGraph.move_point(event.keycode, self.Cells)
+		Result = self.MainGraph.move_point(event.keysym, self.Cells)
 		if Result:
 			self.value_check('')
 			if self.OnLine.get() == 1 and Result == 2:
@@ -210,7 +212,9 @@ class _TableEditWindow:
 		self.Uart.send_command(0xc1, self.TableBox.current(), [])
 
 	def read_table(self):
-		#print('Поучена таблица', self.Uart.TableNumber)
+		#print('Получена таблица', self.Uart.TableNumber)
+		#print(self.Uart.TableNumber, self.TableBox.current())
+		#print(len(self.Uart.TableData),  len(self.get_array_x()))
 		if self.Uart.TableNumber == self.TableBox.current():
 			if len(self.Uart.TableData) == len(self.get_array_x()):
 				
@@ -232,7 +236,11 @@ class _TableEditWindow:
 		for Cell in self.Cells:
 			Data.append(int(Cell.get()))
 		self.Uart.send_command(0xc8, self.TableBox.current(), Data)
-	
+
+	def read_eeprom(self):
+		self.Answer.update(1)
+		self.Uart.send_command(0xcc, self.TableBox.current(), [])
+
 	def write_eeprom(self):
 		self.Answer.update(1)
 		self.Uart.send_command(0xee, self.TableBox.current(), [])
@@ -288,8 +296,8 @@ class _TableEditWindow:
 
 	def draw_table(self):
 		W = 4
-		Y = 600
 		X = 35
+		Y = 630
 		Space = 52.5
 		if self.get_array_x() == TempGrid:
 			Space = 35
@@ -331,11 +339,9 @@ class _TableEditWindow:
 		if self.Uart.port_status():
 			self.ReadBtn.config(state='normal')
 			self.WriteBtn.config(state='normal')
-			self.SaveBtn.config(state='normal')
 		else:
 			self.ReadBtn.config(state='disabled')
 			self.WriteBtn.config(state='disabled')
-			self.SaveBtn.config(state='disabled')
 
 	def get_tcu_data(self, Parameter):
 		return self.Uart.TCU[Parameter]
@@ -389,29 +395,29 @@ class _Graph:
 
 	def move_point(self, Button, Cells):
 		if self.GraphFocus:
-			if Button == 111:	# Up
+			if Button == 'Up':
 				Value = self.get_cell_value(Cells, self.CursorPosition)
 				Value += TablesData[self.N]['Step']
 				Cells[self.CursorPosition].delete(0, END)
 				Cells[self.CursorPosition].insert(0, Value)
 
-			elif Button == 116:	# Down
+			elif Button == 'Down':
 				Value = self.get_cell_value(Cells, self.CursorPosition)
 				Value -= TablesData[self.N]['Step']
 				Cells[self.CursorPosition].delete(0, END)
 				Cells[self.CursorPosition].insert(0, Value)
 
-			elif Button == 113:	# Left
+			elif Button == 'Left':
 				if self.CursorPosition > 0:
 					self.CursorPosition -= 1
-			elif Button == 114:	# Right
+			elif Button == 'Right':
 				if self.CursorPosition < len(self.ArrayX) - 1:
 					self.CursorPosition += 1
 
-			if Button in (111, 116):
+			if Button in ('Up', 'Down'):
 				self.update_data(Cells)
 				return 2
-			elif Button in (113, 114):
+			elif Button in ('Left', 'Right'):
 				self.update_data(Cells)
 				return 1
 			else:
