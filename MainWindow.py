@@ -80,6 +80,9 @@ class _MainWindow:
 		
 		self.MainGraph = _Graph(self.root, 450, 230)
 
+		self.EditBtn = Button(text = "Тест", width = 4, bg = "#f0fff0", command = self.speed_test, state='normal', font = ("Helvetica", 12, 'bold'))
+		self.EditBtn.place(x = 1115, y = 185)
+
 		#self.edit_tables()
 
 	def update(self):
@@ -126,6 +129,9 @@ class _MainWindow:
 
 	def edit_tables(self):
 		self.EditTables = 1
+
+	def speed_test(self):
+		self.Uart.send_command(0xde, 0, [])
 
 	def start(self):
 		self.Uart.port_open(self.PortBox.get())
