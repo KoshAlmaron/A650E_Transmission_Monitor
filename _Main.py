@@ -1,4 +1,4 @@
-Ver = '2025-09-11'
+Ver = '2025-09-12'
 
 import os
 
@@ -55,7 +55,6 @@ def loop():
 
 		if MainWindow.EditTables == 2:
 			TableEditWindow.update_labels()
-
 
 	MainWindow.root.after(40, loop)
 

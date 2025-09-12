@@ -204,7 +204,6 @@ class _uart:
 			else:
 				self.TableNumber = -1 # Таблица не гожая.
 
-
 	def get_int8(self, N):
 		Value = int.from_bytes(self.DataArray[N] + b'\x00', byteorder = 'little', signed = True)
 		if Value > 128:
@@ -220,11 +219,11 @@ class _uart:
 	
 	def send_command(self, Type, Table, Data):
 
-		Command = []
+		SendBuffer = []
 
-		Command.append(0x40)	# Начало исходящего пакета.
-		Command.append(Type)	# Тип пакета.
-		self.add_byte(Command, Table)	# Номер таблицы.
+		SendBuffer.append(0x40)	# Начало исходящего пакета.
+		SendBuffer.append(Type)	# Тип пакета.
+		self.add_byte(SendBuffer, Table)	# Номер таблицы.
 
 		Signed = False
 		if Tables[Table][1] == 'int16_t':
@@ -233,16 +232,19 @@ class _uart:
 		if Type == 0xc8:
 			for Val in Data:
 				for Byte in Val.to_bytes(2, 'big', signed = Signed):
-					self.add_byte(Command, Byte)
-		
-		if Type in (0xcc, 0xee):
-			Command.append(Type)	# Дополнительно вставляем тип пакета.
+					self.add_byte(SendBuffer, Byte)
+		elif Type in (0xcc, 0xee):
+			SendBuffer.append(Type)	# Дополнительно вставляем тип пакета.
+		elif Type == 0xbe:
+			for Val in Data:
+				for Byte in Val.to_bytes(1, 'big', signed = False):
+					self.add_byte(SendBuffer, Byte)
 
-		Command.append(0x0d)	# Конец пакета.
-		#print(len(Command))
-		Command = bytes(Command)
-		#print('Send command', Command)
-		self.Serial.write(Command)
+		SendBuffer.append(0x0d)	# Конец пакета.
+		#print(len(SendBuffer))
+		SendBuffer = bytes(SendBuffer)
+		#print('Send command', SendBuffer)
+		self.Serial.write(SendBuffer)
 
 	def add_byte(self, Array, Byte):	# Добавление байта с подменой.
 		if Byte == 0x40:
