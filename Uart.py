@@ -9,7 +9,8 @@ import codecs
 TpsGridSize = 21 
 TempGridSize = 31
 
-Parameters = (	  ('uint16_t', 'DrumRPM')
+Parameters = (	  ('uint16_t', 'EngineRPM')
+				, ('uint16_t', 'DrumRPM')
 				, ('uint16_t', 'OutputRPM')
 				, ('uint8_t', 'CarSpeed')
 				, ('int16_t', 'OilTemp')
