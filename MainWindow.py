@@ -110,6 +110,8 @@ class _MainWindow:
 		Gear = self.Uart.TCU['Gear']
 		if Gear == 0:
 			Gear = 'N'
+		elif Gear == -1:
+			Gear = 'R'
 		self.Gear.update(Gear)
 		
 		self.MainGraph.update()

@@ -205,7 +205,7 @@ class _uart:
 				self.TableNumber = -1 # Таблица не гожая.
 
 	def get_int8(self, N):
-		Value = int.from_bytes(self.DataArray[N] + b'\x00', byteorder = 'little', signed = True)
+		Value = int.from_bytes(self.DataArray[N] + b'\xff', byteorder = 'little', signed = True)
 		if Value > 128:
 			return 128 - Value
 		else:
