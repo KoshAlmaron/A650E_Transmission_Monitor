@@ -1,6 +1,8 @@
 from tkinter import *
 from tkinter import ttk
 from tkinter import font
+from tkinter import messagebox
+import time
 
 import tkinter as tk
 
@@ -112,30 +114,35 @@ class _TableEditWindow:
 		self.Answer = _LightIndicator(self.root, 'A', 263, 28)
 
 		self.EReadBtn = Button(self.root, text = "Считать из EEPROM", width = 19, bg = "#adff2f", command = self.read_eeprom, font = ("Helvetica", 12, 'bold'))
-		self.EReadBtn.place(x = 325, y = 8)
+		self.EReadBtn.place(x = 310, y = 8)
 		self.ESaveBtn = Button(self.root, text = "Сохранить в EEPROM", width = 19, bg = "#ff8c00", command = self.write_eeprom, font = ("Helvetica", 12, 'bold'))
-		self.ESaveBtn.place(x = 325, y = 45)
+		self.ESaveBtn.place(x = 310, y = 45)
 
 		# Экспорт / Импорт.
 		self.ExportBtn = Button(self.root, text = "Экспорт", width = 8, bg = "#6495ed", command = self.to_excel, font = ("Helvetica", 12, 'bold'))
-		self.ExportBtn.place(x = 600, y = 8)
+		self.ExportBtn.place(x = 550, y = 8)
 		self.ImportBtn = Button(self.root, text = "Импорт", width = 8, bg = "#bc8f8f", command = self.from_excel, font = ("Helvetica", 12, 'bold'))
-		self.ImportBtn.place(x = 600, y = 45)
-		# Выход.
-		self.ExitBtn = Button(self.root, text = "Закрыть", width = 12, bg = "#cd853f", command = self.on_closing, font = ("Helvetica", 12, 'bold'))
-		self.ExitBtn.place(x = 990, y = 8)
+		self.ImportBtn.place(x = 550, y = 45)
 
 		# Ограничения переключения передач.
 		self.MinGearBox = ttk.Combobox(self.root, values = (1, 2, 3, 4, 5), state = "readonly", width = 2, font = ("Helvetica", 16))
-		self.MinGearBox.place(x = 800, y = 10)
+		self.MinGearBox.place(x = 695, y = 10)
 		self.MinGearBox.current(0)
 		self.MinGearBox.bind("<<ComboboxSelected>>", self.min_gear_selected_event)
 		self.MaxGearBox = ttk.Combobox(self.root, values = (1, 2, 3, 4, 5), state = "readonly", width = 2, font = ("Helvetica", 16))
-		self.MaxGearBox.place(x = 875, y = 10)
+		self.MaxGearBox.place(x = 770, y = 10)
 		self.MaxGearBox.current(4)
 		self.MaxGearBox.bind("<<ComboboxSelected>>", self.max_gear_selected_event)
-		self.GearSetLimitBtn = Button(self.root, text = "Установить", width = 10, bg = "#bc8f8f", command = self.set_gear_limit, font = ("Helvetica", 12, 'bold'))
-		self.GearSetLimitBtn.place(x = 800, y = 45)
+		self.GearSetLimitBtn = Button(self.root, text = "Установить", width = 10, bg = "#b0c4de", command = self.set_gear_limit, font = ("Helvetica", 12, 'bold'))
+		self.GearSetLimitBtn.place(x = 695, y = 45)
+
+		# Сброс таблиц.
+		self.TableResetBtn = Button(self.root, text = "Сброс\nтаблиц", width = 8, bg = "#B44444", command = self.reset_tables, font = ("Helvetica", 12, 'bold'))
+		self.TableResetBtn.place(x = 850, y = 8)
+
+		# Выход.
+		self.ExitBtn = Button(self.root, text = "Закрыть", width = 12, height = 3, bg = "#cd853f", command = self.on_closing, font = ("Helvetica", 12, 'bold'))
+		self.ExitBtn.place(x = 990, y = 8)
 
 		# Выбор таблицы.
 		self.TableBox = ttk.Combobox(self.root, values = TablesList, state = "readonly", width = 22, font = ("Helvetica", 16))
@@ -161,6 +168,18 @@ class _TableEditWindow:
 
 		# Обнаружение нажатия кнопок.
 		self.root.bind("<Key>", self.key_pressed)
+
+	def reset_tables(self):
+		if messagebox.askyesno('Сброс таблиц', 'Перезаписать ВСЕ таблицы в EEPROM значениями из прошивки?'):
+			self.TableBox.current(0)
+			self.table_selected_event('')
+			self.root.lift()
+
+			time.sleep(0.5)
+			self.Answer.update(1)
+			self.Uart.send_command(0xab, self.TableBox.current(), [])
+		else:
+			self.root.lift()
 
 	def set_gear_limit(self):
 		MinGear = int(self.MinGearBox.get())
@@ -268,6 +287,7 @@ class _TableEditWindow:
 		self.Uart.send_command(0xc8, self.TableBox.current(), Data)
 
 	def read_eeprom(self):
+
 		self.Answer.update(1)
 		self.Uart.send_command(0xcc, self.TableBox.current(), [])
 

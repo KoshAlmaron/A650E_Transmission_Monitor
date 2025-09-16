@@ -233,7 +233,7 @@ class _uart:
 			for Val in Data:
 				for Byte in Val.to_bytes(2, 'big', signed = Signed):
 					self.add_byte(SendBuffer, Byte)
-		elif Type in (0xcc, 0xee):
+		elif Type in (0xcc, 0xee, 0xab):
 			SendBuffer.append(Type)	# Дополнительно вставляем тип пакета.
 		elif Type == 0xbe:
 			for Val in Data:
