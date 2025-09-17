@@ -206,13 +206,13 @@ class _uart:
 				self.TableNumber = -1 # Таблица не гожая.
 
 	def get_int8(self, N):
-		Value = int.from_bytes(self.DataArray[N] + b'\xff', byteorder = 'little', signed = True)
-		if Value > 128:
-			return 128 - Value
+		Value = ord(self.DataArray[N])
+		if Value > 127:
+			return Value - 256
 		else:
 			return Value
 	def get_uint8(self, N):
-		return int.from_bytes(self.DataArray[N] + b'\x00', byteorder = 'little', signed = False)
+		return ord(self.DataArray[N])
 	def get_int16(self, N):
 		return int.from_bytes(self.DataArray[N] + self.DataArray[N + 1], byteorder = 'little', signed = True)
 	def get_uint16(self, N):

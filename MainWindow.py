@@ -78,7 +78,7 @@ class _MainWindow:
 		self.ATMode = _TextIndicator(self.root, 155, 430, '#efffef')
 		self.Gear = _TextIndicator(self.root, 245, 430, '#efffef')
 		
-		self.MainGraph = _Graph(self.root, 450, 230)
+		self.MainGraph = _Graph(self.root, 450, 230, Uart)
 
 		self.EditBtn = Button(text = "Тест", width = 4, bg = "#f0fff0", command = self.speed_test, state='normal', font = ("Helvetica", 12, 'bold'))
 		self.EditBtn.place(x = 1115, y = 185)
@@ -304,9 +304,10 @@ class _RoundMeter:
 		self.Box.itemconfig(self.TextValue, text = str(Value))
 
 class _Graph:
-	def __init__(self, root, x, y):
+	def __init__(self, root, x, y, Uart):
 		self.x = x
 		self.y = y
+		self.Uart = Uart
 		self.min = 0
 		self.max = 100
 		self.w = 780
@@ -324,7 +325,7 @@ class _Graph:
 		self.Box = Canvas(root, width = self.w + 55, height = self.h, bg = BackGroundColor, bd = 0, highlightthickness = 0, relief = 'ridge')
 		self.Box.place(x = self.x, y = self.y)
 		
-		self.GraphNames = (('---', 100), ('DrumRPM', 6000), ('OutputRPM', 6000), ('CarSpeed' , 150), ('InstTPS', 100), ('TPS', 100), ('SLT', 1023), ('SLN', 1023), ('SLU', 1023), ('S1', 2), ('S2', 2), ('S3', 2), ('S4', 2), ('Gear', 5))
+		self.GraphNames = (('---', 100), ('EngineRPM', 6000), ('DrumRPM', 6000), ('OutputRPM', 6000), ('CarSpeed' , 150), ('InstTPS', 100), ('TPS', 100), ('SLT', 1023), ('SLN', 1023), ('SLU', 1023), ('S1', 2), ('S2', 2), ('S3', 2), ('S4', 2), ('Gear', 5))
 		Names = []
 		for Name in self.GraphNames:
 			Names.append(Name[0])
