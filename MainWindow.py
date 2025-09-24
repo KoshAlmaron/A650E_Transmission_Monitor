@@ -3,6 +3,8 @@ from tkinter import ttk
 from tkinter import font
 import math
 
+import ToolTip
+
 ATModeChar = ('I', 'P', 'R', 'N', 'D', 'D4', 'D3', 'L2', 'L', 'E', 'M')
 BackGroundColor = "#d0d0d0"
 # Главное окно.
@@ -52,9 +54,6 @@ class _MainWindow:
 		self.PortState = ttk.Label(text = "Порт закрыт", width = 15, anchor = CENTER, relief = "raised", background = "#fb7b72")
 		self.PortState.place(x = 25, y = Height-80)
 
-		self.canv = Canvas(self.root, width = Width, height = Height - 90, bg = BackGroundColor)
-		self.canv.place(x = 0, y = 0)
-
 		#				       			  Name  x,  y min max, 	color
 		self.SLT = _LineMeter(self.root, 'SLT', 30, 30, 0, 1023, '#1000fd')
 		self.SLN = _LineMeter(self.root, 'SLN', 160, 30, 0, 1023, '#1000fd')
@@ -80,10 +79,45 @@ class _MainWindow:
 		
 		self.MainGraph = _Graph(self.root, 450, 230, Uart)
 
-		self.EditBtn = Button(text = "Тест", width = 4, bg = "#f0fff0", command = self.speed_test, state='normal', font = ("Helvetica", 12, 'bold'))
-		self.EditBtn.place(x = 1115, y = 185)
+		self.SpdTest = Button(text = "Тест", width = 4, bg = "#f0fff0", command = self.speed_test, state='normal', font = ("Helvetica", 12, 'bold'))
+		self.SpdTest.place(x = 1115, y = 185)
+
+		self.add_tooltip()
 
 		#self.edit_tables()
+
+	def add_tooltip(self):
+		ToolTip.ToolTip(self.PortBox, " Выбор COM-порта ЭБУ")
+		ToolTip.ToolTip(self.OpenBtn, " Открыть COM-порт")
+		ToolTip.ToolTip(self.CloseBtn, " Закрыть COM-порт")
+		ToolTip.ToolTip(self.ExitBtn, " Закрыть программу")
+		ToolTip.ToolTip(self.PortState, " Состояние COM-порта")
+
+		ToolTip.ToolTip(self.SLT.Box, " Линейное давление SLT.\n Основное давление масла в системе.")
+		ToolTip.ToolTip(self.SLN.Box, " Давление (величина сброса давления) подпора гидроаккумуляторов SLN.\n В простое давление максимальное, при переключениях устанавливается в соотвествии с графиком.")
+		ToolTip.ToolTip(self.SLU.Box, " Давление SLU. Используется для блокировки ГТ\n и работы тормоза B3 второй передачи.")
+
+		ToolTip.ToolTip(self.S1.Box, " Состояние шифтового соленоида S1.")
+		ToolTip.ToolTip(self.S2.Box, " Состояние шифтового соленоида S2.")
+		ToolTip.ToolTip(self.S3.Box, " Состояние шифтового соленоида S3.")
+		ToolTip.ToolTip(self.S4.Box, " Состояние шифтового соленоида S4.")
+
+		ToolTip.ToolTip(self.OIL.Box, " Температура масла.")
+		ToolTip.ToolTip(self.TPS.Box, " Текущее значение ДПДЗ.")
+		ToolTip.ToolTip(self.SPD.Box, " Скорость автомобиля.")
+		
+		ToolTip.ToolTip(self.BRK.Box, " Состояние педали тормоза.\n Без тормоза при переключении N->R задняя передача не включится.\n При нажатии тормоза на ходу происходит разблокировка ГТ")
+		ToolTip.ToolTip(self.ENG.Box, " Флаг работы двигателя.\n При неработающем двигателе отключаются ве соленоиды\n и сбрасывается состояние АКПП.")
+
+		ToolTip.ToolTip(self.LCK.Box, " Состояние блокировки ГТ.")
+		ToolTip.ToolTip(self.SLP.Box, " Обнаружение проскальзывание фрикционов.\n Контроль производится по оборотам входного/выходного валов \nи передаточного числа текущей передачи")
+
+		ToolTip.ToolTip(self.Selector.Box, " Положение селектора.\n I - инициализация при старте\n E - ошибка")
+		ToolTip.ToolTip(self.ATMode.Box, " Состояние АКПП.\n I - инициализация при старте\n E - ошибка")
+		ToolTip.ToolTip(self.Gear.Box, " Текущая передача.")
+
+		ToolTip.ToolTip(self.EditBtn, "Открыть окно редактирования графиков.")
+		ToolTip.ToolTip(self.SpdTest, "Устанавливает скорость 100 км/ч для теста.")
 
 	def update(self):
 		self.SLT.update(self.Uart.TCU['SLT'])

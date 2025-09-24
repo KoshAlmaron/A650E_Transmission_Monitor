@@ -2,9 +2,10 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import font
 from tkinter import messagebox
+import tkinter as tk
 import time
 
-import tkinter as tk
+import ToolTip
 
 Parameters = (	  ('uint16_t', 'DrumRPM')
 				, ('uint16_t', 'OutputRPM')
@@ -45,13 +46,13 @@ BackGroundColor = "#d0d0d0"
 TPSGrid = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]
 TempGrid = [-30, -25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120]
 
-LabelsTCU = [['Inst TPS', 'InstTPS'],
-			 ['TPS', 'GearChangeTPS'],
-			 ['G2 Step', 'LastStep'],
-			 ['SLT', 'GearChangeSLT'],
-			 ['SLN', 'GearChangeSLN'],
-			 ['SLU', 'GearChangeSLU'],
-			 ['SLU', 'LastPDRTime'],
+LabelsTCU = [['Inst TPS', 'InstTPS', ' Текущее значение ДПДЗ.'],
+			 ['TPS', 'GearChangeTPS', ' ДПДЗ на момент последнего переключения.'],
+			 ['G2 LastStep', 'LastStep', ' Номер последнего шага включения второй передачи.'],
+			 ['SLT', 'GearChangeSLT', ' Значение SLT на момент последнего переключения.'],
+			 ['SLN', 'GearChangeSLN', ' Значение SLN на момент последнего переключения.'],
+			 ['SLU', 'GearChangeSLU', ' Значение SLU на момент последнего переключения.'],
+			 ['PDRTime', 'LastPDRTime', ' Продолжительность последнего запроса снижения мощности.'],
 			]
 
 			# Номер, название, ось Х, минимум, максимум, описание.
@@ -166,9 +167,37 @@ class _TableEditWindow:
 
 		self.draw_graph_buttons(190 + 400 / 2)
 
+		self.add_tooltip()
+
 		# Обнаружение нажатия кнопок.
 		self.root.bind("<Key>", self.key_pressed)
+	
+	def add_tooltip(self):
+		ToolTip.ToolTip(self.OnLineChk, " Онлайн режим.\n Изменения сразу отсылаются в ЭБУ.")
+		
+		ToolTip.ToolTip(self.ReadBtn, " Считать таблицу из оперативной памяти ЭБУ")
+		ToolTip.ToolTip(self.WriteBtn, " Отправить таблицу в ЭБУ.\n Таблица будет записана в ОЗУ, для сохранения изменений необходимо перенести таблицу в EEPROM.")
+		
+		ToolTip.ToolTip(self.Answer.Box, " Индикатор ответа ЭБУ на команду.\n Красный - команда не принята. \n Зелёный - команда успешно обработана.")
 
+		ToolTip.ToolTip(self.EReadBtn, " Считать все таблицы из EEPROM в ОЗУ")
+		ToolTip.ToolTip(self.ESaveBtn, " Сохранить все таблицы из ОЗУ в EEPROM")
+
+		ToolTip.ToolTip(self.ExportBtn, " Экспорт текущей таблицы в буфер обмена.\n Значения передаюся в буфер с разделителем-табуляцией\n для дальнейшей вставки в Excel.")
+		ToolTip.ToolTip(self.ImportBtn, " Импорт таблицы из буфер обмена.\n Значения должны быть с разделителем-табуляцией и в таком же количестве.")
+		
+		ToolTip.ToolTip(self.MinGearBox, " Минимальная допустимая передача.\n Используется для настройки переключений.")
+		ToolTip.ToolTip(self.MaxGearBox, " Максимальная допустимая передача.\n Используется для настройки переключений.")
+		ToolTip.ToolTip(self.GearSetLimitBtn, " Установить ограничения по передачам в ЭБУ")
+
+
+		ToolTip.ToolTip(self.TableResetBtn, " Сброс всех таблиц.\n Все значения заменяются на начальные из прошивки и производтся запись в EEPROM.\n Можно использовать в том числе для первоначальной записи таблиц в EEPROM.")
+
+		ToolTip.ToolTip(self.ExitBtn, " Закрыть окно.")
+
+		ToolTip.ToolTip(self.TableBox, "Выбор таблицы для редакирования")
+
+		# ToolTip.ToolTip(self.PortState, "")
 	def reset_tables(self):
 		if messagebox.askyesno('Сброс таблиц', 'Перезаписать ВСЕ таблицы в EEPROM значениями из прошивки?'):
 			self.TableBox.current(0)
@@ -200,7 +229,9 @@ class _TableEditWindow:
 		X = 5
 		H = 13
 
-		Button(self.root, text = "0", width = 1, bg = "#bcbcbc", command = lambda: self.move_graph(0), font = ("Helvetica", 10, 'bold'), border="2px").place(x = X, y = Y - H, width = 25, height = 25)
+		self.BtnZero = Button(self.root, text = "0", width = 1, bg = "#bcbcbc", command = lambda: self.move_graph(0), font = ("Helvetica", 10, 'bold'), border="2px").place(x = X, y = Y - H, width = 25, height = 25)
+		#ToolTip.ToolTip(self.BtnZero, " Обнулить таблицу")
+
 
 		Button(self.root, text = "+", width = 1, bg = "#bcbcbc", command = lambda: self.move_graph(1), font = ("Helvetica", 10, 'bold'), border="2px").place(x = X, y = Y - H - 40, width = 25, height = 25)
 		Button(self.root, text = "-", width = 1, bg = "#bcbcbc", command = lambda: self.move_graph(-1), font = ("Helvetica", 10, 'bold'), border="2px").place(x = X, y = Y - H + 40, width = 25, height = 25)
@@ -376,10 +407,13 @@ class _TableEditWindow:
 		for Col, Name in  enumerate(LabelsTCU):
 			Label = ttk.Label(self.root, text = Name[0], width = 12, anchor = CENTER, relief = "flat", background = BackGroundColor, font = "Verdana 12")
 			Label.place(x = X + Space * Col, y = Y)
-			
+
 			Value = ttk.Label(self.root, text = self.get_tcu_data(Name[1]), width = 11, anchor = CENTER, relief = "ridge", background = BackGroundColor, font = "Verdana 12 bold")
 			Value.place(x = X + Space * Col, y = Y + 20)
 			self.DataTCU[Name[1]] = Value
+
+			ToolTip.ToolTip(Label, Name[2])
+			ToolTip.ToolTip(Value, Name[2])
 
 	def update_labels(self):
 		for Name in self.DataTCU:
