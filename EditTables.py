@@ -82,6 +82,8 @@ class _TableEditWindow:
 		self.Labels = []
 		self.DataTCU = {}
 
+		self.GetNewTable = 0
+
 		self.Width = 1180
 		self.Height = 680
 		self.OffsetX = 20
@@ -160,7 +162,7 @@ class _TableEditWindow:
 		self.MainGraph.redraw(self.TableBox.current(), self.get_array_x())
 		if self.Uart.port_status():
 			self.get_table()
-		self.MainGraph.update_data(self.Cells)
+		self.MainGraph.update_data(self.Cells, 0)
 
 		# Значения TCU Data
 		self.draw_labels(37, 87)
@@ -289,6 +291,7 @@ class _TableEditWindow:
 
 	def get_table(self):
 		self.Answer.update(1)
+		self.GetNewTable = 1
 		self.Uart.send_command(0xc1, self.TableBox.current(), [])
 
 	def read_table(self):
@@ -307,7 +310,8 @@ class _TableEditWindow:
 					for i in range(0, len(TempGrid), 1):
 						self.Cells[i].delete(0, END)
 						self.Cells[i].insert(0, self.Uart.TableData[i])
-				self.MainGraph.update_data(self.Cells)
+				self.MainGraph.update_data(self.Cells, self.GetNewTable)
+				self.GetNewTable = 0
 				self.Answer.update(0)
 
 	def write_table(self):
@@ -349,7 +353,7 @@ class _TableEditWindow:
 
 		if AllIsOk:
 			self.WriteBtn.config(state='normal')
-			self.MainGraph.update_data(self.Cells)
+			self.MainGraph.update_data(self.Cells, 0)
 			return 1
 		else:
 			self.WriteBtn.config(state='disabled')
@@ -359,7 +363,7 @@ class _TableEditWindow:
 		self.clear_table()
 		self.draw_table()
 		self.MainGraph.redraw(self.TableBox.current(), self.get_array_x())
-		self.MainGraph.update_data(self.Cells)
+		self.MainGraph.update_data(self.Cells, 0)
 
 		self.TableName.configure(text = TablesData[self.TableBox.current()]['Name'])
 
@@ -446,6 +450,7 @@ class _Graph:
 
 		self.GraphLines = []
 		self.GraphPoints = []
+		self.PrevGraphLines = []
 		self.GraphLabel = 0
 
 		self.GraphFocus = 0
@@ -499,10 +504,10 @@ class _Graph:
 					self.CursorPosition += 1
 
 			if Button in ('Up', 'Down'):
-				self.update_data(Cells)
+				self.update_data(Cells, 0)
 				return 2
 			elif Button in ('Left', 'Right'):
-				self.update_data(Cells)
+				self.update_data(Cells, 0)
 				return 1
 			else:
 				return 0
@@ -530,7 +535,7 @@ class _Graph:
 		Str = str(Value)
 		self.Box.create_text(lx, self.h + 20, font = "Verdana 12", justify = CENTER, fill = 'black', text = Str)
 
-	def print_line(self, X1, Y1, X2, Y2):
+	def print_line(self, X1, Y1, X2, Y2, LineType):
 		MinX = min(self.ArrayX)
 		MaxX = max(self.ArrayX)
 
@@ -543,8 +548,19 @@ class _Graph:
 		lx2 = self.Border + ((X2 - MinX)  / (MaxX - MinX)) * (self.w - self.Border * 2)
 		ly2 = self.h - ((Y2 - MinY)  / (MaxY - MinY)) * (self.h - self.Border * 2) - self.Border
 
-		Line = self.Box.create_line(lx1, ly1, lx2, ly2, fill = '#004c99', width = 3)
-		self.GraphLines.append(Line)
+		LineFill  = '#004c99'
+		LineWidth = 3
+		if LineType == 1:
+			LineFill = '#ff6666'
+			LineWidth = 2
+
+		Line = self.Box.create_line(lx1, ly1, lx2, ly2, fill = LineFill, width = LineWidth)
+
+		if LineType == 0:
+			self.GraphLines.append(Line)
+		else:
+			self.PrevGraphLines.append(Line)
+			return
 
 		R = 3
 		Fill = "#cccc00"
@@ -608,12 +624,17 @@ class _Graph:
 			if X // 10 == X / 10:
 				self.print_v_line(X, Min, Max, 6)
 
-	def update_data(self, ArrayY):
+	def update_data(self, ArrayY, DrawPrev):
 		for Element in self.GraphLines:
 			self.Box.delete(Element)
 		for Element in self.GraphPoints:
 			self.Box.delete(Element)
 		self.Box.delete(self.GraphLabel)
+
+		if DrawPrev == 1:
+			for Element in self.PrevGraphLines:
+				self.Box.delete(Element)
+			self.PrevGraphLines = []
 
 		self.GraphLines = []
 		self.GraphPoints = []
@@ -623,7 +644,9 @@ class _Graph:
 			y1 = self.get_cell_value(ArrayY, i - 1)
 			x2 = self.ArrayX[i]
 			y2 = self.get_cell_value(ArrayY, i)
-			self.print_line(x1, y1, x2, y2)
+			if DrawPrev == 1:
+				self.print_line(x1, y1, x2, y2, 1)
+			self.print_line(x1, y1, x2, y2, 0)
 
 	def update_markers(self):
 		for Element in self.Markers:
