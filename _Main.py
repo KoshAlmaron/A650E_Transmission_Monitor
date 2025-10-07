@@ -1,4 +1,4 @@
-Ver = '2025-09-24'
+Ver = '2025-10-01'
 
 import os
 
@@ -60,4 +60,3 @@ def loop():
 
 MainWindow.root.after(1, loop)
 MainWindow.root.mainloop()
-	

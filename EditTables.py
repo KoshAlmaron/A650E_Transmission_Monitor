@@ -70,6 +70,11 @@ TablesData = [{'N': 0,  'Table': 'SLTGraph', 				'ArrayX': TPSGrid,	'Type': 'uin
 			, {'N': 11, 'Table': 'SLNGear3OffsetGraph', 	'ArrayX': TPSGrid,	'Type': 'int16_t', 	'Min': -1000, 	'Max': 1000,	'Step': 25, 'Parameter': '',				'Name': 'Смещение времени включения SLN при включении третьей передачи'}
 			]
 
+# Список таблиц с командами, для которых есть адапатация.
+AtaptationTables = {'SLUGear2Graph': 			0xfc,
+					'SLUGear2TempCorrGraph':	0xfd
+					}
+
 # Окно редактирования таблиц.
 class _TableEditWindow:
 	def __init__(self, Uart):
@@ -174,7 +179,7 @@ class _TableEditWindow:
 		# Обнаружение нажатия кнопок.
 		self.root.bind("<Key>", self.key_pressed)
 	
-	def add_tooltip(self):
+	def add_tooltip(self):	# Вставка подсказок.
 		ToolTip.ToolTip(self.OnLineChk, " Онлайн режим.\n Изменения сразу отсылаются в ЭБУ.")
 		
 		ToolTip.ToolTip(self.ReadBtn, " Считать таблицу из оперативной памяти ЭБУ")
@@ -192,15 +197,23 @@ class _TableEditWindow:
 		ToolTip.ToolTip(self.MaxGearBox, " Максимальная допустимая передача.\n Используется для настройки переключений.")
 		ToolTip.ToolTip(self.GearSetLimitBtn, " Установить ограничения по передачам в ЭБУ")
 
-
 		ToolTip.ToolTip(self.TableResetBtn, " Сброс всех таблиц.\n Все значения заменяются на начальные из прошивки и производтся запись в EEPROM.\n Можно использовать в том числе для первоначальной записи таблиц в EEPROM.")
-
 		ToolTip.ToolTip(self.ExitBtn, " Закрыть окно.")
+		ToolTip.ToolTip(self.TableBox, " Выбор таблицы для редакирования")
 
-		ToolTip.ToolTip(self.TableBox, "Выбор таблицы для редакирования")
+		ToolTip.ToolTip(self.BtnZero, " Обнуление графика")
+		ToolTip.ToolTip(self.BtnApplyAdapt, " Применение адаптации к текущей таблице.\n После применения таблица адаптации обнуляется.\n Все изменения производятся в ОЗУ ЭБУ,\n для сохранения изменений необходимо произвести запись в EEPROM.")
 
-		# ToolTip.ToolTip(self.PortState, "")
-	def reset_tables(self):
+	def apply_adaptation(self): # Применение адаптации к текущему графику.
+		Number = self.TableBox.current()
+		Name = TablesData[Number]['Table']
+
+		if Name in AtaptationTables:
+			self.Answer.update(1)
+			Command = AtaptationTables[Name]
+			self.Uart.send_command(Command, Number, [])
+
+	def reset_tables(self):	# Команда сброса таблиц в ЭБУ.
 		if messagebox.askyesno('Сброс таблиц', 'Перезаписать ВСЕ таблицы в EEPROM значениями из прошивки?'):
 			self.TableBox.current(0)
 			self.table_selected_event('')
@@ -212,33 +225,35 @@ class _TableEditWindow:
 		else:
 			self.root.lift()
 
-	def set_gear_limit(self):
+	def set_gear_limit(self):	# Команда установки ограничения передач.
 		MinGear = int(self.MinGearBox.get())
 		MaxGear = int(self.MaxGearBox.get())
 
 		self.Answer.update(1)
 		self.Uart.send_command(0xbe, self.TableBox.current(), [MinGear, MaxGear])
 
-	def min_gear_selected_event(self, event):
+	def min_gear_selected_event(self, event):	# Событие смены ограничения передачи (min).
 		if self.MaxGearBox.current() < self.MinGearBox.current():
 			self.MaxGearBox.current(self.MinGearBox.current())
 
-	def max_gear_selected_event(self, event):
+	def max_gear_selected_event(self, event):	# Событие смены ограничения передачи (max).
 		if self.MinGearBox.current() > self.MaxGearBox.current():
 			self.MinGearBox.current(self.MaxGearBox.current())
 
-	def draw_graph_buttons(self, Y):
+	def draw_graph_buttons(self, Y):	# Отрисовка кнопок на графике.
 		X = 5
 		H = 13
 
-		self.BtnZero = Button(self.root, text = "0", width = 1, bg = "#bcbcbc", command = lambda: self.move_graph(0), font = ("Helvetica", 10, 'bold'), border="2px").place(x = X, y = Y - H, width = 25, height = 25)
-		#ToolTip.ToolTip(self.BtnZero, " Обнулить таблицу")
+		self.BtnApplyAdapt = Button(self.root, text = "A", width = 1, bg = "#bcbcbc", command = self.apply_adaptation, font = ("Helvetica", 10, 'bold'), border="2px", state = 'disabled')
+		self.BtnApplyAdapt.place(x = X, y = Y - H - 95, width = 25, height = 25)
 
+		self.BtnZero = Button(self.root, text = "0", width = 1, bg = "#bcbcbc", command = self.apply_adaptation, font = ("Helvetica", 10, 'bold'), border="2px")
+		self.BtnZero.place(x = X, y = Y - H, width = 25, height = 25)
 
 		Button(self.root, text = "+", width = 1, bg = "#bcbcbc", command = lambda: self.move_graph(1), font = ("Helvetica", 10, 'bold'), border="2px").place(x = X, y = Y - H - 40, width = 25, height = 25)
 		Button(self.root, text = "-", width = 1, bg = "#bcbcbc", command = lambda: self.move_graph(-1), font = ("Helvetica", 10, 'bold'), border="2px").place(x = X, y = Y - H + 40, width = 25, height = 25)
 
-	def move_graph(self, Where):
+	def move_graph(self, Where):	# Перемещение точек на графике.
 		N = self.TableBox.current()
 		Step = TablesData[N]['Step']
 		for Cell in self.Cells:
@@ -256,13 +271,7 @@ class _TableEditWindow:
 		if self.OnLine.get() == 1:
 			self.write_table()		
 
-	def on_closing(self):
-		self.WindowOpen = 0
-
-	def window_close(self):
-		self.root.destroy()
-
-	def to_excel(self):
+	def to_excel(self):	# Экспорт данных в Excel.
 		if self.value_check(''):
 			Buffer = ''
 			for Cell in self.Cells:
@@ -271,7 +280,7 @@ class _TableEditWindow:
 			self.root.clipboard_clear()
 			self.root.clipboard_append(Buffer[:-1])				
 
-	def from_excel(self):
+	def from_excel(self):	# Импорт данных из Excel.
 		Buffer = self.root.clipboard_get().split('\t')
 		if len(Buffer) == len(self.get_array_x()):
 			for N, Cell in enumerate(self.Cells):
@@ -279,22 +288,22 @@ class _TableEditWindow:
 				Cell.insert(0, str(Buffer[N]))
 			self.value_check('')
 
-	def get_array_x(self):
+	def get_array_x(self):	# Получить сетку по оси X.
 		return TablesData[self.TableBox.current()]['ArrayX']
 
-	def key_pressed(self, event):
+	def key_pressed(self, event):	# Событие по нажатию кнопки на клавиатуре.
 		Result = self.MainGraph.move_point(event.keysym, self.Cells)
 		if Result:
 			self.value_check('')
 			if self.OnLine.get() == 1 and Result == 2:
 				self.write_table()
 
-	def get_table(self):
+	def get_table(self):	# Команда на получение таблицы из ЭБУ.
 		self.Answer.update(1)
 		self.GetNewTable = 1
 		self.Uart.send_command(0xc1, self.TableBox.current(), [])
 
-	def read_table(self):
+	def read_table(self):	# Событие при получении таблицы из ЭБУ.
 		#print('Получена таблица', self.Uart.TableNumber)
 		#print(self.Uart.TableNumber, self.TableBox.current())
 		#print(len(self.Uart.TableData),  len(self.get_array_x()))
@@ -314,23 +323,23 @@ class _TableEditWindow:
 				self.GetNewTable = 0
 				self.Answer.update(0)
 
-	def write_table(self):
+	def write_table(self):	# Команда на запись таблицы в ОЗУ ЭБУ.
 		self.Answer.update(1)
 		Data = []
 		for Cell in self.Cells:
 			Data.append(int(Cell.get()))
 		self.Uart.send_command(0xc8, self.TableBox.current(), Data)
 
-	def read_eeprom(self):
+	def read_eeprom(self):	# Команда на чтение EEPROM.
 
 		self.Answer.update(1)
 		self.Uart.send_command(0xcc, self.TableBox.current(), [])
 
-	def write_eeprom(self):
+	def write_eeprom(self):	# Команда на запись EEPROM.
 		self.Answer.update(1)
 		self.Uart.send_command(0xee, self.TableBox.current(), [])
 
-	def value_check(self, event):
+	def value_check(self, event):	# Проверка и исправление значений таблицы.
 		N = self.TableBox.current()
 		AllIsOk = 1
 		for Cell in self.Cells:
@@ -359,7 +368,7 @@ class _TableEditWindow:
 			self.WriteBtn.config(state='disabled')
 			return 0
 
-	def table_selected_event(self, event):
+	def table_selected_event(self, event):	# Событие при выборе текущей таблицы.
 		self.clear_table()
 		self.draw_table()
 		self.MainGraph.redraw(self.TableBox.current(), self.get_array_x())
@@ -367,10 +376,17 @@ class _TableEditWindow:
 
 		self.TableName.configure(text = TablesData[self.TableBox.current()]['Name'])
 
+
+		if TablesData[self.TableBox.current()]['Table'] in AtaptationTables:
+			self.BtnApplyAdapt.configure(state = 'normal')
+		else:
+			self.BtnApplyAdapt.configure(state = 'disabled')
+
+
 		if self.Uart.port_status():
 			self.get_table()
 
-	def clear_table(self):
+	def clear_table(self):	# Очистка таблицы в интерфейсе.
 		for Cell in self.Cells:
 			Cell.destroy()
 		for Label in self.Labels:
@@ -379,7 +395,7 @@ class _TableEditWindow:
 		self.Cells = []
 		self.Labels = []			
 
-	def draw_table(self):
+	def draw_table(self):	# Отрисовка таблицы.
 		W = 4
 		X = 35
 		Y = 630
@@ -405,7 +421,7 @@ class _TableEditWindow:
 		self.Width = 36 * len(self.get_array_x())
 		#self.root.geometry(f'{self.Width}x{self.Height}+{self.OffsetX}+{self.OffsetY}')
 
-	def draw_labels(self, X, Y):
+	def draw_labels(self, X, Y):	# Отрисовка текущих параметров переключения.
 		Space = self.Width / (len(LabelsTCU) - 1) + 34
 
 		for Col, Name in  enumerate(LabelsTCU):
@@ -419,7 +435,7 @@ class _TableEditWindow:
 			ToolTip.ToolTip(Label, Name[2])
 			ToolTip.ToolTip(Value, Name[2])
 
-	def update_labels(self):
+	def update_labels(self):	# Обновление текущих параметров переключения.
 		for Name in self.DataTCU:
 			self.DataTCU[Name].configure(text = self.get_tcu_data(Name))
 		self.MainGraph.update_markers()
@@ -431,8 +447,14 @@ class _TableEditWindow:
 			self.ReadBtn.config(state='disabled')
 			self.WriteBtn.config(state='disabled')
 
-	def get_tcu_data(self, Parameter):
+	def get_tcu_data(self, Parameter):	# Получение параметров ЭБУ из пакета данных (0x71).
 		return self.Uart.TCU[Parameter]
+
+	def on_closing(self):	# Событие по закрытию окна.
+		self.WindowOpen = 0
+
+	def window_close(self):	# Закрытие окна.
+		self.root.destroy()
 
 class _Graph:
 	def __init__(self, root, x, y, Uart):
@@ -465,14 +487,14 @@ class _Graph:
 		self.Box.bind('<Leave>', self.focus_event)
 		self.Box.place(x = self.x, y = self.y)
 
-	def focus_event(self, event):
+	def focus_event(self, event):	# Событие смены фокуса окна графика.
 		if event.type == '7':
 			self.GraphFocus = 1
 			self.Box.focus_set()
 		elif event.type == '8':
 			self.GraphFocus = 0
 
-	def get_cell_value(self, Cells, Position):
+	def get_cell_value(self, Cells, Position):	# Получение значения из графика.
 		Value = 0
 		try:
 			Value = int(Cells[Position].get())
@@ -482,7 +504,7 @@ class _Graph:
 				Value = 0
 		return Value
 
-	def move_point(self, Button, Cells):
+	def move_point(self, Button, Cells):	# Перемещение точек.
 		if self.GraphFocus:
 			if Button == 'Up':
 				Value = self.get_cell_value(Cells, self.CursorPosition)
@@ -512,7 +534,7 @@ class _Graph:
 			else:
 				return 0
 
-	def print_h_line(self, Value, Min, Max, Leght):
+	def print_h_line(self, Value, Min, Max, Leght):	# Отрисовка горизонтальных линий.
 		ly = self.h - ((Value - Min)  / (Max - Min)) * (self.h - self.Border * 2) - self.Border
 		self.Box.create_line(self.w - 1, ly, self.w + Leght, ly, fill = 'black', width = 2)
 
@@ -527,7 +549,7 @@ class _Graph:
 		Str = str(Value)
 		self.Box.create_text(self.w + Leght + len(Str) * 5 + 4, ly, font = "Verdana 12", justify = CENTER, fill = 'black', text = Str)
 
-	def print_v_line(self, Value, Min, Max, Leght):
+	def print_v_line(self, Value, Min, Max, Leght):	# Отрисовка вертикальных линий.
 		lx = self.Border + ((Value - Min)  / (Max - Min)) * (self.w - self.Border * 2)
 		self.Box.create_line(lx, self.h - 2, lx, self.h + Leght, fill = 'black', width = 2)
 		self.Box.create_line(lx, 2, lx, self.h - 2, fill = '#cacfca', width = 2, dash = 2)
@@ -535,7 +557,7 @@ class _Graph:
 		Str = str(Value)
 		self.Box.create_text(lx, self.h + 20, font = "Verdana 12", justify = CENTER, fill = 'black', text = Str)
 
-	def print_line(self, X1, Y1, X2, Y2, LineType):
+	def print_line(self, X1, Y1, X2, Y2, LineType):	# Отрисовка линий графика.
 		MinX = min(self.ArrayX)
 		MaxX = max(self.ArrayX)
 
@@ -594,7 +616,7 @@ class _Graph:
 			Circle = self.Box.create_oval(lx2 - R2, ly2 - R2, lx2 + R, ly2 + R2, fill=Fill2, outline="#004c99")
 			self.GraphPoints.append(Circle)
 
-	def redraw(self, N, ArrayX):
+	def redraw(self, N, ArrayX):	# Переотрисовка графика.
 		self.N = N
 		self.ArrayX = ArrayX
 		self.w = len(TempGrid) * 35
@@ -624,7 +646,7 @@ class _Graph:
 			if X // 10 == X / 10:
 				self.print_v_line(X, Min, Max, 6)
 
-	def update_data(self, ArrayY, DrawPrev):
+	def update_data(self, ArrayY, DrawPrev):	# Обновление графика.
 		for Element in self.GraphLines:
 			self.Box.delete(Element)
 		for Element in self.GraphPoints:
@@ -648,7 +670,7 @@ class _Graph:
 				self.print_line(x1, y1, x2, y2, 1)
 			self.print_line(x1, y1, x2, y2, 0)
 
-	def update_markers(self):
+	def update_markers(self):	# Обновление маркеров на графике.
 		for Element in self.Markers:
 			self.Box.delete(Element)
 		self.Markers = []
@@ -679,7 +701,7 @@ class _Graph:
 				Circle = self.Box.create_oval(lx - R, ly - R, lx + R, ly + R, fill='#11ff88', outline="#004c99")
 				self.Markers.append(Circle)
 
-	def get_tcu_data(self, Parameter):
+	def get_tcu_data(self, Parameter):	# Получение параметров ЭБУ из пакета данных (0x71).
 		return self.Uart.TCU[Parameter]
 
 # Светофор.

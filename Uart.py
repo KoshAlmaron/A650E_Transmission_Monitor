@@ -220,6 +220,9 @@ class _uart:
 	
 	def send_command(self, Type, Table, Data):
 
+		if self.PortReading != 1:
+			return
+
 		SendBuffer = []
 
 		SendBuffer.append(0x40)	# Начало исходящего пакета.
@@ -234,7 +237,7 @@ class _uart:
 			for Val in Data:
 				for Byte in Val.to_bytes(2, 'big', signed = Signed):
 					self.add_byte(SendBuffer, Byte)
-		elif Type in (0xcc, 0xee, 0xab):
+		elif Type in (0xcc, 0xee, 0xab, 0xfc, 0xfd):
 			SendBuffer.append(Type)	# Дополнительно вставляем тип пакета.
 		elif Type == 0xbe:
 			for Val in Data:
