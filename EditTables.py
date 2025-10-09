@@ -56,24 +56,28 @@ LabelsTCU = [['Inst TPS', 'InstTPS', ' Текущее значение ДПДЗ.
 			]
 
 			# Номер, название, ось Х, минимум, максимум, описание.
-TablesData = [{'N': 0,  'Table': 'SLTGraph', 				'ArrayX': TPSGrid,	'Type': 'uint16_t', 'Min': 100, 	'Max': 800,		'Step': 4, 'Parameter': 'GearChangeSLT', 	'Name': 'Линейное давление SLT от ДПДЗ'}
-			, {'N': 1,  'Table': 'SLTTempCorrGraph', 		'ArrayX': TempGrid,	'Type': 'int16_t', 	'Min': -30, 	'Max': 30,		'Step': 1, 'Parameter': '',					'Name': 'Коррекция SLT от температуры в %'}
-			, {'N': 2,  'Table': 'SLNGraph', 				'ArrayX': TPSGrid,	'Type': 'uint16_t', 'Min': 100,		'Max': 800,		'Step': 4, 'Parameter': 'GearChangeSLN',	'Name': 'Давление SLN от ДПДЗ (Величина сброса давления)'}
-			, {'N': 3,  'Table': 'SLUGear2Graph', 			'ArrayX': TPSGrid,	'Type': 'uint16_t', 'Min': 100, 	'Max': 500,		'Step': 4, 'Parameter': 'GearChangeSLU',	'Name': 'Давление SLU включения второй передачи (SLU B3) от ДПДЗ'}
-			, {'N': 4,  'Table': 'SLUGear2TempCorrGraph',	'ArrayX': TempGrid,	'Type': 'int16_t', 	'Min': -30, 	'Max': 30,		'Step': 1, 'Parameter': '',					'Name': 'Коррекция SLU от температуры в %'}
-			, {'N': 5,  'Table': 'SLUGear2TPSAdaptGraph', 	'ArrayX': TPSGrid,	'Type': 'int16_t', 	'Min': -32, 	'Max': 32,		'Step': 4, 'Parameter': 'GearChangeSLU',	'Name': 'Адаптация давление SLU включения второй передачи'}			
-			, {'N': 6,  'Table': 'SLUGear2TempAdaptGraph',	'ArrayX': TempGrid,	'Type': 'int16_t', 	'Min': -12, 	'Max': 12,		'Step': 1, 'Parameter': '',					'Name': 'Адаптация коррекции SLU от температуры'}
-			, {'N': 7,  'Table': 'SLUGear2AddGraph', 		'ArrayX': TPSGrid,	'Type': 'int16_t', 	'Min': -30, 	'Max': 30,		'Step': 2, 'Parameter': '',					'Name': 'Добавка к давлению SLU при повторном включении второй передачи'}
-			, {'N': 8,  'Table': 'SLUGear3Graph', 			'ArrayX': TPSGrid,	'Type': 'uint16_t', 'Min': 100, 	'Max': 500,		'Step': 4, 'Parameter': 'GearChangeSLU',	'Name': 'Давление SLU включения третьей передачи (SLU B2) от ДПДЗ'}
-			, {'N': 9,  'Table': 'SLUGear3DelayGraph', 		'ArrayX': TPSGrid,	'Type': 'uint16_t', 'Min': 0, 		'Max': 1500,	'Step': 25, 'Parameter': '',				'Name': 'Время удержания SLU от ДПДЗ при включении третьей передачи'}
-			, {'N': 10, 'Table': 'SLNGear3Graph', 			'ArrayX': TPSGrid,	'Type': 'uint16_t', 'Min': 100, 	'Max': 800,		'Step': 4, 'Parameter': 'GearChangeSLN',	'Name': 'Давление SLN включения третьей передачи от ДПДЗ'}
-			, {'N': 11, 'Table': 'SLNGear3OffsetGraph', 	'ArrayX': TPSGrid,	'Type': 'int16_t', 	'Min': -1000, 	'Max': 1000,	'Step': 25, 'Parameter': '',				'Name': 'Смещение времени включения SLN при включении третьей передачи'}
+TablesData = [{'N': 0,  'Table': 'SLTGraph', 					'ArrayX': TPSGrid,	'Type': 'uint16_t', 'Min': 100, 	'Max': 800,		'Step': 4, 'Parameter': 'GearChangeSLT', 	'Name': 'Линейное давление SLT от ДПДЗ'}
+			, {'N': 1,  'Table': 'SLTTempCorrGraph', 			'ArrayX': TempGrid,	'Type': 'int16_t', 	'Min': -30, 	'Max': 30,		'Step': 1, 'Parameter': '',					'Name': 'Коррекция SLT от температуры в %'}
+			, {'N': 2,  'Table': 'SLNGraph', 					'ArrayX': TPSGrid,	'Type': 'uint16_t', 'Min': 100,		'Max': 800,		'Step': 4, 'Parameter': 'GearChangeSLN',	'Name': 'Давление SLN от ДПДЗ (Величина сброса давления)'}
+			, {'N': 3,  'Table': 'SLUGear2Graph', 				'ArrayX': TPSGrid,	'Type': 'uint16_t', 'Min': 100, 	'Max': 500,		'Step': 4, 'Parameter': 'GearChangeSLU',	'Name': 'Давление SLU включения второй передачи (SLU B3) от ДПДЗ'}
+			, {'N': 4,  'Table': 'SLUGear2TempCorrGraph',		'ArrayX': TempGrid,	'Type': 'int16_t', 	'Min': -30, 	'Max': 30,		'Step': 1, 'Parameter': '',					'Name': 'Коррекция SLU от температуры в %'}
+			, {'N': 5,  'Table': 'SLUGear2TPSAdaptGraph', 		'ArrayX': TPSGrid,	'Type': 'int16_t', 	'Min': -32, 	'Max': 32,		'Step': 4, 'Parameter': 'GearChangeSLU',	'Name': 'Адаптация давление SLU включения второй передачи'}
+			, {'N': 6,  'Table': 'SLUGear2TempAdaptGraph',		'ArrayX': TempGrid,	'Type': 'int16_t', 	'Min': -12, 	'Max': 12,		'Step': 1, 'Parameter': '',					'Name': 'Адаптация коррекции SLU от температуры'}
+			, {'N': 7,  'Table': 'SLUGear2AddGraph', 			'ArrayX': TPSGrid,	'Type': 'int16_t', 	'Min': -30, 	'Max': 30,		'Step': 2, 'Parameter': '',					'Name': 'Добавка к давлению SLU при повторном включении второй передачи'}
+			, {'N': 8,  'Table': 'SLUGear3Graph', 				'ArrayX': TPSGrid,	'Type': 'uint16_t', 'Min': 100, 	'Max': 500,		'Step': 4, 'Parameter': 'GearChangeSLU',	'Name': 'Давление SLU включения третьей передачи (SLU B2) от ДПДЗ'}
+			, {'N': 9,  'Table': 'SLUGear3DelayGraph', 			'ArrayX': TPSGrid,	'Type': 'uint16_t', 'Min': 0, 		'Max': 800,		'Step': 20, 'Parameter': '',				'Name': 'Время удержания SLU от ДПДЗ при включении третьей передачи'}
+			, {'N': 10, 'Table': 'SLUG3DelayTempCorrGraph',		'ArrayX': TempGrid,	'Type': 'int16_t', 	'Min': -200, 	'Max': 200,		'Step': 20, 'Parameter': '',				'Name': 'Коррекция времени удержания SLU для третьей передачи от температуры в мс'}
+			, {'N': 11, 'Table': 'SLUGear3TPSAdaptGraph',		'ArrayX': TPSGrid,	'Type': 'int16_t', 	'Min': -200, 	'Max': 200,		'Step': 20, 'Parameter': '',				'Name': 'Адаптация времени удержания SLU третьей передачи по ДПДЗ в мс'}
+			, {'N': 12, 'Table': 'SLUGear3TempAdaptGraph',		'ArrayX': TempGrid,	'Type': 'int16_t', 	'Min': -200, 	'Max': 200,		'Step': 20, 'Parameter': '',				'Name': 'Адаптация времени удержания SLU третьей передачи по температуре в мс'}
+			, {'N': 13, 'Table': 'SLNGear3Graph', 				'ArrayX': TPSGrid,	'Type': 'uint16_t', 'Min': 100, 	'Max': 800,		'Step': 4, 'Parameter': 'GearChangeSLN',	'Name': 'Давление SLN включения третьей передачи от ДПДЗ'}
+			, {'N': 14, 'Table': 'SLNGear3OffsetGraph', 		'ArrayX': TPSGrid,	'Type': 'int16_t', 	'Min': -1000, 	'Max': 1000,	'Step': 20, 'Parameter': '',				'Name': 'Смещение времени включения SLN при включении третьей передачи'}
 			]
 
 # Список таблиц с командами, для которых есть адапатация.
-AtaptationTables = {'SLUGear2Graph': 			0xfc,
-					'SLUGear2TempCorrGraph':	0xfd
-					}
+ApplyAdaptationCommands = {'SLUGear2Graph': 			0xfc,
+							'SLUGear2TempCorrGraph':	0xfd
+							}
+AtaptationTables = ('SLUGear2TPSAdaptGraph', 'SLUGear2TempAdaptGraph', 'SLUGear3TPSAdaptGraph', 'SLUGear3TempAdaptGraph')
 
 # Окно редактирования таблиц.
 class _TableEditWindow:
@@ -110,7 +114,12 @@ class _TableEditWindow:
 		# Галка "Онлайн".
 		self.OnLine = IntVar()
 		self.OnLineChk = Checkbutton(self.root, text='Онлайн', variable = self.OnLine, onvalue = 1, offvalue = 0, font = ("Helvetica", 14, 'bold'))
-		self.OnLineChk.place(x = 25, y = 28)
+		self.OnLineChk.place(x = 25, y = 11)
+
+		# Галка "Автообновление".
+		self.AutoUpdate = IntVar()
+		self.AutoUpdateChk = Checkbutton(self.root, text='Автообн.', variable = self.AutoUpdate, command = self.command_buttons_disable, onvalue = 1, offvalue = 0, font = ("Helvetica", 14, 'bold'), state = 'disabled')
+		self.AutoUpdateChk.place(x = 25, y = 48)
 
 		# Чтение/Запись
 		self.ReadBtn = Button(self.root, text = "Считать", width = 8, bg = "#4caa00", command = self.get_table, font = ("Helvetica", 12, 'bold'))
@@ -153,7 +162,7 @@ class _TableEditWindow:
 		self.ExitBtn.place(x = 990, y = 8)
 
 		# Выбор таблицы.
-		self.TableBox = ttk.Combobox(self.root, values = TablesList, state = "readonly", width = 22, font = ("Helvetica", 16))
+		self.TableBox = ttk.Combobox(self.root, values = TablesList, state = "readonly", width = 28, font = ("Helvetica", 14))
 		self.TableBox.place(x = 35, y = 155)
 		self.TableBox.current(0)
 		self.TableBox.bind("<<ComboboxSelected>>", self.table_selected_event)
@@ -181,6 +190,7 @@ class _TableEditWindow:
 	
 	def add_tooltip(self):	# Вставка подсказок.
 		ToolTip.ToolTip(self.OnLineChk, " Онлайн режим.\n Изменения сразу отсылаются в ЭБУ.")
+		ToolTip.ToolTip(self.AutoUpdateChk, " Автообновление таблицы.\n Период - 1с, доступно только для таблиц адаптации.")
 		
 		ToolTip.ToolTip(self.ReadBtn, " Считать таблицу из оперативной памяти ЭБУ")
 		ToolTip.ToolTip(self.WriteBtn, " Отправить таблицу в ЭБУ.\n Таблица будет записана в ОЗУ, для сохранения изменений необходимо перенести таблицу в EEPROM.")
@@ -208,9 +218,9 @@ class _TableEditWindow:
 		Number = self.TableBox.current()
 		Name = TablesData[Number]['Table']
 
-		if Name in AtaptationTables:
+		if Name in ApplyAdaptationCommands:
 			self.Answer.update(1)
-			Command = AtaptationTables[Name]
+			Command = ApplyAdaptationCommands[Name]
 			self.Uart.send_command(Command, Number, [])
 
 	def reset_tables(self):	# Команда сброса таблиц в ЭБУ.
@@ -247,7 +257,7 @@ class _TableEditWindow:
 		self.BtnApplyAdapt = Button(self.root, text = "A", width = 1, bg = "#bcbcbc", command = self.apply_adaptation, font = ("Helvetica", 10, 'bold'), border="2px", state = 'disabled')
 		self.BtnApplyAdapt.place(x = X, y = Y - H - 95, width = 25, height = 25)
 
-		self.BtnZero = Button(self.root, text = "0", width = 1, bg = "#bcbcbc", command = self.apply_adaptation, font = ("Helvetica", 10, 'bold'), border="2px")
+		self.BtnZero = Button(self.root, text = "0", width = 1, bg = "#bcbcbc", command = lambda: self.move_graph(0), font = ("Helvetica", 10, 'bold'), border="2px")
 		self.BtnZero.place(x = X, y = Y - H, width = 25, height = 25)
 
 		Button(self.root, text = "+", width = 1, bg = "#bcbcbc", command = lambda: self.move_graph(1), font = ("Helvetica", 10, 'bold'), border="2px").place(x = X, y = Y - H - 40, width = 25, height = 25)
@@ -297,6 +307,32 @@ class _TableEditWindow:
 			self.value_check('')
 			if self.OnLine.get() == 1 and Result == 2:
 				self.write_table()
+
+	def table_auto_update(self):
+		if self.AutoUpdate.get() == 1:
+			if TablesData[self.TableBox.current()]['Table'] in AtaptationTables:
+				self.get_table()
+
+	def command_buttons_disable(self):
+		if self.AutoUpdate.get() == 1:
+			self.OnLineChk.configure(state = 'disabled')
+			self.OnLine.set(0)
+
+			self.ReadBtn.configure(state = 'disabled')
+			self.WriteBtn.configure(state = 'disabled')
+			self.EReadBtn.configure(state = 'disabled')
+			self.ESaveBtn.configure(state = 'disabled')
+			self.GearSetLimitBtn.configure(state = 'disabled')
+			self.TableResetBtn.configure(state = 'disabled')
+
+		else:
+			self.OnLineChk.configure(state = 'normal')
+			self.ReadBtn.configure(state = 'normal')
+			self.WriteBtn.configure(state = 'normal')
+			self.EReadBtn.configure(state = 'normal')
+			self.ESaveBtn.configure(state = 'normal')
+			self.GearSetLimitBtn.configure(state = 'normal')
+			self.TableResetBtn.configure(state = 'normal')
 
 	def get_table(self):	# Команда на получение таблицы из ЭБУ.
 		self.Answer.update(1)
@@ -376,12 +412,16 @@ class _TableEditWindow:
 
 		self.TableName.configure(text = TablesData[self.TableBox.current()]['Name'])
 
-
-		if TablesData[self.TableBox.current()]['Table'] in AtaptationTables:
+		if TablesData[self.TableBox.current()]['Table'] in ApplyAdaptationCommands:
 			self.BtnApplyAdapt.configure(state = 'normal')
 		else:
 			self.BtnApplyAdapt.configure(state = 'disabled')
 
+		if TablesData[self.TableBox.current()]['Table'] in AtaptationTables:
+			self.AutoUpdateChk.configure(state = 'normal')
+		else:
+			self.AutoUpdateChk.configure(state = 'disabled')
+			self.AutoUpdate.set(0)
 
 		if self.Uart.port_status():
 			self.get_table()
@@ -440,7 +480,7 @@ class _TableEditWindow:
 			self.DataTCU[Name].configure(text = self.get_tcu_data(Name))
 		self.MainGraph.update_markers()
 
-		if self.Uart.port_status():
+		if self.Uart.port_status() and self.AutoUpdate.get() != 1:
 			self.ReadBtn.config(state='normal')
 			self.WriteBtn.config(state='normal')
 		else:

@@ -16,6 +16,7 @@ MainWindow = MainWindow._MainWindow(Ver, Uart)
 PortUpdate = 0
 WindowUpdate = 0
 DataUpdate = 0
+TableAutoUpdate = 0
 
 TableEditWindow = None
 
@@ -23,6 +24,8 @@ def loop():
 	global PortUpdate
 	global WindowUpdate
 	global DataUpdate
+	global TableAutoUpdate
+
 	global TableEditWindow
 
 	if MainWindow.EditTables == 1:
@@ -55,6 +58,12 @@ def loop():
 
 		if MainWindow.EditTables == 2:
 			TableEditWindow.update_labels()
+
+	TableAutoUpdate += 1
+	if TableAutoUpdate >= 25:
+		TableAutoUpdate = 0
+		if MainWindow.EditTables == 2:
+			TableEditWindow.table_auto_update()		
 
 	MainWindow.root.after(40, loop)
 
