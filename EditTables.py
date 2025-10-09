@@ -74,8 +74,10 @@ TablesData = [{'N': 0,  'Table': 'SLTGraph', 					'ArrayX': TPSGrid,	'Type': 'ui
 			]
 
 # Список таблиц с командами, для которых есть адапатация.
-ApplyAdaptationCommands = {'SLUGear2Graph': 			0xfc,
-							'SLUGear2TempCorrGraph':	0xfd
+ApplyAdaptationCommands = {'SLUGear2Graph': 				0xfc
+							, 'SLUGear2TempCorrGraph':		0xfd
+							, 'SLUGear3DelayGraph':			0xfa
+							, 'SLUG3DelayTempCorrGraph':	0xfb
 							}
 AtaptationTables = ('SLUGear2TPSAdaptGraph', 'SLUGear2TempAdaptGraph', 'SLUGear3TPSAdaptGraph', 'SLUGear3TempAdaptGraph')
 
