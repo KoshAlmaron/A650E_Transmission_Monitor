@@ -6,11 +6,13 @@ import time
 import serial.tools.list_ports
 import codecs
 
-TpsGridSize = 21 
+TpsGridSize = 21
 TempGridSize = 31
+DeltaRPMGridSize = 21
 
 Parameters = (	  ('uint16_t', 'EngineRPM')
 				, ('uint16_t', 'DrumRPM')
+				, ('int16_t', 'DrumRPMDelta')
 				, ('uint16_t', 'OutputRPM')
 				, ('uint8_t', 'CarSpeed')
 				, ('int16_t', 'OilTemp')
@@ -51,7 +53,8 @@ Tables = (	  ('SLTGraph', 						'uint16_t',		TpsGridSize)
 			, ('SLUGear2TempCorrGraph',			'int16_t', 		TempGridSize)
 			, ('SLUGear2TPSAdaptGraph', 		'int16_t', 		TpsGridSize)						
 			, ('SLUGear2TempAdaptGraph',		'int16_t', 		TempGridSize)
-			, ('SLUGear2AddGraph', 				'int16_t',		TpsGridSize)			
+			, ('Gear2AdvGraph', 				'int16_t',		DeltaRPMGridSize)			
+			, ('Gear2AdvAdaptGraph', 			'int16_t',		DeltaRPMGridSize)			
 			, ('SLUGear3Graph', 				'uint16_t', 	TpsGridSize)
 			, ('SLUGear3DelayGraph', 			'uint16_t',		TpsGridSize)
 			, ('SLUG3DelayTempCorrGraph',		'int16_t',		TempGridSize)
@@ -240,7 +243,7 @@ class _uart:
 			for Val in Data:
 				for Byte in Val.to_bytes(2, 'big', signed = Signed):
 					self.add_byte(SendBuffer, Byte)
-		elif Type in (0xcc, 0xee, 0xab, 0xfc, 0xfd, 0xfa, 0xfb):
+		elif Type in (0xcc, 0xee, 0xab, 0xfc, 0xfd, 0xfe, 0xfa, 0xfb):
 			SendBuffer.append(Type)	# Дополнительно вставляем тип пакета.
 		elif Type == 0xbe:
 			for Val in Data:

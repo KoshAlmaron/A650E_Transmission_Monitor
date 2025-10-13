@@ -5,6 +5,23 @@ import math
 
 import ToolTip
 
+GraphNames = (('---', 100)
+	, ('EngineRPM', 6000)
+	, ('DrumRPM', 6000)
+	, ('DrumRPMDelta', 1000)
+	, ('OutputRPM', 6000)
+	, ('CarSpeed' , 150)
+	, ('InstTPS', 100)
+	, ('TPS', 100)
+	, ('SLT', 1023)
+	, ('SLN', 1023)
+	, ('SLU', 1023)
+	, ('S1', 2)
+	, ('S2', 2)
+	, ('S3', 2)
+	, ('S4', 2)
+	, ('Gear', 5))
+
 ATModeChar = ('I', 'P', 'R', 'N', 'D', 'D4', 'D3', 'L2', 'L', 'E', 'M')
 BackGroundColor = "#d0d0d0"
 # Главное окно.
@@ -359,9 +376,8 @@ class _Graph:
 		self.Box = Canvas(root, width = self.w + 55, height = self.h, bg = BackGroundColor, bd = 0, highlightthickness = 0, relief = 'ridge')
 		self.Box.place(x = self.x, y = self.y)
 		
-		self.GraphNames = (('---', 100), ('EngineRPM', 6000), ('DrumRPM', 6000), ('OutputRPM', 6000), ('CarSpeed' , 150), ('InstTPS', 100), ('TPS', 100), ('SLT', 1023), ('SLN', 1023), ('SLU', 1023), ('S1', 2), ('S2', 2), ('S3', 2), ('S4', 2), ('Gear', 5))
 		Names = []
-		for Name in self.GraphNames:
+		for Name in GraphNames:
 			Names.append(Name[0])
 			
 		self.Colors = ('green', 'blue', 'brown','red' ,'purple')
@@ -404,7 +420,10 @@ class _Graph:
 			if Name != '---':
 				if len(self.GraphArrays[i]) >= self.w - self.Border * 2:
 					self.GraphArrays[i].pop(0)
-				CurrentY = round(self.Uart.TCU[Name] / self.GraphNames[Index][1] * (self.h - self.Border * 2))
+				TCUValue = self.Uart.TCU[Name]
+				if Name == 'DrumRPMDelta':
+					TCUValue += GraphNames[Index][1] / 2
+				CurrentY = round(TCUValue / GraphNames[Index][1] * (self.h - self.Border * 2))
 				self.GraphArrays[i].append(CurrentY)
 				
 	def update(self):

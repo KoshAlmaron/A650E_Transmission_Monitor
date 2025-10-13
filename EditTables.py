@@ -7,44 +7,11 @@ import time
 
 import ToolTip
 
-Parameters = (	  ('uint16_t', 'DrumRPM')
-				, ('uint16_t', 'OutputRPM')
-				, ('uint8_t', 'CarSpeed')
-				, ('int16_t', 'OilTemp')
-				, ('uint16_t', 'TPS')
-				, ('uint16_t', 'InstTPS')
-				, ('uint16_t', 'SLT')
-				, ('uint16_t', 'SLN')
-				, ('uint16_t', 'SLU')
-				, ('uint8_t', 'S1')
-				, ('uint8_t', 'S2')
-				, ('uint8_t', 'S3')
-				, ('uint8_t', 'S4')
-				, ('uint8_t', 'Selector')
-				, ('uint8_t', 'ATMode')
-				, ('int8_t', 'Gear')
-				, ('int8_t', 'GearChange')
-				, ('uint8_t', 'GearStep')
-				, ('uint8_t', 'LastStep')
-				, ('uint8_t', 'Gear2State')
-				, ('uint8_t', 'Break')
-				, ('uint8_t', 'EngineWork')
-				, ('uint8_t', 'SlipDetected')
-				, ('uint8_t', 'Glock')
-				, ('uint8_t', 'GearUpSpeed')
-				, ('uint8_t', 'GearDownSpeed')
-				, ('uint8_t', 'GearChangeTPS')
-				, ('uint16_t', 'GearChangeSLT')
-				, ('uint16_t', 'GearChangeSLN')
-				, ('uint16_t', 'GearChangeSLU')
-				, ('uint16_t', 'LastPDRTime')
-				, ('uint16_t', 'CycleTime_x10')
-				, ('uint8_t', 'DebugMode'))
-
 BackGroundColor = "#d0d0d0"
 
 TPSGrid = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]
 TempGrid = [-30, -25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120]
+DeltaRPMGrid = [0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340, 360, 380, 400]
 
 LabelsTCU = [['Inst TPS', 'InstTPS', ' Текущее значение ДПДЗ.'],
 			 ['TPS', 'GearChangeTPS', ' ДПДЗ на момент последнего переключения.'],
@@ -56,30 +23,32 @@ LabelsTCU = [['Inst TPS', 'InstTPS', ' Текущее значение ДПДЗ.
 			]
 
 			# Номер, название, ось Х, минимум, максимум, описание.
-TablesData = [{'N': 0,  'Table': 'SLTGraph', 					'ArrayX': TPSGrid,	'Type': 'uint16_t', 'Min': 100, 	'Max': 800,		'Step': 4, 'Parameter': 'GearChangeSLT', 	'Name': 'Линейное давление SLT от ДПДЗ'}
-			, {'N': 1,  'Table': 'SLTTempCorrGraph', 			'ArrayX': TempGrid,	'Type': 'int16_t', 	'Min': -30, 	'Max': 30,		'Step': 1, 'Parameter': '',					'Name': 'Коррекция SLT от температуры в %'}
-			, {'N': 2,  'Table': 'SLNGraph', 					'ArrayX': TPSGrid,	'Type': 'uint16_t', 'Min': 100,		'Max': 800,		'Step': 4, 'Parameter': 'GearChangeSLN',	'Name': 'Давление SLN от ДПДЗ (Величина сброса давления)'}
-			, {'N': 3,  'Table': 'SLUGear2Graph', 				'ArrayX': TPSGrid,	'Type': 'uint16_t', 'Min': 100, 	'Max': 500,		'Step': 4, 'Parameter': 'GearChangeSLU',	'Name': 'Давление SLU включения второй передачи (SLU B3) от ДПДЗ'}
-			, {'N': 4,  'Table': 'SLUGear2TempCorrGraph',		'ArrayX': TempGrid,	'Type': 'int16_t', 	'Min': -30, 	'Max': 30,		'Step': 1, 'Parameter': '',					'Name': 'Коррекция SLU от температуры в %'}
-			, {'N': 5,  'Table': 'SLUGear2TPSAdaptGraph', 		'ArrayX': TPSGrid,	'Type': 'int16_t', 	'Min': -32, 	'Max': 32,		'Step': 4, 'Parameter': 'GearChangeSLU',	'Name': 'Адаптация давление SLU включения второй передачи'}
-			, {'N': 6,  'Table': 'SLUGear2TempAdaptGraph',		'ArrayX': TempGrid,	'Type': 'int16_t', 	'Min': -12, 	'Max': 12,		'Step': 1, 'Parameter': '',					'Name': 'Адаптация коррекции SLU от температуры'}
-			, {'N': 7,  'Table': 'SLUGear2AddGraph', 			'ArrayX': TPSGrid,	'Type': 'int16_t', 	'Min': -30, 	'Max': 30,		'Step': 2, 'Parameter': '',					'Name': 'Добавка к давлению SLU при повторном включении второй передачи'}
-			, {'N': 8,  'Table': 'SLUGear3Graph', 				'ArrayX': TPSGrid,	'Type': 'uint16_t', 'Min': 100, 	'Max': 500,		'Step': 4, 'Parameter': 'GearChangeSLU',	'Name': 'Давление SLU включения третьей передачи (SLU B2) от ДПДЗ'}
-			, {'N': 9,  'Table': 'SLUGear3DelayGraph', 			'ArrayX': TPSGrid,	'Type': 'uint16_t', 'Min': 0, 		'Max': 800,		'Step': 20, 'Parameter': '',				'Name': 'Время удержания SLU от ДПДЗ при включении третьей передачи'}
-			, {'N': 10, 'Table': 'SLUG3DelayTempCorrGraph',		'ArrayX': TempGrid,	'Type': 'int16_t', 	'Min': -200, 	'Max': 200,		'Step': 20, 'Parameter': '',				'Name': 'Коррекция времени удержания SLU для третьей передачи от температуры в мс'}
-			, {'N': 11, 'Table': 'SLUGear3TPSAdaptGraph',		'ArrayX': TPSGrid,	'Type': 'int16_t', 	'Min': -200, 	'Max': 200,		'Step': 20, 'Parameter': '',				'Name': 'Адаптация времени удержания SLU третьей передачи по ДПДЗ в мс'}
-			, {'N': 12, 'Table': 'SLUGear3TempAdaptGraph',		'ArrayX': TempGrid,	'Type': 'int16_t', 	'Min': -200, 	'Max': 200,		'Step': 20, 'Parameter': '',				'Name': 'Адаптация времени удержания SLU третьей передачи по температуре в мс'}
-			, {'N': 13, 'Table': 'SLNGear3Graph', 				'ArrayX': TPSGrid,	'Type': 'uint16_t', 'Min': 100, 	'Max': 800,		'Step': 4, 'Parameter': 'GearChangeSLN',	'Name': 'Давление SLN включения третьей передачи от ДПДЗ'}
-			, {'N': 14, 'Table': 'SLNGear3OffsetGraph', 		'ArrayX': TPSGrid,	'Type': 'int16_t', 	'Min': -1000, 	'Max': 1000,	'Step': 20, 'Parameter': '',				'Name': 'Смещение времени включения SLN при включении третьей передачи'}
+TablesData = [{'N': 0,  'Table': 'SLTGraph', 					'ArrayX': TPSGrid,		'Type': 'uint16_t', 'Min': 100, 	'Max': 800,		'Step': 4,	'Parameter': 'GearChangeSLT', 	'Name': 'Линейное давление SLT от ДПДЗ'}
+			, {'N': 1,  'Table': 'SLTTempCorrGraph', 			'ArrayX': TempGrid,		'Type': 'int16_t', 	'Min': -30, 	'Max': 30,		'Step': 1,	'Parameter': '',				'Name': 'Коррекция SLT от температуры в %'}
+			, {'N': 2,  'Table': 'SLNGraph', 					'ArrayX': TPSGrid,		'Type': 'uint16_t', 'Min': 100,		'Max': 800,		'Step': 4,	'Parameter': 'GearChangeSLN',	'Name': 'Давление SLN от ДПДЗ (Величина сброса давления)'}
+			, {'N': 3,  'Table': 'SLUGear2Graph', 				'ArrayX': TPSGrid,		'Type': 'uint16_t', 'Min': 100, 	'Max': 500,		'Step': 4, 'Parameter': 'GearChangeSLU',	'Name': 'Давление SLU включения второй передачи (SLU B3) от ДПДЗ'}
+			, {'N': 4,  'Table': 'SLUGear2TempCorrGraph',		'ArrayX': TempGrid,		'Type': 'int16_t', 	'Min': -30, 	'Max': 30,		'Step': 1,	'Parameter': '',				'Name': 'Коррекция SLU от температуры в %'}
+			, {'N': 5,  'Table': 'SLUGear2TPSAdaptGraph', 		'ArrayX': TPSGrid,		'Type': 'int16_t', 	'Min': -32, 	'Max': 32,		'Step': 4,	'Parameter': 'GearChangeSLU',	'Name': 'Адаптация давление SLU включения второй передачи'}
+			, {'N': 6,  'Table': 'SLUGear2TempAdaptGraph',		'ArrayX': TempGrid,		'Type': 'int16_t', 	'Min': -12, 	'Max': 12,		'Step': 1,	'Parameter': '',				'Name': 'Адаптация коррекции SLU от температуры'}
+			, {'N': 7,  'Table': 'Gear2AdvGraph', 				'ArrayX': DeltaRPMGrid,	'Type': 'int16_t', 	'Min': 0, 		'Max': 800,		'Step': 25, 'Parameter': '',				'Name': 'Опережение по оборотам реативации второй передачи'}
+			, {'N': 8,  'Table': 'Gear2AdvAdaptGraph', 			'ArrayX': DeltaRPMGrid,	'Type': 'int16_t', 	'Min': -300, 	'Max': 300,		'Step': 25, 'Parameter': '',				'Name': 'Адаптация оборотов реативации второй передачи'}
+			, {'N': 9,  'Table': 'SLUGear3Graph', 				'ArrayX': TPSGrid,		'Type': 'uint16_t', 'Min': 100, 	'Max': 500,		'Step': 4,	'Parameter': 'GearChangeSLU',	'Name': 'Давление SLU включения третьей передачи (SLU B2) от ДПДЗ'}
+			, {'N': 10, 'Table': 'SLUGear3DelayGraph', 			'ArrayX': TPSGrid,		'Type': 'uint16_t', 'Min': 0, 		'Max': 800,		'Step': 20, 'Parameter': '',				'Name': 'Время удержания SLU от ДПДЗ при включении третьей передачи'}
+			, {'N': 11, 'Table': 'SLUG3DelayTempCorrGraph',		'ArrayX': TempGrid,		'Type': 'int16_t', 	'Min': -200, 	'Max': 200,		'Step': 20, 'Parameter': '',				'Name': 'Коррекция времени удержания SLU для третьей передачи от температуры в мс'}
+			, {'N': 12, 'Table': 'SLUGear3TPSAdaptGraph',		'ArrayX': TPSGrid,		'Type': 'int16_t', 	'Min': -200, 	'Max': 200,		'Step': 20, 'Parameter': '',				'Name': 'Адаптация времени удержания SLU третьей передачи по ДПДЗ в мс'}
+			, {'N': 13, 'Table': 'SLUGear3TempAdaptGraph',		'ArrayX': TempGrid,		'Type': 'int16_t', 	'Min': -200, 	'Max': 200,		'Step': 20, 'Parameter': '',				'Name': 'Адаптация времени удержания SLU третьей передачи по температуре в мс'}
+			, {'N': 14, 'Table': 'SLNGear3Graph', 				'ArrayX': TPSGrid,		'Type': 'uint16_t', 'Min': 100, 	'Max': 800,		'Step': 4,	'Parameter': 'GearChangeSLN',	'Name': 'Давление SLN включения третьей передачи от ДПДЗ'}
+			, {'N': 15, 'Table': 'SLNGear3OffsetGraph', 		'ArrayX': TPSGrid,		'Type': 'int16_t', 	'Min': -1000, 	'Max': 1000,	'Step': 20, 'Parameter': '',				'Name': 'Смещение времени включения SLN при включении третьей передачи'}
 			]
 
 # Список таблиц с командами, для которых есть адапатация.
 ApplyAdaptationCommands = {'SLUGear2Graph': 				0xfc
 							, 'SLUGear2TempCorrGraph':		0xfd
+							, 'Gear2AdvGraph':				0xfe
 							, 'SLUGear3DelayGraph':			0xfa
 							, 'SLUG3DelayTempCorrGraph':	0xfb
 							}
-AtaptationTables = ('SLUGear2TPSAdaptGraph', 'SLUGear2TempAdaptGraph', 'SLUGear3TPSAdaptGraph', 'SLUGear3TempAdaptGraph')
+AtaptationTables = ('SLUGear2TPSAdaptGraph', 'SLUGear2TempAdaptGraph', 'Gear2AdvAdaptGraph', 'SLUGear3TPSAdaptGraph', 'SLUGear3TempAdaptGraph')
 
 # Окно редактирования таблиц.
 class _TableEditWindow:
@@ -349,14 +318,12 @@ class _TableEditWindow:
 			if len(self.Uart.TableData) == len(self.get_array_x()):
 				
 				self.WriteBtn.config(state='normal')
-				if self.get_array_x() == TPSGrid:
-					for i in range(0, len(TPSGrid), 1):
-						self.Cells[i].delete(0, END)
-						self.Cells[i].insert(0, self.Uart.TableData[i])
-				else:
-					for i in range(0, len(TempGrid), 1):
-						self.Cells[i].delete(0, END)
-						self.Cells[i].insert(0, self.Uart.TableData[i])
+				
+				CurrGrid = self.get_array_x()
+				for i in range(0, len(CurrGrid), 1):
+					self.Cells[i].delete(0, END)
+					self.Cells[i].insert(0, self.Uart.TableData[i])
+
 				self.MainGraph.update_data(self.Cells, self.GetNewTable)
 				self.GetNewTable = 0
 				self.Answer.update(0)
@@ -640,7 +607,10 @@ class _Graph:
 				Tx += 5
 			self.GraphLabel = self.Box.create_text(Tx, Ty, font = "Verdana 10", justify = CENTER, fill = 'black', text = str(Y1))
 
-		Circle = self.Box.create_oval(lx1 - R, ly1 - R, lx1 + R, ly1 + R, fill=Fill, outline="#004c99")
+			DownLine = self.Box.create_line(lx1, ly1, lx1, self.h, fill = "#a0a0a0", width = LineWidth)
+			self.GraphPoints.append(DownLine)
+
+		Circle = self.Box.create_oval(lx1 - R, ly1 - R, lx1 + R, ly1 + R, fill = Fill, outline = "#004c99")
 		self.GraphPoints.append(Circle)
 
 		if X2 == MaxX:
@@ -720,9 +690,11 @@ class _Graph:
 		ValueX = 0
 		if self.ArrayX == TPSGrid:
 			ValueX = self.get_tcu_data('InstTPS')
+		elif self.ArrayX == DeltaRPMGrid:
+			ValueX = self.get_tcu_data('DrumRPMDelta')
 		elif self.ArrayX == TempGrid:
 			ValueX = self.get_tcu_data('OilTemp')
-		else:
+		else:			
 			return
 
 		MinX = min(self.ArrayX)
