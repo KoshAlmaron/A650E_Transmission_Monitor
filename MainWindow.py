@@ -71,6 +71,15 @@ class _MainWindow:
 		self.PortState = ttk.Label(text = "Порт закрыт", width = 15, anchor = CENTER, relief = "raised", background = "#fb7b72")
 		self.PortState.place(x = 25, y = Height-80)
 
+		# Галка "Записывать лог".
+		self.WriteLog = IntVar()
+		self.WriteLogChk = Checkbutton(self.root, text='Записывать лог', command = self.set_log_status, variable = self.WriteLog, onvalue = 1, offvalue = 0, font = ("Helvetica", 14, 'bold'))
+		self.WriteLogChk.place(x = 250, y = Height-80)
+		self.WriteLog.set(0)
+
+		self.LogBtn = Button(text = "Лог-метка", width = 8, bg = "#D2B48C", command = self.write_log)
+		self.LogBtn.place(x = 450, y = Height-85, height = 30)
+
 		#				       			  Name  x,  y min max, 	color
 		self.SLT = _LineMeter(self.root, 'SLT', 30, 30, 0, 1023, '#1000fd')
 		self.SLN = _LineMeter(self.root, 'SLN', 160, 30, 0, 1023, '#1000fd')
@@ -101,7 +110,19 @@ class _MainWindow:
 
 		self.add_tooltip()
 
+		self.set_log_status()
+
 		#self.edit_tables()
+
+	def set_log_status(self):
+		if self.WriteLog.get() == 1:
+			self.Uart.WriteLog = 1
+		else:
+			self.Uart.WriteLog = 0
+
+	def write_log(self):
+		self.Uart.LogCounter = -1
+		self.Uart.LogNumber += 1
 
 	def add_tooltip(self):
 		ToolTip.ToolTip(self.PortBox, " Выбор COM-порта ЭБУ")
@@ -133,8 +154,10 @@ class _MainWindow:
 		ToolTip.ToolTip(self.ATMode.Box, " Состояние АКПП.\n I - инициализация при старте\n E - ошибка")
 		ToolTip.ToolTip(self.Gear.Box, " Текущая передача.")
 
-		ToolTip.ToolTip(self.EditBtn, "Открыть окно редактирования графиков.")
-		ToolTip.ToolTip(self.SpdTest, "Устанавливает скорость 100 км/ч для теста.")
+		ToolTip.ToolTip(self.EditBtn, " Открыть окно редактирования графиков.")
+		ToolTip.ToolTip(self.SpdTest, " Устанавливает скорость 100 км/ч для теста.")
+
+		ToolTip.ToolTip(self.LogBtn, " Запись части лога (+- 10 секунд от нажатия)\n в отдельный файл.")
 
 	def update(self):
 		self.SLT.update(self.Uart.TCU['SLT'])

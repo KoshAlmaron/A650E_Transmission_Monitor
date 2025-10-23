@@ -73,13 +73,17 @@ class _uart:
 		self.LogFolder = Folder		# Папка с логами.
 		self.LogFile = ''
 		
-		# Порт и скорость.
-		self.Serial = serial.Serial()
-		self.Serial.baudrate = Baudrate
+		self.Serial = serial.Serial()			# Порт.
+		self.Serial.baudrate = Baudrate			# Скорость.
 		
-		# Проверка наличия папки.
-		if not os.path.isdir(self.LogFolder):
+		if not os.path.isdir(self.LogFolder):	# Проверка наличия папки.
 			os.mkdir(self.LogFolder)
+
+		self.WriteLog = 1		# Флаг записи лога.
+		# Переменные для выделения куска лога по кнопке.
+		self.LogBuffer = []		# Кольцевой буфер лога.
+		self.LogCounter = 0		# Счетчик для строк буфера.
+		self.LogNumber = 0		# Номер куска.
 		
 		self.PortReading = 0
 		self.SerialRead = threading.Thread(target = self.read_port, daemon = True).start()
@@ -105,29 +109,55 @@ class _uart:
 				self.PacketSize += 2
 	# Логирование
 	def to_log(self, EmrtyLine = 0):
-		# Проверка наличия файла лога.
-		if not os.path.isfile(self.LogFile):
-			File = codecs.open(self.LogFile, 'w', 'utf8')
-			Text = 'Date\tTime\t'
-			for Key in Parameters:
-				Text += Key[1] + '\t'
-			File.write(Text + '\n')
-			File.close()
-			EmrtyLine = 0
+		LogLen = 10 * round(1000 / 50)		# Размер кольцового буфера с секундах (период 50мс).
 
+		if self.LogCounter < 0:
+			self.LogCounter = LogLen
+
+		LogLine = ''
+		# Записывает лог в кольцевой буфер.
 		Date = datetime.now().strftime("%d.%m.%Y")
 		Time = datetime.now().strftime("%H:%M:%S")
 		Time += datetime.now().strftime(".%f")[:4]
-		Text = Date + '\t' + Time + '\t'
+		LogLine = Date + '\t' + Time + '\t'
 		for Key in Parameters:
-			Text += str(self.TCU[Key[1]]) + '\t'
+			LogLine += str(self.TCU[Key[1]]) + '\t'
+		self.LogBuffer.append(LogLine)
+		if len(self.LogBuffer) > LogLen:
+			self.LogBuffer.pop(0)
 
-		File = codecs.open(self.LogFile, 'a', 'utf8')
-		if EmrtyLine == 1:
-			File.write('\n')
-		else:
-			File.write(Text + '\n')
-		File.close()
+		FileNameList = []		
+		if self.WriteLog != 0:
+			FileNameList.append(self.LogFile)
+		if self.LogCounter > 0:
+			FileNameList.append(self.LogFile + '_' + ('000' + str(self.LogNumber))[-3:])
+
+		for FileName in FileNameList:
+			# Проверка наличия файла лога.
+			if not os.path.isfile(FileName):
+				File = codecs.open(FileName, 'w', 'utf8')
+				LogTitle = ''
+				LogTitle = 'Date\tTime\t'
+				for Key in Parameters:
+					LogTitle += Key[1] + '\t'
+				File.write(LogTitle + '\n')
+
+				# Если запись была вызвана по кнопке, то записываем кольцевой буфер.
+				for Line in self.LogBuffer:
+					File.write(Line + '\n')
+
+				File.close()
+				EmrtyLine = 0
+
+			File = codecs.open(FileName, 'a', 'utf8')
+			if EmrtyLine == 1:
+				File.write('\n')
+			else:
+				File.write(LogLine + '\n')
+			File.close()
+
+		if self.LogCounter > 0:
+			self.LogCounter -= 1
 
 	def get_com_ports(self, Mode):
 		Ports = []
