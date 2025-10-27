@@ -157,7 +157,7 @@ class _MainWindow:
 		ToolTip.ToolTip(self.EditBtn, " Открыть окно редактирования графиков.")
 		ToolTip.ToolTip(self.SpdTest, " Устанавливает скорость 100 км/ч для теста.")
 
-		ToolTip.ToolTip(self.LogBtn, " Запись части лога (+- 10 секунд от нажатия)\n в отдельный файл.")
+		ToolTip.ToolTip(self.LogBtn, " Запись части лога (+- 10 секунд от нажатия) в отдельный файл.\n Работает даже при отключенном основном логировании.")
 
 	def update(self):
 		self.SLT.update(self.Uart.TCU['SLT'])
