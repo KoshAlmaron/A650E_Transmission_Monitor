@@ -5,6 +5,7 @@ import os
 import Uart
 import MainWindow
 import EditTables
+import EditADC
 
 LogFolder = os.getcwd() + os.sep + 'LOGS' + os.sep
 
@@ -19,6 +20,7 @@ DataUpdate = 0
 TableAutoUpdate = 0
 
 TableEditWindow = None
+ADCEditWindow = None
 
 def loop():
 	global PortUpdate
@@ -27,6 +29,7 @@ def loop():
 	global TableAutoUpdate
 
 	global TableEditWindow
+	global ADCEditWindow
 
 	if MainWindow.EditTables == 1:
 		TableEditWindow = EditTables._TableEditWindow(Uart)
@@ -42,10 +45,24 @@ def loop():
 			TableEditWindow.value_check('')
 			Uart.TableNumber = -1
 
+	if MainWindow.EditADC == 1:
+		ADCEditWindow = EditADC._TableEditWindow(Uart)
+		MainWindow.EditADC = 2
+
+	if MainWindow.EditADC == 2:
+		if ADCEditWindow.WindowOpen == 0:
+			MainWindow.EditADC = 0
+			ADCEditWindow.window_close()
+			ADCEditWindow = None
+		if Uart.TableNumber > -1:
+			ADCEditWindow.read_table()
+			ADCEditWindow.value_check('')
+			Uart.TableNumber = -1
+
 	if Uart.NewData == 1:
 		MainWindow.update_graph_data()
 		Uart.NewData = 0
-	
+
 	PortUpdate += 1
 	if PortUpdate >= 25:
 		PortUpdate = 0
@@ -58,6 +75,9 @@ def loop():
 
 		if MainWindow.EditTables == 2:
 			TableEditWindow.update_labels()
+
+		if MainWindow.EditADC == 2:
+			ADCEditWindow.update_labels()
 
 	TableAutoUpdate += 1
 	if TableAutoUpdate >= 25:

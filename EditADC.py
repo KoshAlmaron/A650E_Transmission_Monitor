@@ -11,44 +11,16 @@ BackGroundColor = "#d0d0d0"
 
 TPSGrid = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]
 TempGrid = [-30, -25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120]
-DeltaRPMGrid = [0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340, 360, 380, 400]
 
 LabelsTCU = [['Inst TPS', 'InstTPS', ' Текущее значение ДПДЗ.'],
-			 ['TPS', 'GearChangeTPS', ' ДПДЗ на момент последнего переключения.'],
-			 ['G2 LastStep', 'LastStep', ' Номер последнего шага включения второй передачи.'],
-			 ['SLT', 'GearChangeSLT', ' Значение SLT на момент последнего переключения.'],
-			 ['SLN', 'GearChangeSLN', ' Значение SLN на момент последнего переключения.'],
-			 ['SLU', 'GearChangeSLU', ' Значение SLU на момент последнего переключения.'],
-			 ['PDRTime', 'LastPDRTime', ' Продолжительность последнего запроса снижения мощности.'],
+			 ['OilTemp', 'OilTemp', ' Температура масла.'],
+			 ['RawTPS', 'RawTPS', ' АЦП ДПДЗ.'],
+			 ['RawOIL', 'RawOIL', ' АЦП температуры масла.']
 			]
 
-			# Номер, название, ось Х, минимум, максимум, описание.
-TablesData = [{'N': 0,  'Table': 'SLTGraph', 					'ArrayX': TPSGrid,		'Type': 'uint16_t', 'Min': 100, 	'Max': 800,		'Step': 4,	'Parameter': 'GearChangeSLT', 	'Name': 'Линейное давление SLT от ДПДЗ'}
-			, {'N': 1,  'Table': 'SLTTempCorrGraph', 			'ArrayX': TempGrid,		'Type': 'int16_t', 	'Min': -30, 	'Max': 30,		'Step': 1,	'Parameter': '',				'Name': 'Коррекция SLT от температуры в %'}
-			, {'N': 2,  'Table': 'SLNGraph', 					'ArrayX': TPSGrid,		'Type': 'uint16_t', 'Min': 100,		'Max': 800,		'Step': 4,	'Parameter': 'GearChangeSLN',	'Name': 'Давление SLN от ДПДЗ (Величина сброса давления)'}
-			, {'N': 3,  'Table': 'SLUGear2Graph', 				'ArrayX': TPSGrid,		'Type': 'uint16_t', 'Min': 100, 	'Max': 500,		'Step': 4, 'Parameter': 'GearChangeSLU',	'Name': 'Давление SLU включения второй передачи (SLU B3) от ДПДЗ'}
-			, {'N': 4,  'Table': 'SLUGear2TempCorrGraph',		'ArrayX': TempGrid,		'Type': 'int16_t', 	'Min': -30, 	'Max': 30,		'Step': 1,	'Parameter': '',				'Name': 'Коррекция SLU от температуры в %'}
-			, {'N': 5,  'Table': 'SLUGear2TPSAdaptGraph', 		'ArrayX': TPSGrid,		'Type': 'int16_t', 	'Min': -32, 	'Max': 32,		'Step': 4,	'Parameter': 'GearChangeSLU',	'Name': 'Адаптация давление SLU включения второй передачи'}
-			, {'N': 6,  'Table': 'SLUGear2TempAdaptGraph',		'ArrayX': TempGrid,		'Type': 'int16_t', 	'Min': -12, 	'Max': 12,		'Step': 1,	'Parameter': '',				'Name': 'Адаптация коррекции SLU от температуры'}
-			, {'N': 7,  'Table': 'Gear2AdvGraph', 				'ArrayX': DeltaRPMGrid,	'Type': 'int16_t', 	'Min': 0, 		'Max': 800,		'Step': 25, 'Parameter': '',				'Name': 'Опережение по оборотам реативации второй передачи'}
-			, {'N': 8,  'Table': 'Gear2AdvAdaptGraph', 			'ArrayX': DeltaRPMGrid,	'Type': 'int16_t', 	'Min': -300, 	'Max': 300,		'Step': 25, 'Parameter': '',				'Name': 'Адаптация оборотов реативации второй передачи'}
-			, {'N': 9,  'Table': 'SLUGear3Graph', 				'ArrayX': TPSGrid,		'Type': 'uint16_t', 'Min': 100, 	'Max': 500,		'Step': 4,	'Parameter': 'GearChangeSLU',	'Name': 'Давление SLU включения третьей передачи (SLU B2) от ДПДЗ'}
-			, {'N': 10, 'Table': 'SLUGear3DelayGraph', 			'ArrayX': TPSGrid,		'Type': 'uint16_t', 'Min': 0, 		'Max': 800,		'Step': 20, 'Parameter': '',				'Name': 'Время удержания SLU от ДПДЗ при включении третьей передачи'}
-			, {'N': 11, 'Table': 'SLUG3DelayTempCorrGraph',		'ArrayX': TempGrid,		'Type': 'int16_t', 	'Min': -200, 	'Max': 200,		'Step': 20, 'Parameter': '',				'Name': 'Коррекция времени удержания SLU для третьей передачи от температуры в мс'}
-			, {'N': 12, 'Table': 'SLUGear3TPSAdaptGraph',		'ArrayX': TPSGrid,		'Type': 'int16_t', 	'Min': -200, 	'Max': 200,		'Step': 20, 'Parameter': '',				'Name': 'Адаптация времени удержания SLU третьей передачи по ДПДЗ в мс'}
-			, {'N': 13, 'Table': 'SLUGear3TempAdaptGraph',		'ArrayX': TempGrid,		'Type': 'int16_t', 	'Min': -200, 	'Max': 200,		'Step': 20, 'Parameter': '',				'Name': 'Адаптация времени удержания SLU третьей передачи по температуре в мс'}
-			, {'N': 14, 'Table': 'SLNGear3Graph', 				'ArrayX': TPSGrid,		'Type': 'uint16_t', 'Min': 100, 	'Max': 800,		'Step': 4,	'Parameter': 'GearChangeSLN',	'Name': 'Давление SLN включения третьей передачи от ДПДЗ'}
-			, {'N': 15, 'Table': 'SLNGear3OffsetGraph', 		'ArrayX': TPSGrid,		'Type': 'int16_t', 	'Min': -1000, 	'Max': 1000,	'Step': 20, 'Parameter': '',				'Name': 'Смещение времени включения SLN при включении третьей передачи'}
+TablesData = [{'N': 16,  'Table': 'TPSGraph', 		'ArrayX': TPSGrid,	'Type': 'int16_t', 'Min': 0, 	'Max': 1023,	'Step': 4,	'Parameter': '', 	'Name': 'ДПДЗ (показания АЦП)'}
+			, {'N': 17,  'Table': 'OilTempGraph', 	'ArrayX': TempGrid,	'Type': 'int16_t', 'Min': 0, 	'Max': 1023,	'Step': 4,	'Parameter': '',	'Name': 'Температура масла (показания АЦП)'}
 			]
-
-# Список таблиц с командами, для которых есть адапатация.
-ApplyAdaptationCommands = {'SLUGear2Graph': 				0xfc
-							, 'SLUGear2TempCorrGraph':		0xfd
-							, 'Gear2AdvGraph':				0xfe
-							, 'SLUGear3DelayGraph':			0xfa
-							, 'SLUG3DelayTempCorrGraph':	0xfb
-							}
-AtaptationTables = ('SLUGear2TPSAdaptGraph', 'SLUGear2TempAdaptGraph', 'Gear2AdvAdaptGraph', 'SLUGear3TPSAdaptGraph', 'SLUGear3TempAdaptGraph')
 
 # Окно редактирования таблиц.
 class _TableEditWindow:
@@ -74,7 +46,7 @@ class _TableEditWindow:
 
 		self.MainFont = font.Font(size = 10)
 		self.root.option_add("*Font", self.MainFont)
-		self.root.title('Редакирование таблиц')
+		self.root.title('Редакирование АЦП')
 		self.root.minsize(self.Width, self.Height)
 		self.root.configure(background = BackGroundColor)
 
@@ -85,12 +57,7 @@ class _TableEditWindow:
 		# Галка "Онлайн".
 		self.OnLine = IntVar()
 		self.OnLineChk = Checkbutton(self.root, text='Онлайн', variable = self.OnLine, onvalue = 1, offvalue = 0, font = ("Helvetica", 14, 'bold'))
-		self.OnLineChk.place(x = 25, y = 11)
-
-		# Галка "Автообновление".
-		self.AutoUpdate = IntVar()
-		self.AutoUpdateChk = Checkbutton(self.root, text='Автообн.', variable = self.AutoUpdate, command = self.command_buttons_disable, onvalue = 1, offvalue = 0, font = ("Helvetica", 14, 'bold'), state = 'disabled')
-		self.AutoUpdateChk.place(x = 25, y = 48)
+		self.OnLineChk.place(x = 25, y = 29)
 
 		# Чтение/Запись
 		self.ReadBtn = Button(self.root, text = "Считать", width = 8, bg = "#4caa00", command = self.get_table, font = ("Helvetica", 12, 'bold'))
@@ -102,31 +69,15 @@ class _TableEditWindow:
 		self.Answer = _LightIndicator(self.root, 'A', 263, 28)
 
 		self.EReadBtn = Button(self.root, text = "Считать из EEPROM", width = 19, bg = "#adff2f", command = self.read_eeprom, font = ("Helvetica", 12, 'bold'))
-		self.EReadBtn.place(x = 310, y = 8)
+		self.EReadBtn.place(x = 340, y = 8)
 		self.ESaveBtn = Button(self.root, text = "Сохранить в EEPROM", width = 19, bg = "#ff8c00", command = self.write_eeprom, font = ("Helvetica", 12, 'bold'))
-		self.ESaveBtn.place(x = 310, y = 45)
+		self.ESaveBtn.place(x = 340, y = 45)
 
 		# Экспорт / Импорт.
 		self.ExportBtn = Button(self.root, text = "Экспорт", width = 8, bg = "#6495ed", command = self.to_excel, font = ("Helvetica", 12, 'bold'))
-		self.ExportBtn.place(x = 550, y = 8)
+		self.ExportBtn.place(x = 600, y = 8)
 		self.ImportBtn = Button(self.root, text = "Импорт", width = 8, bg = "#bc8f8f", command = self.from_excel, font = ("Helvetica", 12, 'bold'))
-		self.ImportBtn.place(x = 550, y = 45)
-
-		# Ограничения переключения передач.
-		self.MinGearBox = ttk.Combobox(self.root, values = (1, 2, 3, 4, 5), state = "readonly", width = 2, font = ("Helvetica", 16))
-		self.MinGearBox.place(x = 695, y = 10)
-		self.MinGearBox.current(0)
-		self.MinGearBox.bind("<<ComboboxSelected>>", self.min_gear_selected_event)
-		self.MaxGearBox = ttk.Combobox(self.root, values = (1, 2, 3, 4, 5), state = "readonly", width = 2, font = ("Helvetica", 16))
-		self.MaxGearBox.place(x = 770, y = 10)
-		self.MaxGearBox.current(4)
-		self.MaxGearBox.bind("<<ComboboxSelected>>", self.max_gear_selected_event)
-		self.GearSetLimitBtn = Button(self.root, text = "Установить", width = 10, bg = "#b0c4de", command = self.set_gear_limit, font = ("Helvetica", 12, 'bold'))
-		self.GearSetLimitBtn.place(x = 695, y = 45)
-
-		# Сброс таблиц.
-		self.TableResetBtn = Button(self.root, text = "Сброс\nтаблиц", width = 8, bg = "#B44444", command = self.reset_tables, font = ("Helvetica", 12, 'bold'))
-		self.TableResetBtn.place(x = 850, y = 8)
+		self.ImportBtn.place(x = 600, y = 45)
 
 		# Выход.
 		self.ExitBtn = Button(self.root, text = "Закрыть", width = 12, height = 3, bg = "#cd853f", command = self.on_closing, font = ("Helvetica", 12, 'bold'))
@@ -156,10 +107,26 @@ class _TableEditWindow:
 		# Обнаружение нажатия кнопок.
 		self.root.bind("<Key>", self.key_pressed)
 	
-	def add_tooltip(self):	# Вставка подсказок.
-		ToolTip.ToolTip(self.OnLineChk, " Онлайн режим.\n Изменения сразу отсылаются в ЭБУ.")
-		ToolTip.ToolTip(self.AutoUpdateChk, " Автообновление таблицы.\n Период - 1с, доступно только для таблиц адаптации.")
+	def get_table_number(self):
+		return TablesData[self.TableBox.current()]['N']
+
+	def build_line(self):
+
+		ArrayLen = len(self.Cells) - 1
+
+		Min = int(self.Cells[0].get())
+		Max = int(self.Cells[ArrayLen].get())
+
+		Step = (Max - Min) / ArrayLen
 		
+		for N, Cell in enumerate(self.Cells):
+			Cell.delete(0, END)
+			Value = round(Min + Step * N)
+			Cell.insert(0, str(Value))
+		
+		self.value_check('')
+
+	def add_tooltip(self):	# Вставка подсказок.
 		ToolTip.ToolTip(self.ReadBtn, " Считать таблицу из оперативной памяти ЭБУ")
 		ToolTip.ToolTip(self.WriteBtn, " Отправить таблицу в ЭБУ.\n Таблица будет записана в ОЗУ, для сохранения изменений необходимо перенести таблицу в EEPROM.")
 		
@@ -171,59 +138,18 @@ class _TableEditWindow:
 		ToolTip.ToolTip(self.ExportBtn, " Экспорт текущей таблицы в буфер обмена.\n Значения передаюся в буфер с разделителем-табуляцией\n для дальнейшей вставки в Excel.")
 		ToolTip.ToolTip(self.ImportBtn, " Импорт таблицы из буфер обмена.\n Значения должны быть с разделителем-табуляцией и в таком же количестве.")
 		
-		ToolTip.ToolTip(self.MinGearBox, " Минимальная допустимая передача.\n Используется для настройки переключений.")
-		ToolTip.ToolTip(self.MaxGearBox, " Максимальная допустимая передача.\n Используется для настройки переключений.")
-		ToolTip.ToolTip(self.GearSetLimitBtn, " Установить ограничения по передачам в ЭБУ")
-
-		ToolTip.ToolTip(self.TableResetBtn, " Сброс всех таблиц.\n Все значения заменяются на начальные из прошивки и производтся запись в EEPROM.\n Можно использовать в том числе для первоначальной записи таблиц в EEPROM.")
 		ToolTip.ToolTip(self.ExitBtn, " Закрыть окно.")
 		ToolTip.ToolTip(self.TableBox, " Выбор таблицы для редакирования")
 
+		ToolTip.ToolTip(self.BtnBuildLine, " Построить линию по двум точкам")
 		ToolTip.ToolTip(self.BtnZero, " Обнуление графика")
-		ToolTip.ToolTip(self.BtnApplyAdapt, " Применение адаптации к текущей таблице.\n После применения таблица адаптации обнуляется.\n Все изменения производятся в ОЗУ ЭБУ,\n для сохранения изменений необходимо произвести запись в EEPROM.")
-
-	def apply_adaptation(self): # Применение адаптации к текущему графику.
-		Number = self.TableBox.current()
-		Name = TablesData[Number]['Table']
-
-		if Name in ApplyAdaptationCommands:
-			self.Answer.update(1)
-			Command = ApplyAdaptationCommands[Name]
-			self.Uart.send_command(Command, Number, [])
-
-	def reset_tables(self):	# Команда сброса таблиц в ЭБУ.
-		if messagebox.askyesno('Сброс таблиц', 'Перезаписать ВСЕ таблицы в EEPROM значениями из прошивки?'):
-			self.TableBox.current(0)
-			self.table_selected_event('')
-			self.root.lift()
-
-			time.sleep(0.5)
-			self.Answer.update(1)
-			self.Uart.send_command(0xab, self.TableBox.current(), [])
-		else:
-			self.root.lift()
-
-	def set_gear_limit(self):	# Команда установки ограничения передач.
-		MinGear = int(self.MinGearBox.get())
-		MaxGear = int(self.MaxGearBox.get())
-
-		self.Answer.update(1)
-		self.Uart.send_command(0xbe, self.TableBox.current(), [MinGear, MaxGear])
-
-	def min_gear_selected_event(self, event):	# Событие смены ограничения передачи (min).
-		if self.MaxGearBox.current() < self.MinGearBox.current():
-			self.MaxGearBox.current(self.MinGearBox.current())
-
-	def max_gear_selected_event(self, event):	# Событие смены ограничения передачи (max).
-		if self.MinGearBox.current() > self.MaxGearBox.current():
-			self.MinGearBox.current(self.MaxGearBox.current())
 
 	def draw_graph_buttons(self, Y):	# Отрисовка кнопок на графике.
 		X = 5
 		H = 13
 
-		self.BtnApplyAdapt = Button(self.root, text = "A", width = 1, bg = "#bcbcbc", command = self.apply_adaptation, font = ("Helvetica", 10, 'bold'), border="2px", state = 'disabled')
-		self.BtnApplyAdapt.place(x = X, y = Y - H - 95, width = 25, height = 25)
+		self.BtnBuildLine = Button(self.root, text = "L", width = 1, bg = "#bcbcbc", command = self.build_line, font = ("Helvetica", 10, 'bold'), border="2px", state = 'normal')
+		self.BtnBuildLine.place(x = X, y = Y - H - 95, width = 25, height = 25)
 
 		self.BtnZero = Button(self.root, text = "0", width = 1, bg = "#bcbcbc", command = lambda: self.move_graph(0), font = ("Helvetica", 10, 'bold'), border="2px")
 		self.BtnZero.place(x = X, y = Y - H, width = 25, height = 25)
@@ -276,42 +202,13 @@ class _TableEditWindow:
 			if self.OnLine.get() == 1 and Result == 2:
 				self.write_table()
 
-	def table_auto_update(self):
-		if self.AutoUpdate.get() == 1:
-			if TablesData[self.TableBox.current()]['Table'] in AtaptationTables:
-				self.get_table()
-
-	def command_buttons_disable(self):
-		if self.AutoUpdate.get() == 1:
-			self.OnLineChk.configure(state = 'disabled')
-			self.OnLine.set(0)
-
-			self.ReadBtn.configure(state = 'disabled')
-			self.WriteBtn.configure(state = 'disabled')
-			self.EReadBtn.configure(state = 'disabled')
-			self.ESaveBtn.configure(state = 'disabled')
-			self.GearSetLimitBtn.configure(state = 'disabled')
-			self.TableResetBtn.configure(state = 'disabled')
-
-		else:
-			self.OnLineChk.configure(state = 'normal')
-			self.ReadBtn.configure(state = 'normal')
-			self.WriteBtn.configure(state = 'normal')
-			self.EReadBtn.configure(state = 'normal')
-			self.ESaveBtn.configure(state = 'normal')
-			self.GearSetLimitBtn.configure(state = 'normal')
-			self.TableResetBtn.configure(state = 'normal')
-
 	def get_table(self):	# Команда на получение таблицы из ЭБУ.
 		self.Answer.update(1)
 		self.GetNewTable = 1
-		self.Uart.send_command(0xc1, self.TableBox.current(), [])
+		self.Uart.send_command(0xc1, self.get_table_number(), [])
 
 	def read_table(self):	# Событие при получении таблицы из ЭБУ.
-		#print('Получена таблица', self.Uart.TableNumber)
-		#print(self.Uart.TableNumber, self.TableBox.current())
-		#print(len(self.Uart.TableData),  len(self.get_array_x()))
-		if self.Uart.TableNumber == self.TableBox.current():
+		if self.Uart.TableNumber == self.get_table_number():
 			if len(self.Uart.TableData) == len(self.get_array_x()):
 				
 				self.WriteBtn.config(state='normal')
@@ -330,16 +227,15 @@ class _TableEditWindow:
 		Data = []
 		for Cell in self.Cells:
 			Data.append(int(Cell.get()))
-		self.Uart.send_command(0xc8, self.TableBox.current(), Data)
+		self.Uart.send_command(0xc8, self.get_table_number(), Data)
 
 	def read_eeprom(self):	# Команда на чтение EEPROM.
-
 		self.Answer.update(1)
-		self.Uart.send_command(0xcc, self.TableBox.current(), [])
+		self.Uart.send_command(0xcc, self.get_table_number(), [])
 
 	def write_eeprom(self):	# Команда на запись EEPROM.
 		self.Answer.update(1)
-		self.Uart.send_command(0xee, self.TableBox.current(), [])
+		self.Uart.send_command(0xee, self.get_table_number(), [])
 
 	def value_check(self, event):	# Проверка и исправление значений таблицы.
 		N = self.TableBox.current()
@@ -375,17 +271,6 @@ class _TableEditWindow:
 		self.draw_table()
 		self.MainGraph.redraw(self.TableBox.current(), self.get_array_x())
 		self.MainGraph.update_data(self.Cells, 0)
-
-		if TablesData[self.TableBox.current()]['Table'] in ApplyAdaptationCommands:
-			self.BtnApplyAdapt.configure(state = 'normal')
-		else:
-			self.BtnApplyAdapt.configure(state = 'disabled')
-
-		if TablesData[self.TableBox.current()]['Table'] in AtaptationTables:
-			self.AutoUpdateChk.configure(state = 'normal')
-		else:
-			self.AutoUpdateChk.configure(state = 'disabled')
-			self.AutoUpdate.set(0)
 
 		if self.Uart.port_status():
 			self.get_table()
@@ -443,13 +328,6 @@ class _TableEditWindow:
 		for Name in self.DataTCU:
 			self.DataTCU[Name].configure(text = self.get_tcu_data(Name))
 		self.MainGraph.update_markers()
-
-		if self.Uart.port_status() and self.AutoUpdate.get() != 1:
-			self.ReadBtn.config(state='normal')
-			self.WriteBtn.config(state='normal')
-		else:
-			self.ReadBtn.config(state='disabled')
-			self.WriteBtn.config(state='disabled')
 
 	def get_tcu_data(self, Parameter):	# Получение параметров ЭБУ из пакета данных (0x71).
 		return self.Uart.TCU[Parameter]
@@ -685,8 +563,6 @@ class _Graph:
 		ValueX = 0
 		if self.ArrayX == TPSGrid:
 			ValueX = self.get_tcu_data('InstTPS')
-		elif self.ArrayX == DeltaRPMGrid:
-			ValueX = self.get_tcu_data('DrumRPMDelta')
 		elif self.ArrayX == TempGrid:
 			ValueX = self.get_tcu_data('OilTemp')
 		else:			

@@ -30,6 +30,7 @@ class _MainWindow:
 		self.root = Tk()
 		self.Uart = Uart
 		self.EditTables = 0
+		self.EditADC = 0
 
 		Width = 1300
 		Height = 700
@@ -93,6 +94,9 @@ class _MainWindow:
 		self.OIL = _RoundMeter(self.root, 'OIL', 400, 20, -30, 150, 'white')
 		self.TPS = _RoundMeter(self.root, 'TPS', 700, 20, 0, 100, 'white')
 		self.SPD = _RoundMeter(self.root, 'SPD', 1000, 20, 0, 160, 'white')
+
+		self.ADCBtn = Button(text = "АЦП", width = 3, bg = "#008080", command = self.edit_adc, state='normal')
+		self.ADCBtn.place(x = 665, y = 10)
 		
 		self.BRK = _LightIndicator(self.root, 'BRK', 20, 500, '#ff7070')
 		self.ENG = _LightIndicator(self.root, 'ENG', 110, 500, '#ffd700')
@@ -111,8 +115,6 @@ class _MainWindow:
 		self.add_tooltip()
 
 		self.set_log_status()
-
-		#self.edit_tables()
 
 	def set_log_status(self):
 		if self.WriteLog.get() == 1:
@@ -205,6 +207,9 @@ class _MainWindow:
 
 	def edit_tables(self):
 		self.EditTables = 1
+
+	def edit_adc(self):
+		self.EditADC = 1
 
 	def speed_test(self):
 		self.Uart.send_command(0xde, 0, [])

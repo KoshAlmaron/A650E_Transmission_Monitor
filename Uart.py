@@ -44,7 +44,10 @@ Parameters = (	  ('uint16_t', 'EngineRPM')
 				, ('uint16_t', 'GearChangeSLU')
 				, ('uint16_t', 'LastPDRTime')
 				, ('uint16_t', 'CycleTime_x10')
-				, ('uint8_t', 'DebugMode'))
+				, ('uint8_t', 'DebugMode')
+				, ('uint16_t', 'RawTPS')
+				, ('uint16_t', 'RawOIL')
+				)
 
 Tables = (	  ('SLTGraph', 						'uint16_t',		TpsGridSize)
 			, ('SLTTempCorrGraph', 				'int16_t',		TempGridSize)
@@ -61,7 +64,10 @@ Tables = (	  ('SLTGraph', 						'uint16_t',		TpsGridSize)
 			, ('SLUGear3TPSAdaptGraph',			'int16_t',		TpsGridSize)
 			, ('SLUGear3TempAdaptGraph',		'int16_t',		TempGridSize)
 			, ('SLNGear3Graph', 				'uint16_t',		TpsGridSize)
-			, ('SLNGear3OffsetGraph', 			'int16_t',		TpsGridSize))
+			, ('SLNGear3OffsetGraph', 			'int16_t',		TpsGridSize)
+			, ('TPSGraph', 						'int16_t',		TpsGridSize)
+			, ('OilTempGraph', 					'int16_t',		TempGridSize)
+			)
 
 # Прием данных по UART
 class _uart:
