@@ -34,6 +34,10 @@ def loop():
 	if MainWindow.EditTables == 1:
 		TableEditWindow = EditTables._TableEditWindow(Uart)
 		MainWindow.EditTables = 2
+		if MainWindow.EditADC == 2:
+			MainWindow.EditADC = 0
+			ADCEditWindow.window_close()
+			ADCEditWindow = None
 
 	if MainWindow.EditTables == 2:
 		if TableEditWindow.WindowOpen == 0:
@@ -48,6 +52,10 @@ def loop():
 	if MainWindow.EditADC == 1:
 		ADCEditWindow = EditADC._TableEditWindow(Uart)
 		MainWindow.EditADC = 2
+		if MainWindow.EditTables == 2:
+			MainWindow.EditTables = 0
+			TableEditWindow.window_close()
+			TableEditWindow = None
 
 	if MainWindow.EditADC == 2:
 		if ADCEditWindow.WindowOpen == 0:

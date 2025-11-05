@@ -106,7 +106,7 @@ class _TableEditWindow:
 
 		# Обнаружение нажатия кнопок.
 		self.root.bind("<Key>", self.key_pressed)
-	
+
 	def get_table_number(self):
 		return TablesData[self.TableBox.current()]['N']
 
@@ -274,6 +274,7 @@ class _TableEditWindow:
 
 		if self.Uart.port_status():
 			self.get_table()
+		self.OnLine.set(0)
 
 	def clear_table(self):	# Очистка таблицы в интерфейсе.
 		for Cell in self.Cells:

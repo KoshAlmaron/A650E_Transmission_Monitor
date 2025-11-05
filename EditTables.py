@@ -24,13 +24,13 @@ LabelsTCU = [['Inst TPS', 'InstTPS', ' Текущее значение ДПДЗ.
 
 			# Номер, название, ось Х, минимум, максимум, описание.
 TablesData = [{'N': 0,  'Table': 'SLTGraph', 					'ArrayX': TPSGrid,		'Type': 'uint16_t', 'Min': 100, 	'Max': 800,		'Step': 4,	'Parameter': 'GearChangeSLT', 	'Name': 'Линейное давление SLT от ДПДЗ'}
-			, {'N': 1,  'Table': 'SLTTempCorrGraph', 			'ArrayX': TempGrid,		'Type': 'int16_t', 	'Min': -30, 	'Max': 30,		'Step': 1,	'Parameter': '',				'Name': 'Коррекция SLT от температуры в %'}
+			, {'N': 1,  'Table': 'SLTTempCorrGraph', 			'ArrayX': TempGrid,		'Type': 'int16_t', 	'Min': -300, 	'Max': 300,		'Step': 5,	'Parameter': '',				'Name': 'Коррекция SLT от температуры в %'}
 			, {'N': 2,  'Table': 'SLNGraph', 					'ArrayX': TPSGrid,		'Type': 'uint16_t', 'Min': 100,		'Max': 800,		'Step': 4,	'Parameter': 'GearChangeSLN',	'Name': 'Давление SLN от ДПДЗ (Величина сброса давления)'}
 			, {'N': 3,  'Table': 'SLUGear2Graph', 				'ArrayX': TPSGrid,		'Type': 'uint16_t', 'Min': 100, 	'Max': 500,		'Step': 4, 'Parameter': 'GearChangeSLU',	'Name': 'Давление SLU включения второй передачи (SLU B3) от ДПДЗ'}
-			, {'N': 4,  'Table': 'SLUGear2TempCorrGraph',		'ArrayX': TempGrid,		'Type': 'int16_t', 	'Min': -30, 	'Max': 30,		'Step': 1,	'Parameter': '',				'Name': 'Коррекция SLU от температуры в %'}
+			, {'N': 4,  'Table': 'SLUGear2TempCorrGraph',		'ArrayX': TempGrid,		'Type': 'int16_t', 	'Min': -300, 	'Max': 300,		'Step': 5,	'Parameter': '',				'Name': 'Коррекция SLU от температуры в %'}
 			, {'N': 5,  'Table': 'SLUGear2TPSAdaptGraph', 		'ArrayX': TPSGrid,		'Type': 'int16_t', 	'Min': -32, 	'Max': 32,		'Step': 4,	'Parameter': 'GearChangeSLU',	'Name': 'Адаптация давление SLU включения второй передачи'}
-			, {'N': 6,  'Table': 'SLUGear2TempAdaptGraph',		'ArrayX': TempGrid,		'Type': 'int16_t', 	'Min': -12, 	'Max': 12,		'Step': 1,	'Parameter': '',				'Name': 'Адаптация коррекции SLU от температуры'}
-			, {'N': 7,  'Table': 'Gear2AdvGraph', 				'ArrayX': DeltaRPMGrid,	'Type': 'int16_t', 	'Min': 0, 		'Max': 800,		'Step': 25, 'Parameter': '',				'Name': 'Опережение по оборотам реативации второй передачи'}
+			, {'N': 6,  'Table': 'SLUGear2TempAdaptGraph',		'ArrayX': TempGrid,		'Type': 'int16_t', 	'Min': -120, 	'Max': 120,		'Step': 5,	'Parameter': '',				'Name': 'Адаптация коррекции SLU от температуры (%)'}
+			, {'N': 7,  'Table': 'Gear2AdvGraph', 				'ArrayX': DeltaRPMGrid,	'Type': 'int16_t', 	'Min': 0, 		'Max': 1000,	'Step': 25, 'Parameter': '',				'Name': 'Опережение по оборотам реативации второй передачи'}
 			, {'N': 8,  'Table': 'Gear2AdvAdaptGraph', 			'ArrayX': DeltaRPMGrid,	'Type': 'int16_t', 	'Min': -300, 	'Max': 300,		'Step': 25, 'Parameter': '',				'Name': 'Адаптация оборотов реативации второй передачи'}
 			, {'N': 9,  'Table': 'SLUGear3Graph', 				'ArrayX': TPSGrid,		'Type': 'uint16_t', 'Min': 100, 	'Max': 500,		'Step': 4,	'Parameter': 'GearChangeSLU',	'Name': 'Давление SLU включения третьей передачи (SLU B2) от ДПДЗ'}
 			, {'N': 10, 'Table': 'SLUGear3DelayGraph', 			'ArrayX': TPSGrid,		'Type': 'uint16_t', 'Min': 0, 		'Max': 800,		'Step': 20, 'Parameter': '',				'Name': 'Время удержания SLU от ДПДЗ при включении третьей передачи'}
@@ -389,6 +389,11 @@ class _TableEditWindow:
 
 		if self.Uart.port_status():
 			self.get_table()
+
+		self.OnLine.set(0)
+		self.AutoUpdate.set(0)
+		self.command_buttons_disable()
+
 
 	def clear_table(self):	# Очистка таблицы в интерфейсе.
 		for Cell in self.Cells:

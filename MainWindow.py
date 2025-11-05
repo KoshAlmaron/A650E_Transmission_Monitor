@@ -8,7 +8,7 @@ import ToolTip
 GraphNames = (('---', 100)
 	, ('EngineRPM', 6000)
 	, ('DrumRPM', 6000)
-	, ('DrumRPMDelta', 1000)
+	, ('DrumRPMDelta', 1200)
 	, ('OutputRPM', 6000)
 	, ('CarSpeed' , 150)
 	, ('InstTPS', 100)
