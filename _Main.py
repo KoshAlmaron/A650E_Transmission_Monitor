@@ -1,4 +1,4 @@
-Ver = '2025-10-23'
+Ver = '2025-11-27'
 
 import os
 
@@ -6,6 +6,8 @@ import Uart
 import MainWindow
 import EditTables
 import EditADC
+import EditSpeed
+import EditConfig
 
 LogFolder = os.getcwd() + os.sep + 'LOGS' + os.sep
 
@@ -19,8 +21,8 @@ WindowUpdate = 0
 DataUpdate = 0
 TableAutoUpdate = 0
 
-TableEditWindow = None
-ADCEditWindow = None
+EditWindow = None
+WindowState = 0
 
 def loop():
 	global PortUpdate
@@ -28,44 +30,40 @@ def loop():
 	global DataUpdate
 	global TableAutoUpdate
 
-	global TableEditWindow
-	global ADCEditWindow
+	global EditWindow
 
 	if MainWindow.EditTables == 1:
-		TableEditWindow = EditTables._TableEditWindow(Uart)
-		MainWindow.EditTables = 2
-		if MainWindow.EditADC == 2:
-			MainWindow.EditADC = 0
-			ADCEditWindow.window_close()
-			ADCEditWindow = None
-
-	if MainWindow.EditTables == 2:
-		if TableEditWindow.WindowOpen == 0:
-			MainWindow.EditTables = 0
-			TableEditWindow.window_close()
-			TableEditWindow = None
-		if Uart.TableNumber > -1:
-			TableEditWindow.read_table()
-			TableEditWindow.value_check('')
-			Uart.TableNumber = -1
-
+		MainWindow.EditTables = 0
+		close_window(EditWindow)
+		EditWindow = EditTables._TableEditWindow(Uart)
 	if MainWindow.EditADC == 1:
-		ADCEditWindow = EditADC._TableEditWindow(Uart)
-		MainWindow.EditADC = 2
-		if MainWindow.EditTables == 2:
-			MainWindow.EditTables = 0
-			TableEditWindow.window_close()
-			TableEditWindow = None
+		MainWindow.EditADC = 0
+		close_window(EditWindow)
+		EditWindow = EditADC._ADCEditWindow(Uart)
+	if MainWindow.EditSpeed == 1:
+		MainWindow.EditSpeed = 0
+		close_window(EditWindow)
+		EditWindow = EditSpeed._SpeedEditWindow(Uart)
 
-	if MainWindow.EditADC == 2:
-		if ADCEditWindow.WindowOpen == 0:
-			MainWindow.EditADC = 0
-			ADCEditWindow.window_close()
-			ADCEditWindow = None
-		if Uart.TableNumber > -1:
-			ADCEditWindow.read_table()
-			ADCEditWindow.value_check('')
-			Uart.TableNumber = -1
+	if MainWindow.EditConfig == 1:
+		MainWindow.EditConfig = 0
+		close_window(EditWindow)
+		EditWindow = EditConfig._ConfigEditWindow(Uart)
+
+	if EditWindow is not None:
+		if EditWindow.WindowOpen == 0:
+			EditWindow.window_close()
+			EditWindow = None
+		else:
+			if EditWindow.WindowName == 'EditConfig':
+				if Uart.NewConfig == 1:
+					EditWindow.read_config()
+					Uart.NewConfig = 0
+			else:
+				if Uart.TableNumber > -1:
+					EditWindow.read_table()
+					EditWindow.value_check('')
+					Uart.TableNumber = -1
 
 	if Uart.NewData == 1:
 		MainWindow.update_graph_data()
@@ -81,19 +79,21 @@ def loop():
 		WindowUpdate = 0
 		MainWindow.update()
 
-		if MainWindow.EditTables == 2:
-			TableEditWindow.update_labels()
-
-		if MainWindow.EditADC == 2:
-			ADCEditWindow.update_labels()
+		if EditWindow is not None:
+			EditWindow.update_labels()
 
 	TableAutoUpdate += 1
 	if TableAutoUpdate >= 25:
 		TableAutoUpdate = 0
-		if MainWindow.EditTables == 2:
-			TableEditWindow.table_auto_update()		
+		if EditWindow is not None:
+			EditWindow.table_auto_update()
 
 	MainWindow.root.after(40, loop)
+
+def close_window(EditWindow):
+	if EditWindow is not None:
+		EditWindow.window_close()
+		ADCEditWindow = None
 
 MainWindow.root.after(1, loop)
 MainWindow.root.mainloop()

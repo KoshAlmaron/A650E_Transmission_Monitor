@@ -6,12 +6,9 @@ import tkinter as tk
 import time
 
 import ToolTip
+import Tables
 
 BackGroundColor = "#d0d0d0"
-
-TPSGrid = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]
-TempGrid = [-30, -25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120]
-DeltaRPMGrid = [0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340, 360, 380, 400]
 
 LabelsTCU = [['Inst TPS', 'InstTPS', ' Текущее значение ДПДЗ.'],
 			 ['TPS', 'GearChangeTPS', ' ДПДЗ на момент последнего переключения.'],
@@ -22,33 +19,8 @@ LabelsTCU = [['Inst TPS', 'InstTPS', ' Текущее значение ДПДЗ.
 			 ['PDRTime', 'LastPDRTime', ' Продолжительность последнего запроса снижения мощности.'],
 			]
 
-			# Номер, название, ось Х, минимум, максимум, описание.
-TablesData = [{'N': 0,  'Table': 'SLTGraph', 					'ArrayX': TPSGrid,		'Type': 'uint16_t', 'Min': 100, 	'Max': 800,		'Step': 4,	'Parameter': 'GearChangeSLT', 	'Name': 'Линейное давление SLT от ДПДЗ'}
-			, {'N': 1,  'Table': 'SLTTempCorrGraph', 			'ArrayX': TempGrid,		'Type': 'int16_t', 	'Min': -300, 	'Max': 300,		'Step': 5,	'Parameter': '',				'Name': 'Коррекция SLT от температуры в %'}
-			, {'N': 2,  'Table': 'SLNGraph', 					'ArrayX': TPSGrid,		'Type': 'uint16_t', 'Min': 100,		'Max': 800,		'Step': 4,	'Parameter': 'GearChangeSLN',	'Name': 'Давление SLN от ДПДЗ (Величина сброса давления)'}
-			, {'N': 3,  'Table': 'SLUGear2Graph', 				'ArrayX': TPSGrid,		'Type': 'uint16_t', 'Min': 100, 	'Max': 500,		'Step': 4, 'Parameter': 'GearChangeSLU',	'Name': 'Давление SLU включения второй передачи (SLU B3) от ДПДЗ'}
-			, {'N': 4,  'Table': 'SLUGear2TempCorrGraph',		'ArrayX': TempGrid,		'Type': 'int16_t', 	'Min': -300, 	'Max': 300,		'Step': 5,	'Parameter': '',				'Name': 'Коррекция SLU от температуры в %'}
-			, {'N': 5,  'Table': 'SLUGear2TPSAdaptGraph', 		'ArrayX': TPSGrid,		'Type': 'int16_t', 	'Min': -32, 	'Max': 32,		'Step': 4,	'Parameter': 'GearChangeSLU',	'Name': 'Адаптация давление SLU включения второй передачи'}
-			, {'N': 6,  'Table': 'SLUGear2TempAdaptGraph',		'ArrayX': TempGrid,		'Type': 'int16_t', 	'Min': -120, 	'Max': 120,		'Step': 5,	'Parameter': '',				'Name': 'Адаптация коррекции SLU от температуры (%)'}
-			, {'N': 7,  'Table': 'Gear2AdvGraph', 				'ArrayX': DeltaRPMGrid,	'Type': 'int16_t', 	'Min': 0, 		'Max': 1000,	'Step': 25, 'Parameter': '',				'Name': 'Опережение по оборотам реативации второй передачи'}
-			, {'N': 8,  'Table': 'Gear2AdvAdaptGraph', 			'ArrayX': DeltaRPMGrid,	'Type': 'int16_t', 	'Min': -300, 	'Max': 300,		'Step': 25, 'Parameter': '',				'Name': 'Адаптация оборотов реативации второй передачи'}
-			, {'N': 9,  'Table': 'SLUGear3Graph', 				'ArrayX': TPSGrid,		'Type': 'uint16_t', 'Min': 100, 	'Max': 500,		'Step': 4,	'Parameter': 'GearChangeSLU',	'Name': 'Давление SLU включения третьей передачи (SLU B2) от ДПДЗ'}
-			, {'N': 10, 'Table': 'SLUGear3DelayGraph', 			'ArrayX': TPSGrid,		'Type': 'uint16_t', 'Min': 0, 		'Max': 800,		'Step': 20, 'Parameter': '',				'Name': 'Время удержания SLU от ДПДЗ при включении третьей передачи'}
-			, {'N': 11, 'Table': 'SLUG3DelayTempCorrGraph',		'ArrayX': TempGrid,		'Type': 'int16_t', 	'Min': -200, 	'Max': 200,		'Step': 20, 'Parameter': '',				'Name': 'Коррекция времени удержания SLU для третьей передачи от температуры в мс'}
-			, {'N': 12, 'Table': 'SLUGear3TPSAdaptGraph',		'ArrayX': TPSGrid,		'Type': 'int16_t', 	'Min': -200, 	'Max': 200,		'Step': 20, 'Parameter': '',				'Name': 'Адаптация времени удержания SLU третьей передачи по ДПДЗ в мс'}
-			, {'N': 13, 'Table': 'SLUGear3TempAdaptGraph',		'ArrayX': TempGrid,		'Type': 'int16_t', 	'Min': -200, 	'Max': 200,		'Step': 20, 'Parameter': '',				'Name': 'Адаптация времени удержания SLU третьей передачи по температуре в мс'}
-			, {'N': 14, 'Table': 'SLNGear3Graph', 				'ArrayX': TPSGrid,		'Type': 'uint16_t', 'Min': 100, 	'Max': 800,		'Step': 4,	'Parameter': 'GearChangeSLN',	'Name': 'Давление SLN включения третьей передачи от ДПДЗ'}
-			, {'N': 15, 'Table': 'SLNGear3OffsetGraph', 		'ArrayX': TPSGrid,		'Type': 'int16_t', 	'Min': -1000, 	'Max': 1000,	'Step': 20, 'Parameter': '',				'Name': 'Смещение времени включения SLN при включении третьей передачи'}
-			]
-
-# Список таблиц с командами, для которых есть адапатация.
-ApplyAdaptationCommands = {'SLUGear2Graph': 				0xfc
-							, 'SLUGear2TempCorrGraph':		0xfd
-							, 'Gear2AdvGraph':				0xfe
-							, 'SLUGear3DelayGraph':			0xfa
-							, 'SLUG3DelayTempCorrGraph':	0xfb
-							}
-AtaptationTables = ('SLUGear2TPSAdaptGraph', 'SLUGear2TempAdaptGraph', 'Gear2AdvAdaptGraph', 'SLUGear3TPSAdaptGraph', 'SLUGear3TempAdaptGraph')
+FirstTable = 0
+LastTable = 17
 
 # Окно редактирования таблиц.
 class _TableEditWindow:
@@ -56,6 +28,7 @@ class _TableEditWindow:
 		self.root = tk.Toplevel()
 		self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 		self.WindowOpen = 1
+		self.WindowName = 'EditTables'
 
 		self.Uart = Uart
 		self.Cells = []
@@ -79,8 +52,9 @@ class _TableEditWindow:
 		self.root.configure(background = BackGroundColor)
 
 		TablesList = []
-		for Table in TablesData:
-			TablesList.append(Table['Name'] + ' (' + Table['Table'] + ')')
+		for Table in Tables.TablesData:
+			if Table['N'] >= FirstTable and Table['N'] <= LastTable:
+				TablesList.append(str(Table['N'] + 1) + '. ' + Table['Name'] + ' (' + Table['Table'] + ')')
 
 		# Галка "Онлайн".
 		self.OnLine = IntVar()
@@ -155,51 +129,76 @@ class _TableEditWindow:
 
 		# Обнаружение нажатия кнопок.
 		self.root.bind("<Key>", self.key_pressed)
-	
+
+	def get_table_number(self):
+		return Tables.TablesData[self.TableBox.current() + FirstTable]['N']
+
 	def add_tooltip(self):	# Вставка подсказок.
-		ToolTip.ToolTip(self.OnLineChk, " Онлайн режим.\n Изменения сразу отсылаются в ЭБУ.")
-		ToolTip.ToolTip(self.AutoUpdateChk, " Автообновление таблицы.\n Период - 1с, доступно только для таблиц адаптации.")
+		ToolTip.ToolTip(self.OnLineChk, "Онлайн режим. Изменения сразу отсылаются в ЭБУ.")
+		ToolTip.ToolTip(self.AutoUpdateChk, "Автообновление таблицы. Период - 1с, доступно только для таблиц адаптации.")
 		
-		ToolTip.ToolTip(self.ReadBtn, " Считать таблицу из оперативной памяти ЭБУ")
-		ToolTip.ToolTip(self.WriteBtn, " Отправить таблицу в ЭБУ.\n Таблица будет записана в ОЗУ, для сохранения изменений необходимо перенести таблицу в EEPROM.")
+		ToolTip.ToolTip(self.ReadBtn, "Считать таблицу из оперативной памяти ЭБУ")
+		ToolTip.ToolTip(self.WriteBtn, "Отправить таблицу в ЭБУ. Таблица будет записана в ОЗУ, для сохранения изменений необходимо перенести таблицу в EEPROM.")
 		
-		ToolTip.ToolTip(self.Answer.Box, " Индикатор ответа ЭБУ на команду.\n Красный - команда не принята. \n Зелёный - команда успешно обработана.")
+		ToolTip.ToolTip(self.Answer.Box, "Индикатор ответа ЭБУ на команду. Красный - команда не принята. Зелёный - команда успешно обработана.")
 
-		ToolTip.ToolTip(self.EReadBtn, " Считать все таблицы из EEPROM в ОЗУ")
-		ToolTip.ToolTip(self.ESaveBtn, " Сохранить все таблицы из ОЗУ в EEPROM")
+		ToolTip.ToolTip(self.EReadBtn, "Считать все таблицы из EEPROM в ОЗУ")
+		ToolTip.ToolTip(self.ESaveBtn, "Сохранить все таблицы из ОЗУ в EEPROM")
 
-		ToolTip.ToolTip(self.ExportBtn, " Экспорт текущей таблицы в буфер обмена.\n Значения передаюся в буфер с разделителем-табуляцией\n для дальнейшей вставки в Excel.")
-		ToolTip.ToolTip(self.ImportBtn, " Импорт таблицы из буфер обмена.\n Значения должны быть с разделителем-табуляцией и в таком же количестве.")
+		ToolTip.ToolTip(self.ExportBtn, "Экспорт текущей таблицы в буфер обмена. Значения передаюся в буфер с разделителем-табуляцией для дальнейшей вставки в Excel.")
+		ToolTip.ToolTip(self.ImportBtn, "Импорт таблицы из буфер обмена. Значения должны быть с разделителем-табуляцией и в таком же количестве.")
 		
-		ToolTip.ToolTip(self.MinGearBox, " Минимальная допустимая передача.\n Используется для настройки переключений.")
-		ToolTip.ToolTip(self.MaxGearBox, " Максимальная допустимая передача.\n Используется для настройки переключений.")
-		ToolTip.ToolTip(self.GearSetLimitBtn, " Установить ограничения по передачам в ЭБУ")
+		ToolTip.ToolTip(self.MinGearBox, "Минимальная допустимая передача. Используется для настройки переключений.")
+		ToolTip.ToolTip(self.MaxGearBox, "Максимальная допустимая передача. Используется для настройки переключений.")
+		ToolTip.ToolTip(self.GearSetLimitBtn, "Установить ограничения по передачам в ЭБУ")
 
-		ToolTip.ToolTip(self.TableResetBtn, " Сброс всех таблиц.\n Все значения заменяются на начальные из прошивки и производтся запись в EEPROM.\n Можно использовать в том числе для первоначальной записи таблиц в EEPROM.")
-		ToolTip.ToolTip(self.ExitBtn, " Закрыть окно.")
-		ToolTip.ToolTip(self.TableBox, " Выбор таблицы для редакирования")
+		ToolTip.ToolTip(self.TableResetBtn, "Сброс всех таблиц текущего окна. Значения заменяются на начальные из прошивки и производтся запись в EEPROM. Можно использовать в том числе для первоначальной записи таблиц в EEPROM.")
+		ToolTip.ToolTip(self.ExitBtn, "Закрыть окно.")
+		ToolTip.ToolTip(self.TableBox, "Выбор таблицы для редакирования")
 
-		ToolTip.ToolTip(self.BtnZero, " Обнуление графика")
-		ToolTip.ToolTip(self.BtnApplyAdapt, " Применение адаптации к текущей таблице.\n После применения таблица адаптации обнуляется.\n Все изменения производятся в ОЗУ ЭБУ,\n для сохранения изменений необходимо произвести запись в EEPROM.")
+		ToolTip.ToolTip(self.BtnBuildLine, "Построить линию по двум точкам")
+		ToolTip.ToolTip(self.BtnZero, "Обнуление графика")
+		ToolTip.ToolTip(self.BtnApplyAdapt, "Применение адаптации к текущей таблице. После применения таблица адаптации обнуляется. Все изменения производятся в ОЗУ ЭБУ, для сохранения изменений необходимо произвести запись в EEPROM.")
 
 	def apply_adaptation(self): # Применение адаптации к текущему графику.
 		Number = self.TableBox.current()
-		Name = TablesData[Number]['Table']
+		Name = Tables.TablesData[Number]['Table']
 
-		if Name in ApplyAdaptationCommands:
+		if Name in Tables.ApplyAdaptationCommands:
 			self.Answer.update(1)
-			Command = ApplyAdaptationCommands[Name]
+			Command = Tables.ApplyAdaptationCommands[Name]
 			self.Uart.send_command(Command, Number, [])
 
+	def build_line(self):
+		Start = self.MainGraph.CursorPositionL
+		Stop = self.MainGraph.CursorPositionR
+		if Start == Stop:
+			Start = 0
+			Stop = len(self.Cells) - 1
+
+		ArrayLen = len(self.Cells) - 1
+
+		ArrayLen = Stop - Start
+		Min = int(self.Cells[Start].get())
+		Max = int(self.Cells[Stop].get())
+		Step = (Max - Min) / ArrayLen
+
+		for i in range(0, ArrayLen + 1):
+			self.Cells[Start + i].delete(0, END)
+			Value = round(Min + Step * i)
+			self.Cells[Start + i].insert(0, str(Value))
+
+		self.value_check('')
+
 	def reset_tables(self):	# Команда сброса таблиц в ЭБУ.
-		if messagebox.askyesno('Сброс таблиц', 'Перезаписать ВСЕ таблицы в EEPROM значениями из прошивки?'):
+		if messagebox.askyesno('Сброс таблиц', 'Перезаписать EEPROM ВСЕX таблицы текущего окна значениями из прошивки?'):
 			self.TableBox.current(0)
 			self.table_selected_event('')
 			self.root.lift()
 
 			time.sleep(0.5)
 			self.Answer.update(1)
-			self.Uart.send_command(0xab, self.TableBox.current(), [])
+			self.Uart.send_command('TABLES_INIT_MAIN_COMMAND', self.get_table_number(), [])
 		else:
 			self.root.lift()
 
@@ -208,7 +207,7 @@ class _TableEditWindow:
 		MaxGear = int(self.MaxGearBox.get())
 
 		self.Answer.update(1)
-		self.Uart.send_command(0xbe, self.TableBox.current(), [MinGear, MaxGear])
+		self.Uart.send_command('GEAR_LIMIT_COMMAND', self.TableBox.current(), [MinGear, MaxGear])
 
 	def min_gear_selected_event(self, event):	# Событие смены ограничения передачи (min).
 		if self.MaxGearBox.current() < self.MinGearBox.current():
@@ -222,8 +221,11 @@ class _TableEditWindow:
 		X = 5
 		H = 13
 
+		self.BtnBuildLine = Button(self.root, text = "L", width = 1, bg = "#bcbcbc", command = self.build_line, font = ("Helvetica", 10, 'bold'), border="2px", state = 'normal')
+		self.BtnBuildLine.place(x = X, y = Y - H - 95, width = 25, height = 25)
+
 		self.BtnApplyAdapt = Button(self.root, text = "A", width = 1, bg = "#bcbcbc", command = self.apply_adaptation, font = ("Helvetica", 10, 'bold'), border="2px", state = 'disabled')
-		self.BtnApplyAdapt.place(x = X, y = Y - H - 95, width = 25, height = 25)
+		self.BtnApplyAdapt.place(x = X, y = Y - H - 150, width = 25, height = 25)
 
 		self.BtnZero = Button(self.root, text = "0", width = 1, bg = "#bcbcbc", command = lambda: self.move_graph(0), font = ("Helvetica", 10, 'bold'), border="2px")
 		self.BtnZero.place(x = X, y = Y - H, width = 25, height = 25)
@@ -233,7 +235,7 @@ class _TableEditWindow:
 
 	def move_graph(self, Where):	# Перемещение точек на графике.
 		N = self.TableBox.current()
-		Step = TablesData[N]['Step']
+		Step = Tables.TablesData[N]['Step']
 		for Cell in self.Cells:
 			Value = int(Cell.get())
 			if Where == 0:
@@ -267,10 +269,10 @@ class _TableEditWindow:
 			self.value_check('')
 
 	def get_array_x(self):	# Получить сетку по оси X.
-		return TablesData[self.TableBox.current()]['ArrayX']
+		return Tables.TablesData[self.TableBox.current()]['ArrayX']
 
 	def key_pressed(self, event):	# Событие по нажатию кнопки на клавиатуре.
-		Result = self.MainGraph.move_point(event.keysym, self.Cells)
+		Result = self.MainGraph.move_point(event.keysym, event.state, self.Cells)
 		if Result:
 			self.value_check('')
 			if self.OnLine.get() == 1 and Result == 2:
@@ -278,7 +280,7 @@ class _TableEditWindow:
 
 	def table_auto_update(self):
 		if self.AutoUpdate.get() == 1:
-			if TablesData[self.TableBox.current()]['Table'] in AtaptationTables:
+			if Tables.TablesData[self.TableBox.current()]['Table'] in AtaptationTables:
 				self.get_table()
 
 	def command_buttons_disable(self):
@@ -305,13 +307,13 @@ class _TableEditWindow:
 	def get_table(self):	# Команда на получение таблицы из ЭБУ.
 		self.Answer.update(1)
 		self.GetNewTable = 1
-		self.Uart.send_command(0xc1, self.TableBox.current(), [])
+		self.Uart.send_command('GET_TABLE_COMMAND', self.TableBox.current(), [])
 
-	def read_table(self):	# Событие при получении таблицы из ЭБУ.
+	def read_table(self):	# Событие при получении данных из ЭБУ.
 		#print('Получена таблица', self.Uart.TableNumber)
 		#print(self.Uart.TableNumber, self.TableBox.current())
 		#print(len(self.Uart.TableData),  len(self.get_array_x()))
-		if self.Uart.TableNumber == self.TableBox.current():
+		if self.Uart.TableNumber == self.get_table_number():
 			if len(self.Uart.TableData) == len(self.get_array_x()):
 				
 				self.WriteBtn.config(state='normal')
@@ -330,16 +332,16 @@ class _TableEditWindow:
 		Data = []
 		for Cell in self.Cells:
 			Data.append(int(Cell.get()))
-		self.Uart.send_command(0xc8, self.TableBox.current(), Data)
+		self.Uart.send_command('NEW_TABLE_DATA', self.TableBox.current(), Data)
 
 	def read_eeprom(self):	# Команда на чтение EEPROM.
 
 		self.Answer.update(1)
-		self.Uart.send_command(0xcc, self.TableBox.current(), [])
+		self.Uart.send_command('READ_EEPROM_MAIN_COMMAND', self.TableBox.current(), [])
 
 	def write_eeprom(self):	# Команда на запись EEPROM.
 		self.Answer.update(1)
-		self.Uart.send_command(0xee, self.TableBox.current(), [])
+		self.Uart.send_command('WRITE_EEPROM_MAIN_COMMAND', self.TableBox.current(), [])
 
 	def value_check(self, event):	# Проверка и исправление значений таблицы.
 		N = self.TableBox.current()
@@ -347,12 +349,12 @@ class _TableEditWindow:
 		for Cell in self.Cells:
 			try:
 				Value = int(Cell.get())
-				if Value < TablesData[N]['Min']:
+				if Value < Tables.TablesData[N]['Min']:
 					Cell.delete(0, END)
-					Cell.insert(0, str(TablesData[N]['Min']))
-				elif Value > TablesData[N]['Max']:
+					Cell.insert(0, str(Tables.TablesData[N]['Min']))
+				elif Value > Tables.TablesData[N]['Max']:
 					Cell.delete(0, END)
-					Cell.insert(0, str(TablesData[N]['Max']))
+					Cell.insert(0, str(Tables.TablesData[N]['Max']))
 				else:
 					Cell.delete(0, END)
 					Cell.insert(0, str(Value))
@@ -376,12 +378,15 @@ class _TableEditWindow:
 		self.MainGraph.redraw(self.TableBox.current(), self.get_array_x())
 		self.MainGraph.update_data(self.Cells, 0)
 
-		if TablesData[self.TableBox.current()]['Table'] in ApplyAdaptationCommands:
+		self.MainGraph.CursorPositionL = 0
+		self.MainGraph.CursorPositionR = 0
+
+		if Tables.TablesData[self.TableBox.current()]['Table'] in Tables.ApplyAdaptationCommands:
 			self.BtnApplyAdapt.configure(state = 'normal')
 		else:
 			self.BtnApplyAdapt.configure(state = 'disabled')
 
-		if TablesData[self.TableBox.current()]['Table'] in AtaptationTables:
+		if Tables.TablesData[self.TableBox.current()]['Name'][:4] == '    ':
 			self.AutoUpdateChk.configure(state = 'normal')
 		else:
 			self.AutoUpdateChk.configure(state = 'disabled')
@@ -393,7 +398,6 @@ class _TableEditWindow:
 		self.OnLine.set(0)
 		self.AutoUpdate.set(0)
 		self.command_buttons_disable()
-
 
 	def clear_table(self):	# Очистка таблицы в интерфейсе.
 		for Cell in self.Cells:
@@ -409,12 +413,12 @@ class _TableEditWindow:
 		X = 35
 		Y = 630
 		Space = 52.5
-		if self.get_array_x() == TempGrid:
+		if self.get_array_x() == Tables.TempGrid:
 			Space = 35
 
 		for Col, Value in enumerate(self.get_array_x()):
 			Cell = Entry(self.root, justify = "center", bg = self.CellColor, width = W)
-			Default = TablesData[self.TableBox.current()]['Min']
+			Default = Tables.TablesData[self.TableBox.current()]['Min']
 			if Default < 0:
 				Default = 0
 
@@ -456,7 +460,7 @@ class _TableEditWindow:
 			self.ReadBtn.config(state='disabled')
 			self.WriteBtn.config(state='disabled')
 
-	def get_tcu_data(self, Parameter):	# Получение параметров ЭБУ из пакета данных (0x71).
+	def get_tcu_data(self, Parameter):
 		return self.Uart.TCU[Parameter]
 
 	def on_closing(self):	# Событие по закрытию окна.
@@ -477,15 +481,15 @@ class _Graph:
 		self.Border = 10
 
 		self.N = 0
-		self.ArrayX = TPSGrid
+		self.ArrayX = Tables.TPSGrid
 
 		self.GraphLines = []
 		self.GraphPoints = []
 		self.PrevGraphLines = []
-		self.GraphLabel = 0
 
 		self.GraphFocus = 0
-		self.CursorPosition = 0
+		self.CursorPositionL = 0
+		self.CursorPositionR = 0
 
 		self.Markers = []
 
@@ -508,31 +512,41 @@ class _Graph:
 		try:
 			Value = int(Cells[Position].get())
 		except:
-			Value = TablesData[self.N]['Min']
+			Value = Tables.TablesData[self.N]['Min']
 			if Value < 0:
 				Value = 0
 		return Value
 
-	def move_point(self, Button, Cells):	# Перемещение точек.
+	def move_point(self, Button, State, Cells):	# Перемещение точек.
 		if self.GraphFocus:
+			Start = self.CursorPositionL
+			Stop = self.CursorPositionR
+
 			if Button == 'Up':
-				Value = self.get_cell_value(Cells, self.CursorPosition)
-				Value += TablesData[self.N]['Step']
-				Cells[self.CursorPosition].delete(0, END)
-				Cells[self.CursorPosition].insert(0, Value)
+				for i in range(Start, Stop + 1):
+					Value = self.get_cell_value(Cells, i)
+					Value += Tables.TablesData[self.N]['Step']
+					Cells[i].delete(0, END)
+					Cells[i].insert(0, Value)
 
 			elif Button == 'Down':
-				Value = self.get_cell_value(Cells, self.CursorPosition)
-				Value -= TablesData[self.N]['Step']
-				Cells[self.CursorPosition].delete(0, END)
-				Cells[self.CursorPosition].insert(0, Value)
+				for i in range(Start, Stop + 1):
+					Value = self.get_cell_value(Cells, i)
+					Value -= Tables.TablesData[self.N]['Step']
+					Cells[i].delete(0, END)
+					Cells[i].insert(0, Value)
 
 			elif Button == 'Left':
-				if self.CursorPosition > 0:
-					self.CursorPosition -= 1
+				if self.CursorPositionL > 0:
+					self.CursorPositionL -= 1
+				if State not in (17, 8209):		# Shift
+					self.CursorPositionR = self.CursorPositionL
+					
 			elif Button == 'Right':
-				if self.CursorPosition < len(self.ArrayX) - 1:
-					self.CursorPosition += 1
+				if self.CursorPositionR < len(self.ArrayX) - 1:
+					self.CursorPositionR += 1
+				if State not in (17, 8209):		# Shift
+					self.CursorPositionL = self.CursorPositionR
 
 			if Button in ('Up', 'Down'):
 				self.update_data(Cells, 0)
@@ -570,8 +584,8 @@ class _Graph:
 		MinX = min(self.ArrayX)
 		MaxX = max(self.ArrayX)
 
-		MinY = TablesData[self.N]['Min']
-		MaxY = TablesData[self.N]['Max']
+		MinY = Tables.TablesData[self.N]['Min']
+		MaxY = Tables.TablesData[self.N]['Max']
 
 		lx1 = self.Border + ((X1 - MinX)  / (MaxX - MinX)) * (self.w - self.Border * 2)
 		ly1 = self.h - ((Y1 - MinY)  / (MaxY - MinY)) * (self.h - self.Border * 2) - self.Border
@@ -595,7 +609,7 @@ class _Graph:
 
 		R = 3
 		Fill = "#cccc00"
-		if self.ArrayX[self.CursorPosition] == X1:
+		if X1 >= self.ArrayX[self.CursorPositionL] and X1 <= self.ArrayX[self.CursorPositionR]:
 			R = 5
 			Fill = "#ff1111"
 			Tx = lx1
@@ -605,8 +619,8 @@ class _Graph:
 
 			if X1 == MinX:
 				Tx += 5
-			self.GraphLabel = self.Box.create_text(Tx, Ty, font = "Verdana 10", justify = CENTER, fill = 'black', text = str(Y1))
-
+			GraphLabel = self.Box.create_text(Tx, Ty, font = "Verdana 10", justify = CENTER, fill = 'black', text = str(Y1))
+			self.GraphPoints.append(GraphLabel)
 			DownLine = self.Box.create_line(lx1, ly1, lx1, self.h, fill = "#a0a0a0", width = LineWidth)
 			self.GraphPoints.append(DownLine)
 
@@ -616,14 +630,15 @@ class _Graph:
 		if X2 == MaxX:
 			R2 = 3
 			Fill2 = "#cccc00"
-			if self.ArrayX[self.CursorPosition] == X2:
+			if X2 >= self.ArrayX[self.CursorPositionL] and X2 <= self.ArrayX[self.CursorPositionR]:
 				R2 = 5
 				Ty = ly2 - 20
 				if ly2 < 28:
 					Ty = ly2 + 20
 
 				Fill2 = "#ff1111"
-				self.GraphLabel = self.Box.create_text(lx2 - 7, Ty, font = "Verdana 10", justify = CENTER, fill = 'black', text = str(Y2))
+				GraphLabel = self.Box.create_text(lx2 - 7, Ty, font = "Verdana 10", justify = CENTER, fill = 'black', text = str(Y2))
+				self.GraphPoints.append(GraphLabel)
 
 			Circle = self.Box.create_oval(lx2 - R2, ly2 - R2, lx2 + R, ly2 + R2, fill=Fill2, outline="#004c99")
 			self.GraphPoints.append(Circle)
@@ -631,14 +646,14 @@ class _Graph:
 	def redraw(self, N, ArrayX):	# Переотрисовка графика.
 		self.N = N
 		self.ArrayX = ArrayX
-		self.w = len(TempGrid) * 35
-		self.CursorPosition = 0
+		self.w = len(Tables.TempGrid) * 35
+		self.CursorPositionL = 0
 
 		self.Box.delete("all")
 		self.Box.create_rectangle(1, 1, self.w - 2, self.h - 2, width = 2, fill = '#fafffd')
 
-		Min = TablesData[self.N]['Min']
-		Max = TablesData[self.N]['Max']
+		Min = Tables.TablesData[self.N]['Min']
+		Max = Tables.TablesData[self.N]['Max']
 		
 		self.print_h_line(Min, Min, Max, 6)
 		self.print_h_line((Max - Min) * 1 // 4 + Min, Min, Max, 6)
@@ -663,7 +678,6 @@ class _Graph:
 			self.Box.delete(Element)
 		for Element in self.GraphPoints:
 			self.Box.delete(Element)
-		self.Box.delete(self.GraphLabel)
 
 		if DrawPrev == 1:
 			for Element in self.PrevGraphLines:
@@ -688,25 +702,25 @@ class _Graph:
 		self.Markers = []
 
 		ValueX = 0
-		if self.ArrayX == TPSGrid:
+		if self.ArrayX == Tables.TPSGrid:
 			ValueX = self.get_tcu_data('InstTPS')
-		elif self.ArrayX == DeltaRPMGrid:
+		elif self.ArrayX == Tables.DeltaRPMGrid:
 			ValueX = self.get_tcu_data('DrumRPMDelta')
-		elif self.ArrayX == TempGrid:
+		elif self.ArrayX == Tables.TempGrid:
 			ValueX = self.get_tcu_data('OilTemp')
 		else:			
 			return
 
 		MinX = min(self.ArrayX)
 		MaxX = max(self.ArrayX)
-		MinY = TablesData[self.N]['Min']
-		MaxY = TablesData[self.N]['Max']
+		MinY = Tables.TablesData[self.N]['Min']
+		MaxY = Tables.TablesData[self.N]['Max']
 
 		lx = self.Border + ((ValueX - MinX)  / (MaxX - MinX)) * (self.w - self.Border * 2)
 		Line = self.Box.create_line(lx, 2, lx, self.h - 2, fill = '#ff9999', width = 2)
 		self.Markers.append(Line)
 		
-		Parameter = TablesData[self.N]['Parameter']
+		Parameter = Tables.TablesData[self.N]['Parameter']
 		if Parameter != '':
 			R = 6
 			ValueY = self.get_tcu_data(Parameter)
@@ -715,7 +729,7 @@ class _Graph:
 				Circle = self.Box.create_oval(lx - R, ly - R, lx + R, ly + R, fill='#11ff88', outline="#004c99")
 				self.Markers.append(Circle)
 
-	def get_tcu_data(self, Parameter):	# Получение параметров ЭБУ из пакета данных (0x71).
+	def get_tcu_data(self, Parameter):
 		return self.Uart.TCU[Parameter]
 
 # Светофор.

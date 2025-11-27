@@ -6,9 +6,7 @@ import time
 import serial.tools.list_ports
 import codecs
 
-TpsGridSize = 21
-TempGridSize = 31
-DeltaRPMGridSize = 21
+import Tables
 
 Parameters = (	  ('uint16_t', 'EngineRPM')
 				, ('uint16_t', 'DrumRPM')
@@ -49,30 +47,47 @@ Parameters = (	  ('uint16_t', 'EngineRPM')
 				, ('uint16_t', 'RawOIL')
 				)
 
-Tables = (	  ('SLTGraph', 						'uint16_t',		TpsGridSize)
-			, ('SLTTempCorrGraph', 				'int16_t',		TempGridSize)
-			, ('SLNGraph', 						'uint16_t', 	TpsGridSize)
-			, ('SLUGear2Graph', 				'uint16_t', 	TpsGridSize)
-			, ('SLUGear2TempCorrGraph',			'int16_t', 		TempGridSize)
-			, ('SLUGear2TPSAdaptGraph', 		'int16_t', 		TpsGridSize)						
-			, ('SLUGear2TempAdaptGraph',		'int16_t', 		TempGridSize)
-			, ('Gear2AdvGraph', 				'int16_t',		DeltaRPMGridSize)			
-			, ('Gear2AdvAdaptGraph', 			'int16_t',		DeltaRPMGridSize)			
-			, ('SLUGear3Graph', 				'uint16_t', 	TpsGridSize)
-			, ('SLUGear3DelayGraph', 			'uint16_t',		TpsGridSize)
-			, ('SLUG3DelayTempCorrGraph',		'int16_t',		TempGridSize)
-			, ('SLUGear3TPSAdaptGraph',			'int16_t',		TpsGridSize)
-			, ('SLUGear3TempAdaptGraph',		'int16_t',		TempGridSize)
-			, ('SLNGear3Graph', 				'uint16_t',		TpsGridSize)
-			, ('SLNGear3OffsetGraph', 			'int16_t',		TpsGridSize)
-			, ('TPSGraph', 						'int16_t',		TpsGridSize)
-			, ('OilTempGraph', 					'int16_t',		TempGridSize)
-			)
+CommandBytes = {'TCU_DATA_PACKET' :		0x71
+				, 'GET_TABLE_COMMAND' :	0xc1
+				, 'TCU_TABLE_ANSWER' :	0xc2
+				, 'NEW_TABLE_DATA' :	0xc3
+
+				, 'GET_CONFIG_COMMAND' : 	0xc4
+				, 'TCU_CONFIG_ANSWER' : 	0xc5
+				, 'NEW_CONFIG_DATA' : 		0xc6
+
+				, 'READ_EEPROM_MAIN_COMMAND' :		0xe0
+				, 'READ_EEPROM_ADC_COMMAND' :		0xe1
+				, 'READ_EEPROM_SPEED_COMMAND' :		0xe2
+				, 'READ_EEPROM_CONFIG_COMMAND' :	0xe3
+
+				, 'WRITE_EEPROM_MAIN_COMMAND' :		0xea
+				, 'WRITE_EEPROM_ADC_COMMAND' :		0xeb
+				, 'WRITE_EEPROM_SPEED_COMMAND' :	0xec
+				, 'WRITE_EEPROM_CONFIG_COMMAND' :	0xed
+
+				, 'SPEED_TEST_COMMAND' :	0xd0
+				, 'GEAR_LIMIT_COMMAND' :	0xd1
+
+				, 'TABLES_INIT_MAIN_COMMAND' :		0xda
+				, 'TABLES_INIT_ADC_COMMAND' :		0xdb
+				, 'TABLES_INIT_SPEED_COMMAND' :		0xdc
+				, 'TABLES_INIT_CONFIG_COMMAND' :	0xdd
+
+				, 'APPLY_G2_TPS_ADAPT_COMMAND' :		0xf0
+				, 'APPLY_G2_TEMP_ADAPT_COMMAND' :		0xf1
+				, 'APPLY_G2_ADV_ADAPT_COMMAND' :		0xf2
+				, 'APPLY_G2_ADV_TEMP_ADAPT_COMMAND' :	0xf3
+
+				, 'APPLY_G3_TPS_ADAPT_COMMAND' :	0xf4
+				, 'APPLY_G3_TEMP_ADAPT_COMMAND' :	0xf5
+}
 
 # Прием данных по UART
 class _uart:
 	def __init__(self, Folder, Baudrate):
 		self.TCU = {}				# Словарь с параметрами.
+		self.CFG = {}				# Словарь с настройками.
 		self.TableData = []			# Буфер для таблицы.
 		self.Begin = 0				# Флаг начала пакета.
 		self.DataArray = []			# Массив байт.
@@ -94,26 +109,48 @@ class _uart:
 		self.PortReading = 0
 		self.SerialRead = threading.Thread(target = self.read_port, daemon = True).start()
 		
-		self.NewData = 1			# Флаг, получен новый пакет данных (0x71).
 		self.PacketType = 0
-		self.TableNumber = -1		# Флаг и номер, получена новая таблица (0xc2).
+		self.TableNumber = -1		# Флаг и номер, получена новая таблица (TCU_TABLE_ANSWER).
 		self.ByteCount = 0
-		self.PacketSize = 1 		# +1 байт типа пакета.
-		# Первоначальное заполнение словаря.
+		self.DataPacketSize = 1 	# +1 байт типа пакета.
+
+		self.dictionary_init()		# Инициаизация словарей.
+
+		self.NewData = 1			# Флаг, получен новый пакет данных (TCU_DATA_PACKET).
+		self.NewConfig = 1			# Флаг, получен новый пакет настроек (TCU_CONFIG_ANSWER).
+
+	def dictionary_init(self):
+		# Первоначальное заполнение словаря с параметрами.
 		for Key in Parameters:
 			self.TCU[Key[1]] = 0
 			
 		# Определение длины пакета.
 		for Key in Parameters:
 			if Key[0] == 'int8_t':
-				self.PacketSize += 1
+				self.DataPacketSize += 1
 			elif Key[0] == 'uint8_t':
-				self.PacketSize += 1
+				self.DataPacketSize += 1
 			elif Key[0] == 'int16_t':
-				self.PacketSize += 2
+				self.DataPacketSize += 2
 			elif Key[0] == 'uint16_t':
-				self.PacketSize += 2
-	# Логирование
+				self.DataPacketSize += 2
+
+		self.ConfigPacketSize = 1 		# +1 байт типа пакета.
+		# Первоначальное заполнение словаря с настройками.
+		for Key in Tables.ConfigData:
+			self.CFG[Key] = 0
+
+		# Определение длины пакета.
+		for Key in Tables.ConfigData:
+			if Tables.ConfigData[Key]['Type'] == 'int8_t':
+				self.ConfigPacketSize += 1
+			elif Tables.ConfigData[Key]['Type'] == 'uint8_t':
+				self.ConfigPacketSize += 1
+			elif Tables.ConfigData[Key]['Type'] == 'int16_t':
+				self.ConfigPacketSize += 2
+			elif Tables.ConfigData[Key]['Type'] == 'uint16_t':
+				self.ConfigPacketSize += 2
+
 	def to_log(self, EmrtyLine = 0):
 		LogLen = 10 * round(1000 / 50)		# Размер кольцового буфера с секундах (период 50мс).
 
@@ -199,16 +236,17 @@ class _uart:
 		
 	def data_update(self):
 		self.NewData = 0
-		self.PacketType = hex(self.get_uint8(0))
+		self.PacketType = self.get_uint8(0)
 		ByteNumber = 1
 
-		#if self.PacketType != '0x71':
-		#	print(self.PacketType, self.ByteCount)
-		#	print(self.DataArray)
-		#	print(self.PacketType, self.get_uint8(ByteNumber) , self.ByteCount, self.PacketSize)
-		
+		# if self.PacketType != CommandBytes['TCU_DATA_PACKET']:
+		# 	print(self.PacketType, self.ByteCount)
+		# 	print(self.DataArray)
+		# 	print(self.PacketType, self.get_uint8(ByteNumber) , self.ByteCount, self.DataPacketSize)
+		#print(self.PacketType, CommandBytes['TCU_DATA_PACKET'], self.ByteCount, self.DataPacketSize)
+
 		# 0x71 - Пакет с параметрами ЭБУ.
-		if self.PacketType == '0x71' and self.ByteCount == self.PacketSize:
+		if self.PacketType == CommandBytes['TCU_DATA_PACKET'] and self.ByteCount == self.DataPacketSize:
 			for Key in Parameters:
 				Value = 0
 				if Key[0] == 'int8_t':
@@ -226,23 +264,50 @@ class _uart:
 				self.TCU[Key[1]] = Value
 			self.to_log()
 			self.NewData = 1
-		elif self.PacketType == '0xc2' and 	self.TableNumber == -1:
+			#print(self.TCU)
+
+		elif self.PacketType == CommandBytes['TCU_CONFIG_ANSWER'] and self.ByteCount == self.ConfigPacketSize:
+			for Key in Tables.ConfigData:
+				Value = 0
+				if Tables.ConfigData[Key]['Type'] == 'int8_t':
+					Value = self.get_int8(ByteNumber)
+					ByteNumber += 1
+				elif Tables.ConfigData[Key]['Type'] == 'uint8_t':
+					Value = self.get_uint8(ByteNumber)
+					ByteNumber += 1
+				elif Tables.ConfigData[Key]['Type'] == 'int16_t':
+					Value = self.get_int16(ByteNumber)
+					ByteNumber += 2
+				elif Tables.ConfigData[Key]['Type'] == 'uint16_t':
+					Value = self.get_uint16(ByteNumber)
+					ByteNumber += 2
+				self.CFG[Key] = Value
+			self.to_log()
+			self.NewConfig = 1
+			#print(self.CFG)
+
+		elif self.PacketType == CommandBytes['TCU_TABLE_ANSWER'] and self.TableNumber == -1:
 			self.TableNumber = self.get_uint8(ByteNumber)
 
 			ByteNumber += 1
 			N = self.TableNumber
 
-			#print('0xc2')
-			#print(self.ByteCount,  Tables[N][2] * 2 + 2)
-
-			if self.ByteCount == Tables[N][2] * 2 + 2:
+			if self.ByteCount == Tables.TablesData[N]['Size'] + 2:
 				self.TableData = []
-				for i in range(Tables[N][2]):
-					if Tables[N][1] == 'uint16_t':
-						self.TableData.append(self.get_uint16(ByteNumber))
-					elif Tables[N][1] == 'int16_t':
-						self.TableData.append(self.get_int16(ByteNumber))
-					ByteNumber += 2
+
+				if Tables.TablesData[N]['Type']	 == 'uint16_t':
+					for i in range(Tables.TablesData[N]['Size']	 // 2):
+						self.TableData.append(self.get_uint16(ByteNumber + i * 2))
+				elif Tables.TablesData[N]['Type']	 == 'int16_t':
+					for i in range(Tables.TablesData[N]['Size']	 // 2):
+						self.TableData.append(self.get_int16(ByteNumber + i * 2))
+
+				if Tables.TablesData[N]['Type']	 == 'uint8_t':
+					for i in range(Tables.TablesData[N]['Size']	):
+						self.TableData.append(self.get_uint8(ByteNumber + i))
+				elif Tables.TablesData[N]['Type']	 == 'int8_t':
+					for i in range(Tables.TablesData[N]['Size']	):
+						self.TableData.append(self.get_int8(ByteNumber + i))
 				#print(self.TableNumber)
 			else:
 				self.TableNumber = -1 # Таблица не гожая.
@@ -255,41 +320,65 @@ class _uart:
 			return Value
 	def get_uint8(self, N):
 		return ord(self.DataArray[N])
+
 	def get_int16(self, N):
 		return int.from_bytes(self.DataArray[N] + self.DataArray[N + 1], byteorder = 'little', signed = True)
 	def get_uint16(self, N):
 		return int.from_bytes(self.DataArray[N] + self.DataArray[N + 1], byteorder = 'little', signed = False)
 	
-	def send_command(self, Type, Table, Data):
-
+	def send_command(self, Command, Table, Data):
 		if self.PortReading != 1:
 			return
 
+		N = Table
+
+		Command = CommandBytes[Command]
 		SendBuffer = []
 
 		SendBuffer.append(0x40)	# Начало исходящего пакета.
-		SendBuffer.append(Type)	# Тип пакета.
-		self.add_byte(SendBuffer, Table)	# Номер таблицы.
+		SendBuffer.append(Command)	# Тип пакета.
+		self.add_byte(SendBuffer, N)	# Номер таблицы.
 
 		Signed = False
-		if Tables[Table][1] == 'int16_t':
+		if Tables.TablesData[N]['Type']	 == 'int16_t' or Tables.TablesData[N]['Type']	 == 'int8_t':
 			Signed = True
 
-		if Type == 0xc8:
+		ValSize = 2
+		if Tables.TablesData[N]['Type']	 == 'uint8_t' or Tables.TablesData[N]['Type']	 == 'int8_t':
+			ValSize = 1
+
+		if Command == CommandBytes['NEW_TABLE_DATA']:
 			for Val in Data:
-				for Byte in Val.to_bytes(2, 'big', signed = Signed):
+				for Byte in Val.to_bytes(ValSize, 'big', signed = Signed):
 					self.add_byte(SendBuffer, Byte)
-		elif Type in (0xcc, 0xee, 0xab, 0xfc, 0xfd, 0xfe, 0xfa, 0xfb):
-			SendBuffer.append(Type)	# Дополнительно вставляем тип пакета.
-		elif Type == 0xbe:
+		elif Command == CommandBytes['GEAR_LIMIT_COMMAND']:
 			for Val in Data:
-				for Byte in Val.to_bytes(1, 'big', signed = False):
+				for Byte in Val.to_bytes(ValSize, 'big', signed = False):
 					self.add_byte(SendBuffer, Byte)
 
+		elif Command == CommandBytes['NEW_CONFIG_DATA']:
+			for Key in Tables.ConfigData:
+				Value = int(Tables.ConfigData[Key]['Value'].get())
+				ValSize = 1
+				Signed = False
+
+				if Tables.ConfigData[Key]['Type'] == 'uint16_t' or Tables.ConfigData[Key]['Type']	 == 'int16_t':
+					ValSize = 2
+				if Tables.ConfigData[Key]['Type'] == 'int8_t' or Tables.ConfigData[Key]['Type']	 == 'int16_t':
+					Signed = True
+
+				for Byte in Value.to_bytes(ValSize, 'little', signed = Signed):
+					self.add_byte(SendBuffer, Byte)
+
+		else:
+			SendBuffer.append(Command)	# Дополнительно вставляем тип пакета.
+
 		SendBuffer.append(0x0d)	# Конец пакета.
-		#print(len(SendBuffer))
+
+		#for b in SendBuffer:
+		#	print(hex(b))
+
 		SendBuffer = bytes(SendBuffer)
-		#print('Send command', SendBuffer)
 		self.Serial.write(SendBuffer)
 
 	def add_byte(self, Array, Byte):	# Добавление байта с подменой.

@@ -31,6 +31,8 @@ class _MainWindow:
 		self.Uart = Uart
 		self.EditTables = 0
 		self.EditADC = 0
+		self.EditSpeed = 0
+		self.EditConfig = 0
 
 		Width = 1300
 		Height = 700
@@ -39,7 +41,6 @@ class _MainWindow:
 
 		self.root.title('Мониторинг работы АКПП (' + Ver + ')')
 		self.root.geometry(f'{Width}x{Height}+{OffsetX}+{OffsetY}')
-		#self.root.protocol("WM_DELETE_WINDOW", quit)
 		self.root.configure(background = BackGroundColor)
 
 		MainFont = font.Font(size = 16)
@@ -47,30 +48,25 @@ class _MainWindow:
 
 		ComPorts = self.Uart.get_com_ports(1)
 		self.PortBox = ttk.Combobox(values = ComPorts, state = "readonly", width = 40)
-
 		ActivePort = -1
 		for N, Port in enumerate(ComPorts):
 			if Port[0] == '/dev/ttyUSB0':
 				ActivePort = N
 		if ActivePort >= 0:
 			self.PortBox.current(ActivePort)
-
 		self.PortBox.place(x = 25, y = Height-50)
 
-		self.OpenBtn = Button(text = "Старт", width = 5, bg = "#54fa9b", command = self.start)
-		self.OpenBtn.place(x = 630, y = Height-55)
+		self.PortBtn = Button(text = "Старт", width = 10, bg = "#fb7b72", command = self.port_start_stop)
+		self.PortBtn.place(x = 25, y = Height-100)
 
-		self.CloseBtn = Button(text = "Стоп", width = 5, bg = "#fb7b72", command = self.stop)
-		self.CloseBtn.place(x = 750, y = Height-55)
+		self.ConfigBtn = Button(text = "Настройки", width = 9, bg = "#3CB371", command = self.edit_config, state='normal')
+		self.ConfigBtn.place(x = 675, y = Height-55)
 
-		self.EditBtn = Button(text = "Таблицы", width = 8, bg = "#1e90ff", command = self.edit_tables, state='normal')
-		self.EditBtn.place(x = 925, y = Height-55)
+		self.TablesBtn = Button(text = "Таблицы", width = 8, bg = "#1e90ff", command = self.edit_tables, state='normal')
+		self.TablesBtn.place(x = 925, y = Height-55)
 
-		self.ExitBtn = Button(text = "Выход", width = 5, bg = "#f1e71f", command = self.quit)
+		self.ExitBtn = Button(text = "Выход", width = 6, bg = "#f1e71f", command = self.quit)
 		self.ExitBtn.place(x = 1150, y = Height-55)
-
-		self.PortState = ttk.Label(text = "Порт закрыт", width = 15, anchor = CENTER, relief = "raised", background = "#fb7b72")
-		self.PortState.place(x = 25, y = Height-80)
 
 		# Галка "Записывать лог".
 		self.WriteLog = IntVar()
@@ -95,9 +91,12 @@ class _MainWindow:
 		self.TPS = _RoundMeter(self.root, 'TPS', 700, 20, 0, 100, 'white')
 		self.SPD = _RoundMeter(self.root, 'SPD', 1000, 20, 0, 160, 'white')
 
-		self.ADCBtn = Button(text = "АЦП", width = 3, bg = "#008080", command = self.edit_adc, state='normal')
+		self.ADCBtn = Button(text = "АЦП", width = 4, bg = "#0080a0", command = self.edit_adc, state='normal')
 		self.ADCBtn.place(x = 665, y = 10)
-		
+
+		self.SpeedBtn = Button(text = "Скорость", width = 8, bg = "#FF8C00", command = self.edit_speed, state='normal')
+		self.SpeedBtn.place(x = 933, y = 10)
+
 		self.BRK = _LightIndicator(self.root, 'BRK', 20, 500, '#ff7070')
 		self.ENG = _LightIndicator(self.root, 'ENG', 110, 500, '#ffd700')
 		self.LCK = _LightIndicator(self.root, 'LCK', 200, 500, '#4882b4')
@@ -127,39 +126,42 @@ class _MainWindow:
 		self.Uart.LogNumber += 1
 
 	def add_tooltip(self):
-		ToolTip.ToolTip(self.PortBox, " Выбор COM-порта ЭБУ")
-		ToolTip.ToolTip(self.OpenBtn, " Открыть COM-порт")
-		ToolTip.ToolTip(self.CloseBtn, " Закрыть COM-порт")
-		ToolTip.ToolTip(self.ExitBtn, " Закрыть программу")
-		ToolTip.ToolTip(self.PortState, " Состояние COM-порта")
+		ToolTip.ToolTip(self.PortBox, "Выбор COM-порта ЭБУ")
+		ToolTip.ToolTip(self.PortBtn, "Старт/Стоп COM-порта")
 
-		ToolTip.ToolTip(self.SLT.Box, " Линейное давление SLT.\n Основное давление масла в системе.")
-		ToolTip.ToolTip(self.SLN.Box, " Давление (величина сброса давления) подпора гидроаккумуляторов SLN.\n В простое давление максимальное, при переключениях устанавливается в соотвествии с графиком.")
-		ToolTip.ToolTip(self.SLU.Box, " Давление SLU. Используется для блокировки ГТ\n и работы тормоза B3 второй передачи.")
+		ToolTip.ToolTip(self.TablesBtn, "Открыть окно редактирования графиков.")
+		ToolTip.ToolTip(self.ADCBtn, "Открыть окно настройки датчиков")
+		ToolTip.ToolTip(self.SpeedBtn, "Открыть окно настройки скоростей переключения передач")
+		ToolTip.ToolTip(self.ConfigBtn, "Открыть окно настроек")
 
-		ToolTip.ToolTip(self.S1.Box, " Состояние шифтового соленоида S1.")
-		ToolTip.ToolTip(self.S2.Box, " Состояние шифтового соленоида S2.")
-		ToolTip.ToolTip(self.S3.Box, " Состояние шифтового соленоида S3.")
-		ToolTip.ToolTip(self.S4.Box, " Состояние шифтового соленоида S4.")
+		ToolTip.ToolTip(self.ExitBtn, "Закрыть программу")
 
-		ToolTip.ToolTip(self.OIL.Box, " Температура масла.")
-		ToolTip.ToolTip(self.TPS.Box, " Текущее значение ДПДЗ.")
-		ToolTip.ToolTip(self.SPD.Box, " Скорость автомобиля.")
+		ToolTip.ToolTip(self.SLT.Box, "Линейное давление SLT. Основное давление масла в системе.")
+		ToolTip.ToolTip(self.SLN.Box, "Давление (величина сброса давления) подпора гидроаккумуляторов SLN. В простое давление максимальное, при переключениях устанавливается в соотвествии с графиком.")
+		ToolTip.ToolTip(self.SLU.Box, "Давление SLU. Используется для блокировки ГТ и работы тормоза B3 второй передачи.")
+
+		ToolTip.ToolTip(self.S1.Box, "Состояние шифтового соленоида S1.")
+		ToolTip.ToolTip(self.S2.Box, "Состояние шифтового соленоида S2.")
+		ToolTip.ToolTip(self.S3.Box, "Состояние шифтового соленоида S3.")
+		ToolTip.ToolTip(self.S4.Box, "Состояние шифтового соленоида S4.")
+
+		ToolTip.ToolTip(self.OIL.Box, "Температура масла.")
+		ToolTip.ToolTip(self.TPS.Box, "Текущее значение ДПДЗ.")
+		ToolTip.ToolTip(self.SPD.Box, "Скорость автомобиля.")
 		
-		ToolTip.ToolTip(self.BRK.Box, " Состояние педали тормоза.\n Без тормоза при переключении N->R задняя передача не включится.\n При нажатии тормоза на ходу происходит разблокировка ГТ")
-		ToolTip.ToolTip(self.ENG.Box, " Флаг работы двигателя.\n При неработающем двигателе отключаются ве соленоиды\n и сбрасывается состояние АКПП.")
+		ToolTip.ToolTip(self.BRK.Box, "Состояние педали тормоза. Без тормоза при переключении N->R задняя передача не включится. При нажатии тормоза на ходу происходит разблокировка ГТ")
+		ToolTip.ToolTip(self.ENG.Box, "Флаг работы двигателя. При неработающем двигателе отключаются все соленоиды и сбрасывается состояние АКПП.")
 
-		ToolTip.ToolTip(self.LCK.Box, " Состояние блокировки ГТ.")
-		ToolTip.ToolTip(self.SLP.Box, " Обнаружение проскальзывание фрикционов.\n Контроль производится по оборотам входного/выходного валов \nи передаточного числа текущей передачи")
+		ToolTip.ToolTip(self.LCK.Box, "Состояние блокировки ГТ.")
+		ToolTip.ToolTip(self.SLP.Box, "Обнаружение проскальзывание фрикционов. Контроль производится по оборотам входного/выходного валов и передаточного числа текущей передачи")
 
-		ToolTip.ToolTip(self.Selector.Box, " Положение селектора.\n I - инициализация при старте\n E - ошибка")
-		ToolTip.ToolTip(self.ATMode.Box, " Состояние АКПП.\n I - инициализация при старте\n E - ошибка")
-		ToolTip.ToolTip(self.Gear.Box, " Текущая передача.")
+		ToolTip.ToolTip(self.Selector.Box, "Положение селектора. I - инициализация при старте, E - ошибка")
+		ToolTip.ToolTip(self.ATMode.Box, "Состояние АКПП. I - инициализация при старте, E - ошибка")
+		ToolTip.ToolTip(self.Gear.Box, "Текущая передача.")
 
-		ToolTip.ToolTip(self.EditBtn, " Открыть окно редактирования графиков.")
 		ToolTip.ToolTip(self.SpdTest, " Устанавливает скорость 100 км/ч для теста.")
 
-		ToolTip.ToolTip(self.LogBtn, " Запись части лога (+- 10 секунд от нажатия) в отдельный файл.\n Работает даже при отключенном основном логировании.")
+		ToolTip.ToolTip(self.LogBtn, "Запись части лога (+- 10 секунд от нажатия) в отдельный файл. Работает даже при отключенном основном логировании.")
 
 	def update(self):
 		self.SLT.update(self.Uart.TCU['SLT'])
@@ -194,16 +196,6 @@ class _MainWindow:
 
 	def update_graph_data(self):
 		self.MainGraph.update_data()
-	def port_update(self):
-		ComPorts = self.Uart.get_com_ports(1)
-		self.PortBox.config(values = ComPorts)
-
-		if self.Uart.port_status():
-			self.PortState.config(background = "#54fa9b", text = 'Порт открыт')
-			#self.EditBtn.config(state='normal')
-		else:
-			self.PortState.config(background = "#fb7b72", text = 'Порт закрыт')
-			#self.EditBtn.config(state='disabled')
 
 	def edit_tables(self):
 		self.EditTables = 1
@@ -211,17 +203,37 @@ class _MainWindow:
 	def edit_adc(self):
 		self.EditADC = 1
 
-	def speed_test(self):
-		self.Uart.send_command(0xde, 0, [])
+	def edit_speed(self):
+		self.EditSpeed = 1
 
-	def start(self):
-		self.Uart.port_open(self.PortBox.get())
-	def stop(self):
-		self.Uart.port_close()
-		for key in self.Uart.TCU:
-			self.Uart.TCU[key] = 0
-		self.update()
-		self.port_update()
+	def edit_config(self):
+		self.EditConfig = 1
+
+	def speed_test(self):
+		self.Uart.send_command('SPEED_TEST_COMMAND', 0, [])
+
+	def port_start_stop(self):
+		if self.Uart.port_status():
+			self.Uart.port_close()
+			for key in self.Uart.TCU:
+				self.Uart.TCU[key] = 0
+			self.update()
+			self.port_update()
+		else:
+			self.Uart.port_open(self.PortBox.get())
+			self.port_update()
+
+	def port_update(self):
+		ComPorts = self.Uart.get_com_ports(1)
+		self.PortBox.config(values = ComPorts)
+
+		if self.Uart.port_status():
+			self.PortBtn.config(background = "#54fa9b", text = 'Стоп')
+			#self.TablesBtn.config(state='normal')
+		else:
+			self.PortBtn.config(background = "#fb7b72", text = 'Старт')
+			#self.TablesBtn.config(state='disabled')
+
 	def quit(self):
 		self.Uart.PortReading = 0
 		self.root.destroy()

@@ -22,14 +22,16 @@ class ToolTip:
 
 			DeltaY = len(self.Text.split('\n')) * 25 
 
-			x = self.Widget.winfo_rootx() #+ self.Widget.winfo_reqwidth() - 10
-			y = self.Widget.winfo_rooty() - DeltaY
+			x = self.Widget.winfo_rootx() + self.Widget.winfo_reqwidth()
+			y = self.Widget.winfo_rooty() #- DeltaY
 
 			self.ToolTipLabel = Toplevel(self.Widget)
 			self.ToolTipLabel.wm_overrideredirect(True)
 			self.ToolTipLabel.wm_geometry(f"+{x}+{y}")
 
-			Label = ttk.Label(self.ToolTipLabel, text = self.Text, background = "#ffffe0", relief = "solid", borderwidth = 1, font = "Verdana 14")
+			W = 400 # Ширина окна подсказки.
+
+			Label = ttk.Label(self.ToolTipLabel, text = self.Text, background = "#ffffe0", relief = "solid", borderwidth = 1, font = "Verdana 14", padding = 5, wraplength = W)
 			Label.pack()
 
 	def hide(self, event=None):
