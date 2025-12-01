@@ -115,7 +115,7 @@ class _TableEditWindow:
 		# График.
 		self.MainGraph = _Graph(self.root, 35, 190, Uart)
 		self.draw_table()
-		self.MainGraph.redraw(self.TableBox.current(), self.get_array_x())
+		self.MainGraph.redraw(self.get_table_number(), self.get_array_x())
 		if self.Uart.port_status():
 			self.get_table()
 		self.MainGraph.update_data(self.Cells, 0)
@@ -161,7 +161,7 @@ class _TableEditWindow:
 		ToolTip.ToolTip(self.BtnApplyAdapt, "Применение адаптации к текущей таблице. После применения таблица адаптации обнуляется. Все изменения производятся в ОЗУ ЭБУ, для сохранения изменений необходимо произвести запись в EEPROM.")
 
 	def apply_adaptation(self): # Применение адаптации к текущему графику.
-		Number = self.TableBox.current()
+		Number = self.get_table_number()
 		Name = Tables.TablesData[Number]['Table']
 
 		if Name in Tables.ApplyAdaptationCommands:
@@ -207,7 +207,7 @@ class _TableEditWindow:
 		MaxGear = int(self.MaxGearBox.get())
 
 		self.Answer.update(1)
-		self.Uart.send_command('GEAR_LIMIT_COMMAND', self.TableBox.current(), [MinGear, MaxGear])
+		self.Uart.send_command('GEAR_LIMIT_COMMAND', self.get_table_number(), [MinGear, MaxGear])
 
 	def min_gear_selected_event(self, event):	# Событие смены ограничения передачи (min).
 		if self.MaxGearBox.current() < self.MinGearBox.current():
@@ -234,7 +234,7 @@ class _TableEditWindow:
 		Button(self.root, text = "-", width = 1, bg = "#bcbcbc", command = lambda: self.move_graph(-1), font = ("Helvetica", 10, 'bold'), border="2px").place(x = X, y = Y - H + 40, width = 25, height = 25)
 
 	def move_graph(self, Where):	# Перемещение точек на графике.
-		N = self.TableBox.current()
+		N = self.get_table_number()
 		Step = Tables.TablesData[N]['Step']
 		for Cell in self.Cells:
 			Value = int(Cell.get())
@@ -269,7 +269,7 @@ class _TableEditWindow:
 			self.value_check('')
 
 	def get_array_x(self):	# Получить сетку по оси X.
-		return Tables.TablesData[self.TableBox.current()]['ArrayX']
+		return Tables.TablesData[self.get_table_number()]['ArrayX']
 
 	def key_pressed(self, event):	# Событие по нажатию кнопки на клавиатуре.
 		Result = self.MainGraph.move_point(event.keysym, event.state, self.Cells)
@@ -280,7 +280,7 @@ class _TableEditWindow:
 
 	def table_auto_update(self):
 		if self.AutoUpdate.get() == 1:
-			if Tables.TablesData[self.TableBox.current()]['Table'] in AtaptationTables:
+			if Tables.TablesData[self.get_table_number()]['Name'][:4] == '    ':
 				self.get_table()
 
 	def command_buttons_disable(self):
@@ -307,11 +307,11 @@ class _TableEditWindow:
 	def get_table(self):	# Команда на получение таблицы из ЭБУ.
 		self.Answer.update(1)
 		self.GetNewTable = 1
-		self.Uart.send_command('GET_TABLE_COMMAND', self.TableBox.current(), [])
+		self.Uart.send_command('GET_TABLE_COMMAND', self.get_table_number(), [])
 
 	def read_table(self):	# Событие при получении данных из ЭБУ.
 		#print('Получена таблица', self.Uart.TableNumber)
-		#print(self.Uart.TableNumber, self.TableBox.current())
+		#print(self.Uart.TableNumber, self.get_table_number())
 		#print(len(self.Uart.TableData),  len(self.get_array_x()))
 		if self.Uart.TableNumber == self.get_table_number():
 			if len(self.Uart.TableData) == len(self.get_array_x()):
@@ -332,19 +332,19 @@ class _TableEditWindow:
 		Data = []
 		for Cell in self.Cells:
 			Data.append(int(Cell.get()))
-		self.Uart.send_command('NEW_TABLE_DATA', self.TableBox.current(), Data)
+		self.Uart.send_command('NEW_TABLE_DATA', self.get_table_number(), Data)
 
 	def read_eeprom(self):	# Команда на чтение EEPROM.
 
 		self.Answer.update(1)
-		self.Uart.send_command('READ_EEPROM_MAIN_COMMAND', self.TableBox.current(), [])
+		self.Uart.send_command('READ_EEPROM_MAIN_COMMAND', self.get_table_number(), [])
 
 	def write_eeprom(self):	# Команда на запись EEPROM.
 		self.Answer.update(1)
-		self.Uart.send_command('WRITE_EEPROM_MAIN_COMMAND', self.TableBox.current(), [])
+		self.Uart.send_command('WRITE_EEPROM_MAIN_COMMAND', self.get_table_number(), [])
 
 	def value_check(self, event):	# Проверка и исправление значений таблицы.
-		N = self.TableBox.current()
+		N = self.get_table_number()
 		AllIsOk = 1
 		for Cell in self.Cells:
 			try:
@@ -375,18 +375,18 @@ class _TableEditWindow:
 	def table_selected_event(self, event):	# Событие при выборе текущей таблицы.
 		self.clear_table()
 		self.draw_table()
-		self.MainGraph.redraw(self.TableBox.current(), self.get_array_x())
+		self.MainGraph.redraw(self.get_table_number(), self.get_array_x())
 		self.MainGraph.update_data(self.Cells, 0)
 
 		self.MainGraph.CursorPositionL = 0
 		self.MainGraph.CursorPositionR = 0
 
-		if Tables.TablesData[self.TableBox.current()]['Table'] in Tables.ApplyAdaptationCommands:
+		if Tables.TablesData[self.get_table_number()]['Table'] in Tables.ApplyAdaptationCommands:
 			self.BtnApplyAdapt.configure(state = 'normal')
 		else:
 			self.BtnApplyAdapt.configure(state = 'disabled')
 
-		if Tables.TablesData[self.TableBox.current()]['Name'][:4] == '    ':
+		if Tables.TablesData[self.get_table_number()]['Name'][:4] == '    ':
 			self.AutoUpdateChk.configure(state = 'normal')
 		else:
 			self.AutoUpdateChk.configure(state = 'disabled')
@@ -418,7 +418,7 @@ class _TableEditWindow:
 
 		for Col, Value in enumerate(self.get_array_x()):
 			Cell = Entry(self.root, justify = "center", bg = self.CellColor, width = W)
-			Default = Tables.TablesData[self.TableBox.current()]['Min']
+			Default = Tables.TablesData[self.get_table_number()]['Min']
 			if Default < 0:
 				Default = 0
 
@@ -541,7 +541,7 @@ class _Graph:
 					self.CursorPositionL -= 1
 				if State not in (17, 8209):		# Shift
 					self.CursorPositionR = self.CursorPositionL
-					
+
 			elif Button == 'Right':
 				if self.CursorPositionR < len(self.ArrayX) - 1:
 					self.CursorPositionR += 1

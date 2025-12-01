@@ -71,11 +71,11 @@ class _MainWindow:
 		# Галка "Записывать лог".
 		self.WriteLog = IntVar()
 		self.WriteLogChk = Checkbutton(self.root, text='Записывать лог', command = self.set_log_status, variable = self.WriteLog, onvalue = 1, offvalue = 0, font = ("Helvetica", 14, 'bold'))
-		self.WriteLogChk.place(x = 250, y = Height-80)
+		self.WriteLogChk.place(x = 200, y = Height-90)
 		self.WriteLog.set(0)
 
 		self.LogBtn = Button(text = "Лог-метка", width = 8, bg = "#D2B48C", command = self.write_log)
-		self.LogBtn.place(x = 450, y = Height-85, height = 30)
+		self.LogBtn.place(x = 420, y = Height-85, height = 30)
 
 		#				       			  Name  x,  y min max, 	color
 		self.SLT = _LineMeter(self.root, 'SLT', 30, 30, 0, 1023, '#1000fd')

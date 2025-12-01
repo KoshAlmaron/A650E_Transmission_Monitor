@@ -8,7 +8,7 @@ ConfigData = {'AfterChangeMinRPM' :		{'Block': 0, 'Element' : 'Spinbox',		'Type'
 
 			, 'IdleTPSLimit' :			{'Block': 1, 'Element' : 'Spinbox',		'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 10,		'Step' : 1,		'Name': 'Порог ДПДЗ ХХ'}
 			, 'MaxSlipRPM' :			{'Block': 1, 'Element' : 'Spinbox',		'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 150,		'Step' : 5,		'Name': 'Обороты обнаружения проскальзывания'}
-			, 'RearGearInitMaxSpeed' :	{'Block': 1, 'Element' : 'Spinbox',		'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 15,		'Step' : 1,		'Name': 'Пророг включения задней передачи'}
+			, 'RearGearInitMaxSpeed' :	{'Block': 1, 'Element' : 'Spinbox',		'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 15,		'Step' : 1,		'Name': 'Порог включения задней передачи'}
 			, 'PowerDownMaxTPS' :		{'Block': 1, 'Element' : 'Spinbox',		'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 100,		'Step' : 1,		'Name': 'Лимит ДПДЗ запроса снижения мощности'}
 
 			, 'MinPressureSLN' :		{'Block': 2, 'Element' : 'Spinbox',		'Type': 'uint16_t',	'Value': None, 'Min': 0,	'Max': 800,		'Step' : 1,		'Name': 'ШИМ SLN минимального давления'}
@@ -22,20 +22,20 @@ ConfigData = {'AfterChangeMinRPM' :		{'Block': 0, 'Element' : 'Spinbox',		'Type'
 			, 'AdaptationStepRatio' :	{'Block': 4, 'Element' : 'CheckButton',	'Type': 'uint8_t',	'Value': None, 'Min': 1,	'Max': 2,		'Step' : 1,		'Name': '"Быстрая" адаптация'}
 
 			, 'G2EnableAdaptTPS' :		{'Block': 5, 'Element' : 'CheckButton',	'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 1,		'Step' : 1,		'Name': 'Адаптация по ДПДЗ'}
-			, 'G2AdaptTPSTempMin' :		{'Block': 5, 'Element' : 'Spinbox',		'Type': 'int8_t',	'Value': None, 'Min': 0,	'Max': 50,		'Step' : 1,		'Name': 'Минимальная температура'}
+			, 'G2AdaptTPSTempMin' :		{'Block': 5, 'Element' : 'Spinbox',		'Type': 'int8_t',	'Value': None, 'Min': 0,	'Max': 80,		'Step' : 1,		'Name': 'Минимальная температура'}
 			, 'G2AdaptTPSTempMax' :		{'Block': 5, 'Element' : 'Spinbox',		'Type': 'int8_t',	'Value': None, 'Min': 0,	'Max': 80,		'Step' : 1,		'Name': 'Максимальная температура'}
 			, 'G2EnableAdaptTemp' :		{'Block': 5, 'Element' : 'CheckButton',	'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 1,		'Step' : 1,		'Name': 'Адаптация по температуре'}
 			, 'G2AdaptTempMaxTPS' :		{'Block': 5, 'Element' : 'Spinbox',		'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 50,		'Step' : 1,		'Name': 'Лимит ДПДЗ'}
 
 			, 'G2EnableAdaptReact' :	{'Block': 6, 'Element' : 'CheckButton',	'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 1,		'Step' : 1,		'Name': 'Адаптация по ДПДЗ'}
 			, 'G2AdaptReactMinDRPM' :	{'Block': 6, 'Element' : 'Spinbox',		'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 255,		'Step' : 1,		'Name': 'Минимальное ускорение'}
-			, 'G2AdaptReactTempMin' :	{'Block': 6, 'Element' : 'Spinbox',		'Type': 'int8_t',	'Value': None, 'Min': 0,	'Max': 50,		'Step' : 1,		'Name': 'Минимальная температура'}
+			, 'G2AdaptReactTempMin' :	{'Block': 6, 'Element' : 'Spinbox',		'Type': 'int8_t',	'Value': None, 'Min': 0,	'Max': 80,		'Step' : 1,		'Name': 'Минимальная температура'}
 			, 'G2AdaptReactTempMax' :	{'Block': 6, 'Element' : 'Spinbox',		'Type': 'int8_t',	'Value': None, 'Min': 0,	'Max': 80,		'Step' : 1,		'Name': 'Максимальная температура'}
 			, 'G2EnableAdaptRctTemp' :	{'Block': 6, 'Element' : 'CheckButton',	'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 1,		'Step' : 1,		'Name': 'Адаптация по температуре'}
 			, 'G2AdaptRctTempMaxTPS' :	{'Block': 6, 'Element' : 'Spinbox',		'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 50,		'Step' : 1,		'Name': 'Лимит ДПДЗ'}
 
 			, 'G3EnableAdaptTPS' :		{'Block': 7, 'Element' : 'CheckButton',	'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 1,		'Step' : 1,		'Name': 'Адаптация по ДПДЗ'}
-			, 'G3AdaptTPSTempMin' :		{'Block': 7, 'Element' : 'Spinbox',		'Type': 'int8_t',	'Value': None, 'Min': 0,	'Max': 50,		'Step' : 1,		'Name': 'Минимальная температура'}
+			, 'G3AdaptTPSTempMin' :		{'Block': 7, 'Element' : 'Spinbox',		'Type': 'int8_t',	'Value': None, 'Min': 0,	'Max': 80,		'Step' : 1,		'Name': 'Минимальная температура'}
 			, 'G3AdaptTPSTempMax' :		{'Block': 7, 'Element' : 'Spinbox',		'Type': 'int8_t',	'Value': None, 'Min': 0,	'Max': 80,		'Step' : 1,		'Name': 'Максимальная температура'}
 			, 'G3EnableAdaptTemp' :		{'Block': 7, 'Element' : 'CheckButton',	'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 1,		'Step' : 1,		'Name': 'Адаптация по температуре'}
 			, 'G3AdaptTempMaxTPS' :		{'Block': 7, 'Element' : 'Spinbox',		'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 50,		'Step' : 1,		'Name': 'Лимит ДПДЗ'}

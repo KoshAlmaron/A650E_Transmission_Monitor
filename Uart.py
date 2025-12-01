@@ -353,7 +353,7 @@ class _uart:
 					self.add_byte(SendBuffer, Byte)
 		elif Command == CommandBytes['GEAR_LIMIT_COMMAND']:
 			for Val in Data:
-				for Byte in Val.to_bytes(ValSize, 'big', signed = False):
+				for Byte in Val.to_bytes(1, 'big', signed = False):
 					self.add_byte(SendBuffer, Byte)
 
 		elif Command == CommandBytes['NEW_CONFIG_DATA']:
