@@ -1,4 +1,4 @@
-Ver = '2025-11-27'
+Ver = '2025-12-08'
 
 import os
 
@@ -8,6 +8,8 @@ import EditTables
 import EditADC
 import EditSpeed
 import EditConfig
+
+import DataExport
 
 LogFolder = os.getcwd() + os.sep + 'LOGS' + os.sep
 
@@ -44,11 +46,14 @@ def loop():
 		MainWindow.EditSpeed = 0
 		close_window(EditWindow)
 		EditWindow = EditSpeed._SpeedEditWindow(Uart)
-
 	if MainWindow.EditConfig == 1:
 		MainWindow.EditConfig = 0
 		close_window(EditWindow)
 		EditWindow = EditConfig._ConfigEditWindow(Uart)
+	if MainWindow.DataExport == 1:
+		MainWindow.DataExport = 0
+		close_window(EditWindow)
+		EditWindow = DataExport._DataExportEditWindow(Uart, Ver)
 
 	if EditWindow is not None:
 		if EditWindow.WindowOpen == 0:
@@ -61,9 +66,11 @@ def loop():
 					Uart.NewConfig = 0
 			else:
 				if Uart.TableNumber > -1:
-					EditWindow.read_table()
-					EditWindow.value_check('')
-					Uart.TableNumber = -1
+					if hasattr(EditWindow, 'read_table'):
+						EditWindow.read_table()
+						Uart.TableNumber = -1
+					if hasattr(EditWindow, 'value_check'):
+						EditWindow.value_check('')
 
 	if Uart.NewData == 1:
 		MainWindow.update_graph_data()
@@ -80,13 +87,15 @@ def loop():
 		MainWindow.update()
 
 		if EditWindow is not None:
-			EditWindow.update_labels()
+			if hasattr(EditWindow, 'update_data'):
+				EditWindow.update_data()
 
 	TableAutoUpdate += 1
 	if TableAutoUpdate >= 25:
 		TableAutoUpdate = 0
 		if EditWindow is not None:
-			EditWindow.table_auto_update()
+			if hasattr(EditWindow, 'table_auto_update'):
+				EditWindow.table_auto_update()
 
 	MainWindow.root.after(40, loop)
 

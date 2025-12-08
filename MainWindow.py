@@ -1,9 +1,16 @@
 from tkinter import *
 from tkinter import ttk
 from tkinter import font
-import math
+from tkinter import messagebox
 
+import math
+import json
+import os
+
+import Tables
 import ToolTip
+
+ConfigFilePath = os.path.join(os.getcwd(), "Config.json")
 
 GraphNames = (('---', 100)
 	, ('EngineRPM', 6000)
@@ -33,6 +40,7 @@ class _MainWindow:
 		self.EditADC = 0
 		self.EditSpeed = 0
 		self.EditConfig = 0
+		self.DataExport = 0
 
 		Width = 1300
 		Height = 700
@@ -46,36 +54,42 @@ class _MainWindow:
 		MainFont = font.Font(size = 16)
 		self.root.option_add("*Font", MainFont)
 
+		self.load_config()
+
 		ComPorts = self.Uart.get_com_ports(1)
-		self.PortBox = ttk.Combobox(values = ComPorts, state = "readonly", width = 40)
+		self.PortBox = ttk.Combobox(values = ComPorts, state = "readonly", width = 36)
+		self.PortBox.place(x = 25, y = Height-50)
+
 		ActivePort = -1
 		for N, Port in enumerate(ComPorts):
-			if Port[0] == '/dev/ttyUSB0':
+			if Port[0] == Tables.Configuration['LastUsedPort']:
 				ActivePort = N
 		if ActivePort >= 0:
 			self.PortBox.current(ActivePort)
-		self.PortBox.place(x = 25, y = Height-50)
 
 		self.PortBtn = Button(text = "Старт", width = 10, bg = "#fb7b72", command = self.port_start_stop)
 		self.PortBtn.place(x = 25, y = Height-100)
 
 		self.ConfigBtn = Button(text = "Настройки", width = 9, bg = "#3CB371", command = self.edit_config, state='normal')
-		self.ConfigBtn.place(x = 675, y = Height-55)
+		self.ConfigBtn.place(x = 580, y = Height-55)
 
 		self.TablesBtn = Button(text = "Таблицы", width = 8, bg = "#1e90ff", command = self.edit_tables, state='normal')
-		self.TablesBtn.place(x = 925, y = Height-55)
+		self.TablesBtn.place(x = 760, y = Height-55)
+
+		self.ExportBtn = Button(text = "Экспорт/Импорт", width = 13, bg = "#a0522d", command = self.data_export, state='normal')
+		self.ExportBtn.place(x = 925, y = Height-55)
 
 		self.ExitBtn = Button(text = "Выход", width = 6, bg = "#f1e71f", command = self.quit)
 		self.ExitBtn.place(x = 1150, y = Height-55)
 
 		# Галка "Записывать лог".
 		self.WriteLog = IntVar()
-		self.WriteLogChk = Checkbutton(self.root, text='Записывать лог', command = self.set_log_status, variable = self.WriteLog, onvalue = 1, offvalue = 0, font = ("Helvetica", 14, 'bold'))
+		self.WriteLogChk = Checkbutton(self.root, text='Записывать лог', command = self.set_log_status, variable = self.WriteLog, onvalue = 1, offvalue = 0, background = BackGroundColor, font = ("Helvetica", 14, 'bold'))
 		self.WriteLogChk.place(x = 200, y = Height-90)
 		self.WriteLog.set(0)
 
 		self.LogBtn = Button(text = "Лог-метка", width = 8, bg = "#D2B48C", command = self.write_log)
-		self.LogBtn.place(x = 420, y = Height-85, height = 30)
+		self.LogBtn.place(x = 400, y = Height-85, height = 30)
 
 		#				       			  Name  x,  y min max, 	color
 		self.SLT = _LineMeter(self.root, 'SLT', 30, 30, 0, 1023, '#1000fd')
@@ -176,6 +190,9 @@ class _MainWindow:
 		self.OIL.update(self.Uart.TCU['OilTemp'])
 		self.TPS.update(self.Uart.TCU['InstTPS'])
 		self.SPD.update(self.Uart.TCU['CarSpeed'])
+
+		self.SPD.update_markers(self.SPD.MarkerMin, self.Uart.TCU['GearDownSpeed'])
+		self.SPD.update_markers(self.SPD.MarkerMax, self.Uart.TCU['GearUpSpeed'])
 		
 		self.BRK.update(self.Uart.TCU['Break'])
 		self.ENG.update(self.Uart.TCU['EngineWork'])
@@ -209,6 +226,9 @@ class _MainWindow:
 	def edit_config(self):
 		self.EditConfig = 1
 
+	def data_export(self):
+		self.DataExport = 1
+
 	def speed_test(self):
 		self.Uart.send_command('SPEED_TEST_COMMAND', 0, [])
 
@@ -221,6 +241,7 @@ class _MainWindow:
 			self.port_update()
 		else:
 			self.Uart.port_open(self.PortBox.get())
+			Tables.Configuration['LastUsedPort'] = self.PortBox.get().split(' - ')[0]
 			self.port_update()
 
 	def port_update(self):
@@ -234,7 +255,22 @@ class _MainWindow:
 			self.PortBtn.config(background = "#fb7b72", text = 'Старт')
 			#self.TablesBtn.config(state='disabled')
 
+	def load_config(self):
+			# Обработка файла.
+		try:
+			File = open(ConfigFilePath, "r", encoding="utf-8")
+			Tables.Configuration = json.load(File)
+		except Exception as error:
+			messagebox.showerror('Загрузка конфигурации', 'Не удалось прочитать файл конфигурации:\n' + str(error))
+			return
+
+	def save_config(self):
+		DumpText = json.dumps(Tables.Configuration, ensure_ascii = False, indent = '\t')
+		File = open(ConfigFilePath, 'w', encoding = 'utf-8')
+		File.write(DumpText)
+
 	def quit(self):
+		self.save_config()
 		self.Uart.PortReading = 0
 		self.root.destroy()
 		exit()
@@ -354,9 +390,13 @@ class _RoundMeter:
 		# Круг
 		self.Box.create_oval (1 + self.Offset, 1 + self.Offset, self.r * 2 - 1 + self.Offset, self.r * 2 - 1 + self.Offset, width = 2, fill = Color)
 		self.Box.create_rectangle(0, self.r + self.Offset, self.r * 2 + self.Offset, self.r * 2 + self.Offset, fill = BackGroundColor, outline = BackGroundColor)
+		# Маркеры.
+		self.MarkerMin = self.Box.create_line(0, 0, 0, 0, width = 1.5, dash = 3,  fill = 'blue')
+		self.MarkerMax = self.Box.create_line(0, 0, 0, 0, width = 1.5, dash = 3, fill = 'blue')
 		# Стрелка.
 		self.Box.create_oval (self.r - 10 + self.Offset, self.r - 10 + self.Offset, self.r + 10 + self.Offset, self.r + 10 + self.Offset, width = 1, fill = 'black')
 		self.Needle = self.Box.create_line(0, 0, 0, 0, width = 3, fill = 'black')
+
 		# Значение.
 		self.TextValue = self.Box.create_text(self.r + self.Offset, self.r, font = "Verdana 14", justify = CENTER, fill = 'black', text = '0')
 		self.update(self.min)
@@ -393,6 +433,15 @@ class _RoundMeter:
 		self.Box.coords(self.Needle, self.r + self.Offset, self.r + self.Offset, x, y)
 		# Обновление значения.
 		self.Box.itemconfig(self.TextValue, text = str(Value))
+
+	def update_markers(self, Marker, Value):
+		Angle = 180 * ((Value - self.min) / (self.max - self.min))
+		Rads = (Angle + 180) * (math.pi / 180)
+
+		x = (self.r - 15) * math.cos(Rads) + self.r + self.Offset;
+		y = (self.r - 15) * math.sin(Rads) + self.r + self.Offset;
+
+		self.Box.coords(Marker, self.r + self.Offset, self.r + self.Offset, x, y)
 
 class _Graph:
 	def __init__(self, root, x, y, Uart):

@@ -4,6 +4,8 @@ from tkinter import font
 from tkinter import messagebox
 import tkinter as tk
 import time
+from functools import partial
+
 
 import ToolTip
 import Tables
@@ -18,6 +20,12 @@ LabelsTCU = [['Inst TPS', 'InstTPS', ' Текущее значение ДПДЗ.
 			 ['SLU', 'GearChangeSLU', ' Значение SLU на момент последнего переключения.'],
 			 ['PDRTime', 'LastPDRTime', ' Продолжительность последнего запроса снижения мощности.'],
 			]
+
+TablesMenuNames = {0: 'Общие графики SLN/SLT'
+				, 1: 'Графики переключения 1>2'
+				, 2: 'Графики переключения 2>2'
+				, 3: 'Графики переключения 2>3'
+}
 
 FirstTable = 0
 LastTable = 17
@@ -36,6 +44,7 @@ class _TableEditWindow:
 		self.DataTCU = {}
 
 		self.GetNewTable = 0
+		self.CurrentTable = FirstTable
 
 		self.Width = 1180
 		self.Height = 680
@@ -51,19 +60,14 @@ class _TableEditWindow:
 		self.root.minsize(self.Width, self.Height)
 		self.root.configure(background = BackGroundColor)
 
-		TablesList = []
-		for Table in Tables.TablesData:
-			if Table['N'] >= FirstTable and Table['N'] <= LastTable:
-				TablesList.append(str(Table['N'] + 1) + '. ' + Table['Name'] + ' (' + Table['Table'] + ')')
-
 		# Галка "Онлайн".
 		self.OnLine = IntVar()
-		self.OnLineChk = Checkbutton(self.root, text='Онлайн', variable = self.OnLine, onvalue = 1, offvalue = 0, font = ("Helvetica", 14, 'bold'))
+		self.OnLineChk = Checkbutton(self.root, text='Онлайн', variable = self.OnLine, onvalue = 1, offvalue = 0, background = BackGroundColor, font = ("Helvetica", 14, 'bold'))
 		self.OnLineChk.place(x = 25, y = 11)
 
 		# Галка "Автообновление".
 		self.AutoUpdate = IntVar()
-		self.AutoUpdateChk = Checkbutton(self.root, text='Автообн.', variable = self.AutoUpdate, command = self.command_buttons_disable, onvalue = 1, offvalue = 0, font = ("Helvetica", 14, 'bold'), state = 'disabled')
+		self.AutoUpdateChk = Checkbutton(self.root, text='Автообн.', variable = self.AutoUpdate, command = self.command_buttons_disable, onvalue = 1, offvalue = 0, background = BackGroundColor, font = ("Helvetica", 14, 'bold'), state = 'disabled')
 		self.AutoUpdateChk.place(x = 25, y = 48)
 
 		# Чтение/Запись
@@ -106,16 +110,17 @@ class _TableEditWindow:
 		self.ExitBtn = Button(self.root, text = "Закрыть", width = 12, height = 3, bg = "#cd853f", command = self.on_closing, font = ("Helvetica", 12, 'bold'))
 		self.ExitBtn.place(x = 990, y = 8)
 
-		# Выбор таблицы.
-		self.TableBox = ttk.Combobox(self.root, values = TablesList, state = "readonly", width = 106, font = ("Helvetica", 14))
-		self.TableBox.place(x = 35, y = 155)
-		self.TableBox.current(0)
-		self.TableBox.bind("<<ComboboxSelected>>", self.table_selected_event)
+		# Добавление пунктов меню.
+		self.add_menu()
+
+		# Название текущей таблицы.
+		self.TableName = ttk.Label(self.root, text = '', width = 106, anchor = CENTER, relief = "flat", background = BackGroundColor, font = ("Helvetica", 14))
+		self.TableName.place(x = 35, y = 155)
 
 		# График.
 		self.MainGraph = _Graph(self.root, 35, 190, Uart)
 		self.draw_table()
-		self.MainGraph.redraw(self.get_table_number(), self.get_array_x())
+		self.MainGraph.redraw(self.CurrentTable, self.get_array_x())
 		if self.Uart.port_status():
 			self.get_table()
 		self.MainGraph.update_data(self.Cells, 0)
@@ -127,11 +132,10 @@ class _TableEditWindow:
 
 		self.add_tooltip()
 
+		self.table_select_event(FirstTable)
+
 		# Обнаружение нажатия кнопок.
 		self.root.bind("<Key>", self.key_pressed)
-
-	def get_table_number(self):
-		return Tables.TablesData[self.TableBox.current() + FirstTable]['N']
 
 	def add_tooltip(self):	# Вставка подсказок.
 		ToolTip.ToolTip(self.OnLineChk, "Онлайн режим. Изменения сразу отсылаются в ЭБУ.")
@@ -154,14 +158,36 @@ class _TableEditWindow:
 
 		ToolTip.ToolTip(self.TableResetBtn, "Сброс всех таблиц текущего окна. Значения заменяются на начальные из прошивки и производтся запись в EEPROM. Можно использовать в том числе для первоначальной записи таблиц в EEPROM.")
 		ToolTip.ToolTip(self.ExitBtn, "Закрыть окно.")
-		ToolTip.ToolTip(self.TableBox, "Выбор таблицы для редакирования")
 
 		ToolTip.ToolTip(self.BtnBuildLine, "Построить линию по двум точкам")
 		ToolTip.ToolTip(self.BtnZero, "Обнуление графика")
 		ToolTip.ToolTip(self.BtnApplyAdapt, "Применение адаптации к текущей таблице. После применения таблица адаптации обнуляется. Все изменения производятся в ОЗУ ЭБУ, для сохранения изменений необходимо произвести запись в EEPROM.")
 
+	def add_menu(self):
+		self.root.option_add("*tearOff", FALSE)
+		MenuBGColor = "#a0a0a0"
+		self.MainMenu = Menu(font = ("Helvetica", 12, 'bold'), background = MenuBGColor)
+		MenuFont = ("Helvetica", 12)
+
+		SubMenu = None
+		for Key in TablesMenuNames:
+			SubMenu = Menu(font = MenuFont)
+			K = 1
+			for Table in Tables.TablesData:
+				if Table['Menu'] == Key:
+					N = Table['N']
+					LabelName = str(Key + 1) + '.' + str(K) + '. ' + Table['Name']
+					LabelName = str(K) + '. ' + Table['Name']
+					SubMenu.add_command(label = LabelName, command = partial(self.table_select_event, N))
+					K += 1
+
+			self.MainMenu.add_cascade(label = str(Key + 1) + '. ' + TablesMenuNames[Key], menu = SubMenu)
+			SubMenu = None
+
+		self.root.config(menu = self.MainMenu)
+
 	def apply_adaptation(self): # Применение адаптации к текущему графику.
-		Number = self.get_table_number()
+		Number = self.CurrentTable
 		Name = Tables.TablesData[Number]['Table']
 
 		if Name in Tables.ApplyAdaptationCommands:
@@ -192,13 +218,12 @@ class _TableEditWindow:
 
 	def reset_tables(self):	# Команда сброса таблиц в ЭБУ.
 		if messagebox.askyesno('Сброс таблиц', 'Перезаписать EEPROM ВСЕX таблицы текущего окна значениями из прошивки?'):
-			self.TableBox.current(0)
-			self.table_selected_event('')
+			self.table_select_event(FirstTable)
 			self.root.lift()
 
 			time.sleep(0.5)
 			self.Answer.update(1)
-			self.Uart.send_command('TABLES_INIT_MAIN_COMMAND', self.get_table_number(), [])
+			self.Uart.send_command('TABLES_INIT_MAIN_COMMAND', self.CurrentTable, [])
 		else:
 			self.root.lift()
 
@@ -207,7 +232,7 @@ class _TableEditWindow:
 		MaxGear = int(self.MaxGearBox.get())
 
 		self.Answer.update(1)
-		self.Uart.send_command('GEAR_LIMIT_COMMAND', self.get_table_number(), [MinGear, MaxGear])
+		self.Uart.send_command('GEAR_LIMIT_COMMAND', self.CurrentTable, [MinGear, MaxGear])
 
 	def min_gear_selected_event(self, event):	# Событие смены ограничения передачи (min).
 		if self.MaxGearBox.current() < self.MinGearBox.current():
@@ -234,7 +259,7 @@ class _TableEditWindow:
 		Button(self.root, text = "-", width = 1, bg = "#bcbcbc", command = lambda: self.move_graph(-1), font = ("Helvetica", 10, 'bold'), border="2px").place(x = X, y = Y - H + 40, width = 25, height = 25)
 
 	def move_graph(self, Where):	# Перемещение точек на графике.
-		N = self.get_table_number()
+		N = self.CurrentTable
 		Step = Tables.TablesData[N]['Step']
 		for Cell in self.Cells:
 			Value = int(Cell.get())
@@ -269,7 +294,7 @@ class _TableEditWindow:
 			self.value_check('')
 
 	def get_array_x(self):	# Получить сетку по оси X.
-		return Tables.TablesData[self.get_table_number()]['ArrayX']
+		return Tables.TablesData[self.CurrentTable]['ArrayX']
 
 	def key_pressed(self, event):	# Событие по нажатию кнопки на клавиатуре.
 		Result = self.MainGraph.move_point(event.keysym, event.state, self.Cells)
@@ -280,7 +305,7 @@ class _TableEditWindow:
 
 	def table_auto_update(self):
 		if self.AutoUpdate.get() == 1:
-			if Tables.TablesData[self.get_table_number()]['Name'][:4] == '    ':
+			if Tables.TablesData[self.CurrentTable]['Name'][:4] == '    ':
 				self.get_table()
 
 	def command_buttons_disable(self):
@@ -307,13 +332,13 @@ class _TableEditWindow:
 	def get_table(self):	# Команда на получение таблицы из ЭБУ.
 		self.Answer.update(1)
 		self.GetNewTable = 1
-		self.Uart.send_command('GET_TABLE_COMMAND', self.get_table_number(), [])
+		self.Uart.send_command('GET_TABLE_COMMAND', self.CurrentTable, [])
 
 	def read_table(self):	# Событие при получении данных из ЭБУ.
 		#print('Получена таблица', self.Uart.TableNumber)
-		#print(self.Uart.TableNumber, self.get_table_number())
+		#print(self.Uart.TableNumber, self.CurrentTable)
 		#print(len(self.Uart.TableData),  len(self.get_array_x()))
-		if self.Uart.TableNumber == self.get_table_number():
+		if self.Uart.TableNumber == self.CurrentTable:
 			if len(self.Uart.TableData) == len(self.get_array_x()):
 				
 				self.WriteBtn.config(state='normal')
@@ -332,19 +357,19 @@ class _TableEditWindow:
 		Data = []
 		for Cell in self.Cells:
 			Data.append(int(Cell.get()))
-		self.Uart.send_command('NEW_TABLE_DATA', self.get_table_number(), Data)
+		self.Uart.send_command('NEW_TABLE_DATA', self.CurrentTable, Data)
 
 	def read_eeprom(self):	# Команда на чтение EEPROM.
 
 		self.Answer.update(1)
-		self.Uart.send_command('READ_EEPROM_MAIN_COMMAND', self.get_table_number(), [])
+		self.Uart.send_command('READ_EEPROM_MAIN_COMMAND', self.CurrentTable, [])
 
 	def write_eeprom(self):	# Команда на запись EEPROM.
 		self.Answer.update(1)
-		self.Uart.send_command('WRITE_EEPROM_MAIN_COMMAND', self.get_table_number(), [])
+		self.Uart.send_command('WRITE_EEPROM_MAIN_COMMAND', self.CurrentTable, [])
 
 	def value_check(self, event):	# Проверка и исправление значений таблицы.
-		N = self.get_table_number()
+		N = self.CurrentTable
 		AllIsOk = 1
 		for Cell in self.Cells:
 			try:
@@ -372,21 +397,25 @@ class _TableEditWindow:
 			self.WriteBtn.config(state='disabled')
 			return 0
 
-	def table_selected_event(self, event):	# Событие при выборе текущей таблицы.
+	def table_select_event(self, N):	# Событие при выборе текущей таблицы.
+		self.CurrentTable = N
+
+		self.TableName.config(text = Tables.TablesData[self.CurrentTable]['Name'])
+
 		self.clear_table()
 		self.draw_table()
-		self.MainGraph.redraw(self.get_table_number(), self.get_array_x())
+		self.MainGraph.redraw(self.CurrentTable, self.get_array_x())
 		self.MainGraph.update_data(self.Cells, 0)
 
 		self.MainGraph.CursorPositionL = 0
 		self.MainGraph.CursorPositionR = 0
 
-		if Tables.TablesData[self.get_table_number()]['Table'] in Tables.ApplyAdaptationCommands:
+		if Tables.TablesData[self.CurrentTable]['Table'] in Tables.ApplyAdaptationCommands:
 			self.BtnApplyAdapt.configure(state = 'normal')
 		else:
 			self.BtnApplyAdapt.configure(state = 'disabled')
 
-		if Tables.TablesData[self.get_table_number()]['Name'][:4] == '    ':
+		if Tables.TablesData[self.CurrentTable]['Name'][:4] == '    ':
 			self.AutoUpdateChk.configure(state = 'normal')
 		else:
 			self.AutoUpdateChk.configure(state = 'disabled')
@@ -418,7 +447,7 @@ class _TableEditWindow:
 
 		for Col, Value in enumerate(self.get_array_x()):
 			Cell = Entry(self.root, justify = "center", bg = self.CellColor, width = W)
-			Default = Tables.TablesData[self.get_table_number()]['Min']
+			Default = Tables.TablesData[self.CurrentTable]['Min']
 			if Default < 0:
 				Default = 0
 
@@ -448,7 +477,7 @@ class _TableEditWindow:
 			ToolTip.ToolTip(Label, Name[2])
 			ToolTip.ToolTip(Value, Name[2])
 
-	def update_labels(self):	# Обновление текущих параметров переключения.
+	def update_data(self):	# Обновление текущих параметров переключения.
 		for Name in self.DataTCU:
 			self.DataTCU[Name].configure(text = self.get_tcu_data(Name))
 		self.MainGraph.update_markers()

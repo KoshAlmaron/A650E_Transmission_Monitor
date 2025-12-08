@@ -68,7 +68,7 @@ class _SpeedEditWindow:
 
 		# Галка "Онлайн".
 		self.OnLine = IntVar()
-		self.OnLineChk = Checkbutton(self.root, text='Онлайн', variable = self.OnLine, onvalue = 1, offvalue = 0, font = ("Helvetica", 14, 'bold'))
+		self.OnLineChk = Checkbutton(self.root, text='Онлайн', variable = self.OnLine, onvalue = 1, offvalue = 0, background = BackGroundColor, font = ("Helvetica", 14, 'bold'))
 		self.OnLineChk.place(x = 120, y = 10)
 
 		# Чтение/Запись
@@ -168,7 +168,14 @@ class _SpeedEditWindow:
 		self.Uart.send_command('GET_TABLE_COMMAND', TableN, [])
 
 	def key_pressed(self, event):	# Событие по нажатию кнопки на клавиатуре.
-		Result = self.MainGraph.move_point(event.keysym, event.state, self.SpeedData)
+		State = event.state
+
+		BadMods = (0x40000, 16)	# Список ненужных модификаторов на удаление.
+		for Mod in BadMods:
+			if State >= Mod:
+				State -= Mod
+
+		Result = self.MainGraph.move_point(event.keysym, State, self.SpeedData)
 		if Result:
 			self.value_check('')
 			if self.OnLine.get() == 1 and Result == 2:
@@ -286,16 +293,13 @@ class _SpeedEditWindow:
 		self.MainGraph.update_data(self.SpeedData)
 		return 1
 
-	def update_labels(self):	# Обновление текущих параметров переключения.
+	def update_data(self):	# Обновление текущих параметров переключения.
 		for Name in self.DataTCU:
 			self.DataTCU[Name].configure(text = self.get_tcu_data(Name))
 		self.MainGraph.update_markers()
 
 	def get_tcu_data(self, Parameter):
 		return self.Uart.TCU[Parameter]
-
-	def table_auto_update(self):
-		pass
 
 	def on_closing(self):	# Событие по закрытию окна.
 		self.WindowOpen = 0
@@ -344,13 +348,13 @@ class _Graph:
 			Stop = self.CursorPositionR
 
 			if Button == 'Up':
-				if State in (20, 8212):		# Ctrl
+				if State == 4:		# Ctrl
 					self.CurrentGraph = min(self.CurrentGraph + 1, len(GraphParemeters) - 1)
 				else:
 					for i in range(Start, Stop + 1):
 						SpeedData[self.CurrentGraph][i] += Tables.TablesData[TableN]['Step']
 			elif Button == 'Down':
-				if State in (20, 8212):		# Ctrl
+				if State == 4:		# Ctrl
 					self.CurrentGraph = max(self.CurrentGraph - 1, 0)
 				else:
 					for i in range(Start, Stop + 1):
@@ -359,13 +363,13 @@ class _Graph:
 			elif Button == 'Left':
 				if self.CursorPositionL > 0:
 					self.CursorPositionL -= 1
-				if State not in (17, 8209):		# Shift
+				if State != 1:		# Shift
 					self.CursorPositionR = self.CursorPositionL
 					
 			elif Button == 'Right':
 				if self.CursorPositionR < len(ArrayX) - 1:
 					self.CursorPositionR += 1
-				if State not in (17, 8209):		# Shift
+				if State != 1:		# Shift
 					self.CursorPositionL = self.CursorPositionR
 			if Button in ('Up', 'Down'):
 				self.update_data(SpeedData)
@@ -533,6 +537,7 @@ class _Graph:
 		self.Markers = []
 
 		ValueX = self.get_tcu_data('InstTPS')
+		ValueY = self.get_tcu_data('CarSpeed')
 
 		MinX = min(ArrayX)
 		MaxX = max(ArrayX)
@@ -540,8 +545,13 @@ class _Graph:
 		MaxY = Tables.TablesData[TableN]['Max']
 
 		lx = self.Border + ((ValueX - MinX)  / (MaxX - MinX)) * (self.w - self.Border * 2)
-		Line = self.Box.create_line(lx, 2, lx, self.h - 2, fill = '#ff9999', width = 2)
+		Line = self.Box.create_line(lx, 2, lx, self.h - 2, fill = '#ff0000', width = 2)
 		self.Markers.append(Line)
+
+		ly = self.h - ((ValueY - MinY)  / (MaxY - MinY)) * (self.h - self.Border * 2) - self.Border
+		Line = self.Box.create_line(2, ly, self.w - 2, ly, fill = '#0000ff', width = 2, dash = 3)
+		self.Markers.append(Line)
+
 
 	def get_tcu_data(self, Parameter):
 		return self.Uart.TCU[Parameter]

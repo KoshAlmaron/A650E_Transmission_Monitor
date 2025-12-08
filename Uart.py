@@ -117,7 +117,7 @@ class _uart:
 		self.dictionary_init()		# Инициаизация словарей.
 
 		self.NewData = 1			# Флаг, получен новый пакет данных (TCU_DATA_PACKET).
-		self.NewConfig = 1			# Флаг, получен новый пакет настроек (TCU_CONFIG_ANSWER).
+		self.NewConfig = 0			# Флаг, получен новый пакет настроек (TCU_CONFIG_ANSWER).
 
 	def dictionary_init(self):
 		# Первоначальное заполнение словаря с параметрами.
@@ -331,9 +331,10 @@ class _uart:
 			return
 
 		N = Table
-
 		Command = CommandBytes[Command]
 		SendBuffer = []
+
+		#print(hex(Command))
 
 		SendBuffer.append(0x40)	# Начало исходящего пакета.
 		SendBuffer.append(Command)	# Тип пакета.
@@ -375,8 +376,11 @@ class _uart:
 
 		SendBuffer.append(0x0d)	# Конец пакета.
 
-		#for b in SendBuffer:
-		#	print(hex(b))
+		CommandStr = ''
+		for b in SendBuffer:
+			CommandStr += ', ' + hex(b)
+		CommandStr = CommandStr[2:]
+		#print(CommandStr)
 
 		SendBuffer = bytes(SendBuffer)
 		self.Serial.write(SendBuffer)

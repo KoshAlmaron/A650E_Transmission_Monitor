@@ -16,8 +16,14 @@ LabelsTCU = [['Inst TPS', 'InstTPS', ' Текущее значение ДПДЗ.
 			 ['RawOIL', 'RawOIL', ' АЦП температуры масла.']
 			]
 
-FirstTable = 18
-LastTable = 19
+FirstTable = 0
+LastTable = 0
+
+for n, Table in enumerate(Tables.TablesData):
+	if Table['Table'] == 'TPSGraph':
+		FirstTable = n
+		LastTable = n + 1
+		break
 
 # Окно редактирования таблиц.
 class _ADCEditWindow:
@@ -55,7 +61,7 @@ class _ADCEditWindow:
 
 		# Галка "Онлайн".
 		self.OnLine = IntVar()
-		self.OnLineChk = Checkbutton(self.root, text='Онлайн', variable = self.OnLine, onvalue = 1, offvalue = 0, font = ("Helvetica", 14, 'bold'))
+		self.OnLineChk = Checkbutton(self.root, text='Онлайн', variable = self.OnLine, onvalue = 1, offvalue = 0, background = BackGroundColor, font = ("Helvetica", 14, 'bold'))
 		self.OnLineChk.place(x = 25, y = 29)
 
 		# Чтение/Запись
@@ -350,7 +356,7 @@ class _ADCEditWindow:
 			ToolTip.ToolTip(Label, Name[2])
 			ToolTip.ToolTip(Value, Name[2])
 
-	def update_labels(self):	# Обновление текущих параметров переключения.
+	def update_data(self):	# Обновление текущих параметров переключения.
 		for Name in self.DataTCU:
 			self.DataTCU[Name].configure(text = self.get_tcu_data(Name))
 		self.MainGraph.update_markers()
