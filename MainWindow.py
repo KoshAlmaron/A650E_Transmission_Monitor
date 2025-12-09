@@ -31,6 +31,7 @@ GraphNames = (('---', 100)
 
 ATModeChar = ('I', 'P', 'R', 'N', 'D', 'D4', 'D3', 'L2', 'L', 'E', 'M')
 BackGroundColor = "#d0d0d0"
+
 # Главное окно.
 class _MainWindow:
 	def __init__(self, Ver, Uart):
@@ -107,10 +108,10 @@ class _MainWindow:
 		self.SPD = _RoundMeter(self.root, 'SPD', 1000, 20, 0, 160, 'white')
 
 		self.ADCBtn = Button(text = "АЦП", width = 4, bg = "#0080a0", command = self.edit_adc, state='normal')
-		self.ADCBtn.place(x = 650, y = 10)
+		self.ADCBtn.place(x = 655, y = 10)
 
 		self.SpeedBtn = Button(text = "Скорость", width = 8, bg = "#FF8C00", command = self.edit_speed, state='normal')
-		self.SpeedBtn.place(x = 920, y = 10)
+		self.SpeedBtn.place(x = 924, y = 10)
 
 		self.IOBtn = Button(text = "I/O", width = 4, bg = "#e0e0ff", command = self.port_state, state='normal', font = ("Helvetica", 12, 'bold'))
 		self.IOBtn.place(x = 515, y = 185)
@@ -128,6 +129,9 @@ class _MainWindow:
 
 		self.SpdTest = Button(text = "Тест", width = 4, bg = "#e0ffe0", command = self.speed_test, state='normal', font = ("Helvetica", 12, 'bold'))
 		self.SpdTest.place(x = 1115, y = 185)
+
+		self.AdaptTemp = _AdaptationIndicator(self.root, 680 , 80)
+		self.AdaptTPS = _AdaptationIndicator(self.root, 980 , 80)
 
 		self.add_tooltip()
 
@@ -151,6 +155,9 @@ class _MainWindow:
 		ToolTip.ToolTip(self.ADCBtn, "Открыть окно настройки датчиков")
 		ToolTip.ToolTip(self.SpeedBtn, "Открыть окно настройки скоростей переключения передач")
 		ToolTip.ToolTip(self.ConfigBtn, "Открыть окно настроек")
+
+		ToolTip.ToolTip(self.ExportBtn, "Открыть окно экспорта/импорта ккалибровок")
+		ToolTip.ToolTip(self.IOBtn, "Открыть окно просмотра состояний портов МК")
 
 		ToolTip.ToolTip(self.ExitBtn, "Закрыть программу")
 
@@ -180,6 +187,9 @@ class _MainWindow:
 		ToolTip.ToolTip(self.SpdTest, " Устанавливает скорость 100 км/ч для теста.")
 
 		ToolTip.ToolTip(self.LogBtn, "Запись части лога (+- 10 секунд от нажатия) в отдельный файл. Работает даже при отключенном основном логировании.")
+
+		ToolTip.ToolTip(self.AdaptTPS.Box, "Индикатор срабатывания адаптации по ДПДЗ.")
+		ToolTip.ToolTip(self.AdaptTemp.Box, "Индикатор срабатывания адаптации по температуре.")
 
 	def update(self):
 		self.SLT.update(self.Uart.TCU['SLT'])
@@ -212,7 +222,10 @@ class _MainWindow:
 		elif Gear == -1:
 			Gear = 'R'
 		self.Gear.update(Gear)
-		
+
+		self.AdaptTPS.update(self.Uart.TCU['AdaptationTPS'])
+		self.AdaptTemp.update(self.Uart.TCU['AdaptationTemp'])
+
 		self.MainGraph.update()
 
 	def update_graph_data(self):
@@ -353,31 +366,6 @@ class _TextIndicator:
 			self.Box.itemconfig(self.Oval, fill = '#ff4040')
 		else:
 			self.Box.itemconfig(self.Oval, fill = self.Color)
-
-# Светофор.
-class _LightIndicator:
-	def __init__(self, root, Name, x, y, Color):
-		self.x = x
-		self.y = y
-		self.w = 70
-		self.h = 70
-		self.Name = Name
-		self.OffColor = "#d0d0d0"
-		self.OnColor = Color
-		
-		# Холст.
-		self.Box = Canvas(root, width = self.w, height = self.h, bg = self.OffColor, bd = 0, highlightthickness = 0, relief = 'ridge')
-		self.Box.place(x = self.x, y = self.y)
-		# Круг
-		self.Box.create_oval (0, 0, self.w - 1, self.h - 1, width = 2)
-		self.Oval = self.Box.create_oval (5, 5, self.w - 6, self.h - 6, width = 2, fill = "#c0c0c0")
-		# Название.
-		self.Box.create_text(self.w / 2, self.h // 2, font = "Verdana 16 bold", justify = CENTER, fill = 'black', text = self.Name)
-	def update(self, Value):
-		if Value > 0:
-			self.Box.itemconfig(self.Oval, fill = self.OnColor)
-		else:
-			self.Box.itemconfig(self.Oval, fill = self.OffColor)
 
 # Круговая шкала
 class _RoundMeter:
@@ -564,3 +552,66 @@ class _Graph:
 				y = y * 2
 				
 				self.Box.create_text(x, y, font = "Verdana 10", justify = CENTER, fill = self.Colors[i], text = str(self.Uart.TCU[Name]))
+
+# Светофор.
+class _LightIndicator:
+	def __init__(self, root, Name, x, y, Color):
+		self.x = x
+		self.y = y
+		self.w = 70
+		self.h = 70
+		self.Name = Name
+		self.OffColor = "#d0d0d0"
+		self.OnColor = Color
+
+		# Холст.
+		self.Box = Canvas(root, width = self.w, height = self.h, bg = self.OffColor, bd = 0, highlightthickness = 0, relief = 'ridge')
+		self.Box.place(x = self.x, y = self.y)
+		# Круг
+		self.Box.create_oval (0, 0, self.w - 1, self.h - 1, width = 2)
+		self.Oval = self.Box.create_oval (5, 5, self.w - 6, self.h - 6, width = 2, fill = "#c0c0c0")
+		# Название.
+		self.Box.create_text(self.w / 2, self.h // 2, font = "Verdana 16 bold", justify = CENTER, fill = 'black', text = self.Name)
+	def update(self, Value):
+		if Value > 0:
+			self.Box.itemconfig(self.Oval, fill = self.OnColor)
+		else:
+			self.Box.itemconfig(self.Oval, fill = self.OffColor)
+
+# Индикатор состояния адаптации.
+class _AdaptationIndicator:
+	def __init__(self, root, x, y):
+		self.x = x
+		self.y = y
+		self.w = 30
+		self.h = 70
+		self.OffColor = "gray"
+		self.OnColor = '#ff4500'
+
+		self.Indicators = {}
+
+		# Холст.
+		self.Box = Canvas(root, width = self.w + 3, height = self.h, bg = BackGroundColor, bd = 0, highlightthickness = 0, relief = 'ridge')
+		self.Box.place(x = self.x, y = self.y)
+
+		self.Indicators['Up'] = self.draw_triangle(0, self.w,  0)
+		self.Indicators['Down'] = self.draw_triangle(self.h - self.w, self.w, 1)
+
+	def draw_triangle(self, y, w, flip):
+		Points = [w / 2, y, 0, y + w, w, y + w]
+		if flip:
+			Points = [0, y, w / 2, y +w, w, y]
+
+		Triangle = self.Box.create_polygon(Points, fill = self.OffColor, outline = 'black', width = 2)
+		return Triangle
+
+	def update(self, Value):
+		if Value > 0:
+			self.Box.itemconfig(self.Indicators['Up'], fill = self.OnColor)
+			self.Box.itemconfig(self.Indicators['Down'], fill = self.OffColor)
+		elif Value < 0:
+			self.Box.itemconfig(self.Indicators['Up'], fill = self.OffColor)
+			self.Box.itemconfig(self.Indicators['Down'], fill = self.OnColor)
+		else:
+			self.Box.itemconfig(self.Indicators['Up'], fill = self.OffColor)
+			self.Box.itemconfig(self.Indicators['Down'], fill = self.OffColor)

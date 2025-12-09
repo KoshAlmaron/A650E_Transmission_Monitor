@@ -45,6 +45,8 @@ Parameters = (	  ('uint16_t', 'EngineRPM')
 				, ('uint8_t', 'DebugMode')
 				, ('uint16_t', 'RawTPS')
 				, ('uint16_t', 'RawOIL')
+				, ('int8_t', 'AdaptationTPS')
+				, ('int8_t', 'AdaptationTemp')
 				)
 
 CommandBytes = {'TCU_DATA_PACKET' :		0x71
