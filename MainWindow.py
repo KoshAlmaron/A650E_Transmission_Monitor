@@ -41,6 +41,7 @@ class _MainWindow:
 		self.EditSpeed = 0
 		self.EditConfig = 0
 		self.DataExport = 0
+		self.PortState = 0
 
 		Width = 1300
 		Height = 700
@@ -70,17 +71,17 @@ class _MainWindow:
 		self.PortBtn = Button(text = "Старт", width = 10, bg = "#fb7b72", command = self.port_start_stop)
 		self.PortBtn.place(x = 25, y = Height-100)
 
-		self.ConfigBtn = Button(text = "Настройки", width = 9, bg = "#3CB371", command = self.edit_config, state='normal')
+		self.ConfigBtn = Button(text = "Настройки", width = 8, bg = "#3CB371", command = self.edit_config, state='normal')
 		self.ConfigBtn.place(x = 580, y = Height-55)
 
-		self.TablesBtn = Button(text = "Таблицы", width = 8, bg = "#1e90ff", command = self.edit_tables, state='normal')
+		self.TablesBtn = Button(text = "Таблицы", width = 7, bg = "#1e90ff", command = self.edit_tables, state='normal')
 		self.TablesBtn.place(x = 760, y = Height-55)
 
 		self.ExportBtn = Button(text = "Экспорт/Импорт", width = 13, bg = "#a0522d", command = self.data_export, state='normal')
 		self.ExportBtn.place(x = 925, y = Height-55)
 
-		self.ExitBtn = Button(text = "Выход", width = 6, bg = "#f1e71f", command = self.quit)
-		self.ExitBtn.place(x = 1150, y = Height-55)
+		self.ExitBtn = Button(text = "Выход", width = 5, height = 2, bg = "#f1e71f", command = self.quit)
+		self.ExitBtn.place(x = 1188, y = Height-80)
 
 		# Галка "Записывать лог".
 		self.WriteLog = IntVar()
@@ -106,10 +107,13 @@ class _MainWindow:
 		self.SPD = _RoundMeter(self.root, 'SPD', 1000, 20, 0, 160, 'white')
 
 		self.ADCBtn = Button(text = "АЦП", width = 4, bg = "#0080a0", command = self.edit_adc, state='normal')
-		self.ADCBtn.place(x = 665, y = 10)
+		self.ADCBtn.place(x = 650, y = 10)
 
 		self.SpeedBtn = Button(text = "Скорость", width = 8, bg = "#FF8C00", command = self.edit_speed, state='normal')
-		self.SpeedBtn.place(x = 933, y = 10)
+		self.SpeedBtn.place(x = 920, y = 10)
+
+		self.IOBtn = Button(text = "I/O", width = 4, bg = "#e0e0ff", command = self.port_state, state='normal', font = ("Helvetica", 12, 'bold'))
+		self.IOBtn.place(x = 515, y = 185)
 
 		self.BRK = _LightIndicator(self.root, 'BRK', 20, 500, '#ff7070')
 		self.ENG = _LightIndicator(self.root, 'ENG', 110, 500, '#ffd700')
@@ -122,7 +126,7 @@ class _MainWindow:
 		
 		self.MainGraph = _Graph(self.root, 450, 230, Uart)
 
-		self.SpdTest = Button(text = "Тест", width = 4, bg = "#f0fff0", command = self.speed_test, state='normal', font = ("Helvetica", 12, 'bold'))
+		self.SpdTest = Button(text = "Тест", width = 4, bg = "#e0ffe0", command = self.speed_test, state='normal', font = ("Helvetica", 12, 'bold'))
 		self.SpdTest.place(x = 1115, y = 185)
 
 		self.add_tooltip()
@@ -228,6 +232,9 @@ class _MainWindow:
 
 	def data_export(self):
 		self.DataExport = 1
+
+	def port_state(self):
+		self.PortState = 1
 
 	def speed_test(self):
 		self.Uart.send_command('SPEED_TEST_COMMAND', 0, [])

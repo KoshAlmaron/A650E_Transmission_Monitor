@@ -8,6 +8,7 @@ import EditTables
 import EditADC
 import EditSpeed
 import EditConfig
+import PortState
 
 import DataExport
 
@@ -54,8 +55,17 @@ def loop():
 		MainWindow.DataExport = 0
 		close_window(EditWindow)
 		EditWindow = DataExport._DataExportEditWindow(Uart, Ver)
+	if MainWindow.PortState == 1:
+		MainWindow.PortState = 0
+		close_window(EditWindow)
+		EditWindow = PortState._PortStateEditWindow(Uart)
 
 	if EditWindow is not None:
+		if Uart.NewPortState == 1:
+			if hasattr(EditWindow, 'update_port_state'):
+				EditWindow.update_port_state()
+			Uart.NewPortState = 0
+
 		if EditWindow.WindowOpen == 0:
 			EditWindow.window_close()
 			EditWindow = None
@@ -96,6 +106,8 @@ def loop():
 		if EditWindow is not None:
 			if hasattr(EditWindow, 'table_auto_update'):
 				EditWindow.table_auto_update()
+			if hasattr(EditWindow, 'get_port_packet'):
+				EditWindow.get_port_packet()
 
 	MainWindow.root.after(40, loop)
 

@@ -56,7 +56,7 @@ TablesData = [{'N': 0,	'Menu': 0,	'Table': 'SLTGraph',					'ArrayX': TPSGrid,		'
 			, {'N': 5,	'Menu': 1,	'Table': 'SLUGear2TPSAdaptGraph',		'ArrayX': TPSGrid,		'Type': 'int16_t',	'Size' : 0,	'Min': -32,		'Max': 32,		'Step': 4,	'Parameter': 'GearChangeSLU',	'Name': '    SLU G2 - Адаптация давления включения второй передачи'}
 			, {'N': 6,	'Menu': 1,	'Table': 'SLUGear2TempCorrGraph',		'ArrayX': TempGrid,		'Type': 'int16_t',	'Size' : 0,	'Min': -300,	'Max': 300,		'Step': 5,	'Parameter': '',				'Name': 'SLU G2 - Температурная коррекция давления включения второй передачи'}
 			, {'N': 7,	'Menu': 1,	'Table': 'SLUGear2TempAdaptGraph',		'ArrayX': TempGrid,		'Type': 'int16_t',	'Size' : 0,	'Min': -120,	'Max': 120,		'Step': 5,	'Parameter': '',				'Name': '    SLU G2 - Адаптация температурной коррекции включения второй передачи'}
-			, {'N': 8,	'Menu': 1,	'Table': 'GearChangeStepArray',			'ArrayX': TPSGrid,		'Type': 'uint16_t',	'Size' : 0,	'Min': 1,		'Max': 120,		'Step': 1,	'Parameter': '',				'Name': 'SLU G2 - Длительность 1 шага включения передачи'}
+			, {'N': 8,	'Menu': 1,	'Table': 'GearChangeStepArray',			'ArrayX': TPSGrid,		'Type': 'uint16_t',	'Size' : 0,	'Min': 1,		'Max': 120,		'Step': 5,	'Parameter': '',				'Name': 'SLU G2 - Длительность 1 шага включения передачи'}
 			, {'N': 9,	'Menu': 2,	'Table': 'Gear2AdvGraph',				'ArrayX': DeltaRPMGrid,	'Type': 'int16_t',	'Size' : 0,	'Min': 0,		'Max': 1200,	'Step': 25,	'Parameter': '',				'Name': 'RPM G2 - Опережение по оборотам реативации второй передачи'}
 			, {'N': 10,	'Menu': 2,	'Table': 'Gear2AdvAdaptGraph',			'ArrayX': DeltaRPMGrid,	'Type': 'int16_t',	'Size' : 0,	'Min': -300,	'Max': 300,		'Step': 25,	'Parameter': '',				'Name': '    RPM G2 - Адаптация оборотов реативации второй передачи'}
 			, {'N': 11,	'Menu': 2,	'Table': 'Gear2AdvTempCorrGraph',		'ArrayX': TempGrid,		'Type': 'int16_t',	'Size' : 0,	'Min': -300,	'Max': 300,		'Step': 25,	'Parameter': '',				'Name': 'RPM G2 - Температурная коррекция оборотов реативации второй передачи'}
@@ -91,4 +91,77 @@ ApplyAdaptationCommands = {	'SLUGear2Graph':				'APPLY_G2_TPS_ADAPT_COMMAND'
 							, 'Gear2AdvTempCorrGraph' :		'APPLY_G2_ADV_TEMP_ADAPT_COMMAND'
 							, 'SLUGear3DelayGraph':			'APPLY_G3_TPS_ADAPT_COMMAND'
 							, 'SLUG3DelayTempCorrGraph':	'APPLY_G3_TEMP_ADAPT_COMMAND'
+}
+
+ArduinoPins = {
+		' 0': {'Port': 'PE0', 'Functions': 'RX0', 'State': 0},
+		' 1': {'Port': 'PE1', 'Functions': 'TX0', 'State': 0},
+		' 2': {'Port': 'PE4', 'Functions': 'OC3B, INT4', 'State': 0},
+		' 3': {'Port': 'PE5', 'Functions': 'OC3C, INT5', 'State': 0},
+		' 4': {'Port': 'PG5', 'Functions': 'OC0B', 'State': 0},
+		' 5': {'Port': 'PE3', 'Functions': 'OC3A', 'State': 0},
+		' 6': {'Port': 'PH3', 'Functions': 'OC4A', 'State': 0},
+		' 7': {'Port': 'PH4', 'Functions': 'OC4B', 'State': 0},
+		' 8': {'Port': 'PH5', 'Functions': 'OC4C', 'State': 0},
+		' 9': {'Port': 'PH6', 'Functions': 'OC2B', 'State': 0},
+		'10': {'Port': 'PB4', 'Functions': 'OC2A', 'State': 0},
+		'11': {'Port': 'PB5', 'Functions': 'OC1A', 'State': 0},
+		'12': {'Port': 'PB6', 'Functions': 'OC1B', 'State': 0},
+		'13': {'Port': 'PB7', 'Functions': 'OC1C', 'State': 0},
+		'14': {'Port': 'PJ1', 'Functions': 'TX3', 'State': 0},
+		'15': {'Port': 'PJ0', 'Functions': 'RX3', 'State': 0},
+		'16': {'Port': 'PH1', 'Functions': 'TX2', 'State': 0},
+		'17': {'Port': 'PH0', 'Functions': 'RX2', 'State': 0},
+		'18': {'Port': 'PD3', 'Functions': 'TX1, INT3', 'State': 0},
+		'19': {'Port': 'PD2', 'Functions': 'RX1, INT2', 'State': 0},
+		'20': {'Port': 'PD1', 'Functions': 'SDA, INT1', 'State': 0},
+		'21': {'Port': 'PD0', 'Functions': 'SCL, INT0', 'State': 0},
+		'22': {'Port': 'PA0', 'Functions': '', 'State': 0},
+		'23': {'Port': 'PA1', 'Functions': '', 'State': 0},
+		'24': {'Port': 'PA2', 'Functions': '', 'State': 0},
+		'25': {'Port': 'PA3', 'Functions': '', 'State': 0},
+		'26': {'Port': 'PA4', 'Functions': '', 'State': 0},
+		'27': {'Port': 'PA5', 'Functions': '', 'State': 0},
+		'28': {'Port': 'PA6', 'Functions': '', 'State': 0},
+		'29': {'Port': 'PA7', 'Functions': '', 'State': 0},
+		'30': {'Port': 'PC7', 'Functions': '', 'State': 0},
+		'31': {'Port': 'PC6', 'Functions': '', 'State': 0},
+		'32': {'Port': 'PC5', 'Functions': '', 'State': 0},
+		'33': {'Port': 'PC4', 'Functions': '', 'State': 0},
+		'34': {'Port': 'PC3', 'Functions': '', 'State': 0},
+		'35': {'Port': 'PC2', 'Functions': '', 'State': 0},
+		'36': {'Port': 'PC1', 'Functions': '', 'State': 0},
+		'37': {'Port': 'PC0', 'Functions': '', 'State': 0},
+		'38': {'Port': 'PD7', 'Functions': '', 'State': 0},
+		'39': {'Port': 'PG2', 'Functions': '', 'State': 0},
+		'40': {'Port': 'PG1', 'Functions': '', 'State': 0},
+		'41': {'Port': 'PG0', 'Functions': '', 'State': 0},
+		'42': {'Port': 'PL7', 'Functions': '', 'State': 0},
+		'43': {'Port': 'PL6', 'Functions': '', 'State': 0},
+		'44': {'Port': 'PL5', 'Functions': 'OC5C', 'State': 0},
+		'45': {'Port': 'PL4', 'Functions': 'OC5B', 'State': 0},
+		'46': {'Port': 'PL3', 'Functions': 'OC5A', 'State': 0},
+		'47': {'Port': 'PL2', 'Functions': '', 'State': 0},
+		'48': {'Port': 'PL1', 'Functions': 'ICP5', 'State': 0},
+		'49': {'Port': 'PL0', 'Functions': 'ICP4', 'State': 0},
+		'50': {'Port': 'PB3', 'Functions': 'MISO', 'State': 0},
+		'51': {'Port': 'PB2', 'Functions': 'MOSI', 'State': 0},
+		'52': {'Port': 'PB1', 'Functions': 'SCK', 'State': 0},
+		'53': {'Port': 'PB0', 'Functions': 'SS', 'State': 0},
+		'A0': {'Port': 'PF0', 'Functions': 'ADC0', 'State': 0},
+		'A1': {'Port': 'PF1', 'Functions': 'ADC1', 'State': 0},
+		'A2': {'Port': 'PF2', 'Functions': 'ADC2', 'State': 0},
+		'A3': {'Port': 'PF3', 'Functions': 'ADC3', 'State': 0},
+		'A4': {'Port': 'PF4', 'Functions': 'ADC4', 'State': 0},
+		'A5': {'Port': 'PF5', 'Functions': 'ADC5', 'State': 0},
+		'A6': {'Port': 'PF6', 'Functions': 'ADC6', 'State': 0},
+		'A7': {'Port': 'PF7', 'Functions': 'ADC7', 'State': 0},
+		'A8': {'Port': 'PK0', 'Functions': 'ADC8', 'State': 0},
+		'A9': {'Port': 'PK1', 'Functions': 'ADC9', 'State': 0},
+		'A10': {'Port': 'PK2', 'Functions': 'ADC10', 'State': 0},
+		'A11': {'Port': 'PK3', 'Functions': 'ADC11', 'State': 0},
+		'A12': {'Port': 'PK4', 'Functions': 'ADC12', 'State': 0},
+		'A13': {'Port': 'PK5', 'Functions': 'ADC13', 'State': 0},
+		'A14': {'Port': 'PK6', 'Functions': 'ADC14', 'State': 0},
+		'A15': {'Port': 'PK7', 'Functions': 'ADC15', 'State': 0},
 }

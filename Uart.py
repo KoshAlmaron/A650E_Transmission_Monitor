@@ -52,9 +52,12 @@ CommandBytes = {'TCU_DATA_PACKET' :		0x71
 				, 'TCU_TABLE_ANSWER' :	0xc2
 				, 'NEW_TABLE_DATA' :	0xc3
 
-				, 'GET_CONFIG_COMMAND' : 	0xc4
-				, 'TCU_CONFIG_ANSWER' : 	0xc5
-				, 'NEW_CONFIG_DATA' : 		0xc6
+				, 'GET_CONFIG_COMMAND' :	0xc4
+				, 'TCU_CONFIG_ANSWER' :		0xc5
+				, 'NEW_CONFIG_DATA' :		0xc6
+
+				, 'GET_PORTS_STATE' :		0xc7
+				, 'PORTS_STATE_PACKET' :	0xc8
 
 				, 'READ_EEPROM_MAIN_COMMAND' :		0xe0
 				, 'READ_EEPROM_ADC_COMMAND' :		0xe1
@@ -89,6 +92,7 @@ class _uart:
 		self.TCU = {}				# Словарь с параметрами.
 		self.CFG = {}				# Словарь с настройками.
 		self.TableData = []			# Буфер для таблицы.
+		self.PortData = []			# Буфер для состояния портов.
 		self.Begin = 0				# Флаг начала пакета.
 		self.DataArray = []			# Массив байт.
 		self.LogFolder = Folder		# Папка с логами.
@@ -113,11 +117,13 @@ class _uart:
 		self.TableNumber = -1		# Флаг и номер, получена новая таблица (TCU_TABLE_ANSWER).
 		self.ByteCount = 0
 		self.DataPacketSize = 1 	# +1 байт типа пакета.
+		self.PortPacketSize = 23 + 1
 
 		self.dictionary_init()		# Инициаизация словарей.
 
 		self.NewData = 1			# Флаг, получен новый пакет данных (TCU_DATA_PACKET).
 		self.NewConfig = 0			# Флаг, получен новый пакет настроек (TCU_CONFIG_ANSWER).
+		self.NewPortState = 0		# Флаг, получен новый пакет с портами (PORTS_STATE_PACKET).
 
 	def dictionary_init(self):
 		# Первоначальное заполнение словаря с параметрами.
@@ -264,8 +270,16 @@ class _uart:
 				self.TCU[Key[1]] = Value
 			self.to_log()
 			self.NewData = 1
-			#print(self.TCU)
 
+		# Пакет с состоянием портов.
+		if self.PacketType == CommandBytes['PORTS_STATE_PACKET'] and self.ByteCount == self.PortPacketSize:
+			self.PortData = []
+
+			for i in range(0, self.PortPacketSize - 1):
+				self.PortData.append(self.get_uint8(ByteNumber + i))
+			self.NewPortState = 1
+
+		# Пакет с настройками ЭБУ.
 		elif self.PacketType == CommandBytes['TCU_CONFIG_ANSWER'] and self.ByteCount == self.ConfigPacketSize:
 			for Key in Tables.ConfigData:
 				Value = 0
@@ -286,6 +300,7 @@ class _uart:
 			self.NewConfig = 1
 			#print(self.CFG)
 
+		# Пакет с таблицей.
 		elif self.PacketType == CommandBytes['TCU_TABLE_ANSWER'] and self.TableNumber == -1:
 			self.TableNumber = self.get_uint8(ByteNumber)
 

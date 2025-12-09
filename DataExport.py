@@ -34,8 +34,6 @@ class _DataExportEditWindow:
 		self.OffsetX = 20
 		self.OffsetY = 0
 
-		self.CellColor = "#d0ddd0"
-
 		self.MainFont = font.Font(size = 10)
 		self.root.option_add("*Font", self.MainFont)
 		self.root.title('Экспорт/импорт калибровок')
