@@ -169,9 +169,7 @@ class _SpeedEditWindow:
 
 	def key_pressed(self, event):	# Событие по нажатию кнопки на клавиатуре.
 		State = event.state
-
-		BadMods = (0x40000, 16)	# Список ненужных модификаторов на удаление.
-		for Mod in BadMods:
+		for Mod in Tables.BadMods:
 			if State >= Mod:
 				State -= Mod
 

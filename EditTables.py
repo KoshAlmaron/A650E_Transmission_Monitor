@@ -297,7 +297,12 @@ class _TableEditWindow:
 		return Tables.TablesData[self.CurrentTable]['ArrayX']
 
 	def key_pressed(self, event):	# Событие по нажатию кнопки на клавиатуре.
-		Result = self.MainGraph.move_point(event.keysym, event.state, self.Cells)
+		State = event.state
+		for Mod in Tables.BadMods:
+			if State >= Mod:
+				State -= Mod
+
+		Result = self.MainGraph.move_point(event.keysym, State, self.Cells)
 		if Result:
 			self.value_check('')
 			if self.OnLine.get() == 1 and Result == 2:
@@ -568,13 +573,13 @@ class _Graph:
 			elif Button == 'Left':
 				if self.CursorPositionL > 0:
 					self.CursorPositionL -= 1
-				if State not in (17, 8209):		# Shift
+				if State != 1:		# Shift
 					self.CursorPositionR = self.CursorPositionL
 
 			elif Button == 'Right':
 				if self.CursorPositionR < len(self.ArrayX) - 1:
 					self.CursorPositionR += 1
-				if State not in (17, 8209):		# Shift
+				if State != 1:		# Shift
 					self.CursorPositionL = self.CursorPositionR
 
 			if Button in ('Up', 'Down'):

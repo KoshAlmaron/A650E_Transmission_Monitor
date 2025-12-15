@@ -72,16 +72,16 @@ class _MainWindow:
 		self.PortBtn = Button(text = "Старт", width = 10, bg = "#fb7b72", command = self.port_start_stop)
 		self.PortBtn.place(x = 25, y = Height-100)
 
-		self.ConfigBtn = Button(text = "Настройки", width = 8, bg = "#3CB371", command = self.edit_config, state='normal')
+		self.ConfigBtn = Button(text = "Настройки", width = 9, bg = "#3CB371", command = self.edit_config, state='normal')
 		self.ConfigBtn.place(x = 580, y = Height-55)
 
-		self.TablesBtn = Button(text = "Таблицы", width = 7, bg = "#1e90ff", command = self.edit_tables, state='normal')
+		self.TablesBtn = Button(text = "Таблицы", width = 8, bg = "#1e90ff", command = self.edit_tables, state='normal')
 		self.TablesBtn.place(x = 760, y = Height-55)
 
-		self.ExportBtn = Button(text = "Экспорт/Импорт", width = 13, bg = "#a0522d", command = self.data_export, state='normal')
+		self.ExportBtn = Button(text = "Экспорт/Импорт", width = 14, bg = "#a0522d", command = self.data_export, state='normal')
 		self.ExportBtn.place(x = 925, y = Height-55)
 
-		self.ExitBtn = Button(text = "Выход", width = 5, height = 2, bg = "#f1e71f", command = self.quit)
+		self.ExitBtn = Button(text = "Выход", width = 6, height = 2, bg = "#f1e71f", command = self.quit)
 		self.ExitBtn.place(x = 1188, y = Height-80)
 
 		# Галка "Записывать лог".
@@ -172,7 +172,7 @@ class _MainWindow:
 
 		ToolTip.ToolTip(self.OIL.Box, "Температура масла.")
 		ToolTip.ToolTip(self.TPS.Box, "Текущее значение ДПДЗ.")
-		ToolTip.ToolTip(self.SPD.Box, "Скорость автомобиля.")
+		ToolTip.ToolTip(self.SPD.Box, "Скорость автомобиля.\nСиние стрелки - это пороги переключения текущей передачи.")
 		
 		ToolTip.ToolTip(self.BRK.Box, "Состояние педали тормоза. Без тормоза при переключении N->R задняя передача не включится. При нажатии тормоза на ходу происходит разблокировка ГТ")
 		ToolTip.ToolTip(self.ENG.Box, "Флаг работы двигателя. При неработающем двигателе отключаются все соленоиды и сбрасывается состояние АКПП.")

@@ -27,7 +27,7 @@ class _DataExportEditWindow:
 		self.Version = Ver
 
 		self.SleepStepTime = 0.010
-		self.SleepStepCount = 25
+		self.SleepStepCount = 30
 
 		self.Width = 860
 		self.Height = 710
@@ -95,7 +95,7 @@ class _DataExportEditWindow:
 		BorderSpace = 5
 
 		Border = ttk.Label(self.root, text = '', relief = "ridge", background = BackGroundColor)
-		Border.place(x = 10, y = Y - 5, width = self.Width - 20, height = DeltaY * 2 + 3)
+		Border.place(x = 10, y = Y - 5, width = self.Width - 20, height = DeltaY * 2 + 10)
 
 		self.add_row(Y, 'Config', 'Настройки АКПП')
 		Y += DeltaY
@@ -105,7 +105,7 @@ class _DataExportEditWindow:
 		Y += BorderSpace
 
 		Border = ttk.Label(self.root, text = '', relief = "ridge", background = BackGroundColor)
-		Border.place(x = 10, y = Y - 5, width = self.Width - 20, height = DeltaY * 2 + 3)
+		Border.place(x = 10, y = Y - 5, width = self.Width - 20, height = DeltaY * 2 + 10)
 
 		N = self.get_table_number('TPSGraph')
 		self.add_row(Y, Tables.TablesData[N]['Table'], Tables.TablesData[N]['Name'])
@@ -115,7 +115,7 @@ class _DataExportEditWindow:
 		Y += BorderSpace
 
 		Border = ttk.Label(self.root, text = '', relief = "ridge", background = BackGroundColor)
-		Border.place(x = 10, y = Y - 5, width = self.Width - 20, height = DeltaY * (len(Tables.TablesData) - 3) + 3)
+		Border.place(x = 10, y = Y - 5, width = self.Width - 20, height = DeltaY * (len(Tables.TablesData) - 3) + 10)
 
 		for K in range(0, N):
 			self.add_row(Y, Tables.TablesData[K]['Table'], Tables.TablesData[K]['Name'])
@@ -182,7 +182,7 @@ class _DataExportEditWindow:
 				if Key in Content['Config']:
 					if (Content['Config'][Key] < Tables.ConfigData[Key]['Min']
 					or Content['Config'][Key] > Tables.ConfigData[Key]['Max']):
-						print(Content['Config'][Key])
+						#print(Content['Config'][Key])
 						ConfigWarn += ' - Значение %s "%s" не попадает в диапазон от %s до %s\n' % (Key, Content['Config'][Key], Tables.ConfigData[Key]['Min'], Tables.ConfigData[Key]['Max'])
 				else:
 					ConfigErr += ' - Отсутствует обязательный параметр %s\n' % (Key)
@@ -334,7 +334,7 @@ class _DataExportEditWindow:
 			# Ждем ответ ЭБУ.
 			Result = self.wait_for_table('GearSpeedGraphs')
 			if Result == 1:
-				messagebox.showwarning('Сохранение в EEPROM', 'Нет ответа от ЭБУ (Скорости переючения)')
+				messagebox.showwarning('Сохранение в EEPROM', 'Нет ответа от ЭБУ (Скорости переключения)')
 				return
 			elif Result == 2:
 				messagebox.showwarning('Сохранение в EEPROM', 'ЭБУ вернул неправильный ответ (Скорости переючения)')
@@ -356,7 +356,7 @@ class _DataExportEditWindow:
 			self.Answer.update(1)
 			self.Uart.send_command('WRITE_EEPROM_MAIN_COMMAND', self.get_table_number('SLTGraph'), [])
 			# Ждем ответ ЭБУ.
-			Result = self.wait_for_table('SLTGraph')
+			Result = self.wait_for_table('SLTGraph', 100)
 			if Result == 1:
 				messagebox.showwarning('Сохранение в EEPROM', 'Нет ответа от ЭБУ (Таблицы)')
 				return
@@ -389,16 +389,16 @@ class _DataExportEditWindow:
 			return 1
 		return 0
 
-	def wait_for_table(self, TableName):
+	def wait_for_table(self, TableName, Steps = 0):
 		# Ждем ответ ЭБУ, Таблицы.
 		# Результат: 0 - всё ок, 1 - нет ответ, 2 - неправильный ответ.
 		TableN = self.get_table_number(TableName)
-		Steps = self.SleepStepCount
-		if TableN == 0:
-			Steps = 50
+		if Steps == 0:
+			Steps = self.SleepStepCount
 
 		DataReceived = 0
 		for T in range(0, Steps):
+			#print(self.Uart.TableNumber, TableN)
 			if self.Uart.TableNumber == TableN:
 				self.Answer.update(0)
 				self.Uart.TableNumber = -1
@@ -503,7 +503,7 @@ class _DataExportEditWindow:
 	def get_backup_folder(self):
 		Folder = os.path.join(os.getcwd(), "Backups")
 		if not os.path.isdir(Folder):
-			os.makedirs(Folderw, exist_ok = True)
+			os.makedirs(Folder, exist_ok = True)
 		return Folder
 
 	def on_closing(self):	# Событие по закрытию окна.

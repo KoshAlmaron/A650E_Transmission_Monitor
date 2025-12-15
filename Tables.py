@@ -1,5 +1,7 @@
 from tkinter import *
 
+BadMods = (0x40008, 0x40000, 16)	# Список ненужных модификаторов клавиатуры на удаление.
+
 TPSGrid = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]
 TempGrid = [-30, -25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120]
 DeltaRPMGrid = [0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340, 360, 380, 400]
@@ -50,7 +52,7 @@ ConfigData = {'AfterChangeMinRPM' :		{'Block': 0, 'Element' : 'Spinbox',		'Type'
 
 TablesData = [{'N': 0,	'Menu': 0,	'Table': 'SLTGraph',					'ArrayX': TPSGrid,		'Type': 'uint16_t',	'Size' : 0,	'Min': 100,		'Max': 800,		'Step': 4,	'Parameter': 'GearChangeSLT',	'Name': 'SLT - Линейное давление от ДПДЗ'}
 			, {'N': 1,	'Menu': 0,	'Table': 'SLTTempCorrGraph',			'ArrayX': TempGrid,		'Type': 'int16_t',	'Size' : 0,	'Min': -300,	'Max': 300,		'Step': 5,	'Parameter': '',				'Name': 'SLT - Температурная коррекция'}
-			, {'N': 2,	'Menu': 0,	'Table': 'SLNGraph',					'ArrayX': TPSGrid,		'Type': 'uint16_t',	'Size' : 0,	'Min': 100,		'Max': 800,		'Step': 4,	'Parameter': 'GearChangeSLN',	'Name': 'SLN - Давление подпора гидроаккумуляторов от ДПДЗ'}
+			, {'N': 2,	'Menu': 0,	'Table': 'SLNGraph',					'ArrayX': TPSGrid,		'Type': 'uint16_t',	'Size' : 0,	'Min': 0,		'Max': 800,		'Step': 4,	'Parameter': 'GearChangeSLN',	'Name': 'SLN - Давление подпора гидроаккумуляторов от ДПДЗ'}
 			, {'N': 3,	'Menu': 0,	'Table': 'SLNTempCorrGraph',			'ArrayX': TempGrid,		'Type': 'int16_t',	'Size' : 0,	'Min': -300,	'Max': 300,		'Step': 5,	'Parameter': '',				'Name': 'SLN - Температурная коррекция'}
 			, {'N': 4,	'Menu': 1,	'Table': 'SLUGear2Graph',				'ArrayX': TPSGrid,		'Type': 'uint16_t',	'Size' : 0,	'Min': 100,		'Max': 500,		'Step': 4,	'Parameter': 'GearChangeSLU',	'Name': 'SLU G2 - Давление включения второй передачи от ДПДЗ'}
 			, {'N': 5,	'Menu': 1,	'Table': 'SLUGear2TPSAdaptGraph',		'ArrayX': TPSGrid,		'Type': 'int16_t',	'Size' : 0,	'Min': -32,		'Max': 32,		'Step': 4,	'Parameter': 'GearChangeSLU',	'Name': '    SLU G2 - Адаптация давления включения второй передачи'}
@@ -66,7 +68,7 @@ TablesData = [{'N': 0,	'Menu': 0,	'Table': 'SLTGraph',					'ArrayX': TPSGrid,		'
 			, {'N': 15,	'Menu': 3,	'Table': 'SLUGear3TPSAdaptGraph',		'ArrayX': TPSGrid,		'Type': 'int16_t',	'Size' : 0,	'Min': -200,	'Max': 200,		'Step': 20,	'Parameter': '',				'Name': '    SLU G3 - Адаптация времени удержания третьей передачи по ДПДЗ'}
 			, {'N': 16,	'Menu': 3,	'Table': 'SLUG3DelayTempCorrGraph',		'ArrayX': TempGrid,		'Type': 'int16_t',	'Size' : 0,	'Min': -200,	'Max': 200,		'Step': 20,	'Parameter': '',				'Name': 'SLU G3 - Температурная коррекция времени удержания в мс'}
 			, {'N': 17,	'Menu': 3,	'Table': 'SLUGear3TempAdaptGraph',		'ArrayX': TempGrid,		'Type': 'int16_t',	'Size' : 0,	'Min': -200,	'Max': 200,		'Step': 20,	'Parameter': '',				'Name': '    SLU G3 - Адаптация времени удержания SLU третьей передачи по температуре в мс'}
-			, {'N': 18,	'Menu': 3,	'Table': 'SLNGear3Graph',				'ArrayX': TPSGrid,		'Type': 'uint16_t',	'Size' : 0,	'Min': 100,		'Max': 800,		'Step': 4,	'Parameter': 'GearChangeSLN',	'Name': 'SLN G3 - Давление SLN включения третьей передачи от ДПДЗ'}
+			, {'N': 18,	'Menu': 3,	'Table': 'SLNGear3Graph',				'ArrayX': TPSGrid,		'Type': 'uint16_t',	'Size' : 0,	'Min': 0,		'Max': 800,		'Step': 4,	'Parameter': 'GearChangeSLN',	'Name': 'SLN G3 - Давление SLN включения третьей передачи от ДПДЗ'}
 			, {'N': 19,	'Menu': 3,	'Table': 'SLNGear3OffsetGraph',			'ArrayX': TPSGrid,		'Type': 'int16_t',	'Size' : 0,	'Min': -1000,	'Max': 1000,	'Step': 20,	'Parameter': '',				'Name': 'SLN G3 - Смещение времени активации SLN при включении третьей передачи'}
 			, {'N': 20,	'Menu': 4,	'Table': 'TPSGraph',					'ArrayX': TPSGrid,		'Type': 'int16_t',	'Size' : 0,	'Min': 0,		'Max': 1023,	'Step': 4,	'Parameter': '',				'Name': 'ДПДЗ (показания АЦП)'}
 			, {'N': 21,	'Menu': 4,	'Table': 'OilTempGraph',				'ArrayX': TempGrid,		'Type': 'int16_t',	'Size' : 0,	'Min': 0,		'Max': 1023,	'Step': 4,	'Parameter': '',				'Name': 'Температура масла (показания АЦП)'}

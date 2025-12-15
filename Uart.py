@@ -99,6 +99,8 @@ class _uart:
 		self.DataArray = []			# Массив байт.
 		self.LogFolder = Folder		# Папка с логами.
 		self.LogFile = ''
+
+		self.CRC = [0, 0]			# Контрольная сумма.
 		
 		self.Serial = serial.Serial()			# Порт.
 		self.Serial.baudrate = Baudrate			# Скорость.
@@ -241,8 +243,29 @@ class _uart:
 			return 1
 		else:
 			return 0
+
+	def crc_add(self, Value):
+		self.CRC[0] += Value
+		if self.CRC[0] > 255:
+			self.CRC[0] -= 256
 		
+		self.CRC[1] += self.CRC[0];
+		if self.CRC[1] > 255:
+			self.CRC[1] -= 256
+
 	def data_update(self):
+		# Проверка CRC.
+		self.CRC = [0, 0]
+
+		for i in range(0, self.ByteCount - 2):
+			self.crc_add(self.get_uint8(i))
+		self.crc_add(self.ByteCount - 2)
+
+		if self.get_uint8(self.ByteCount - 2) != self.CRC[0] or self.get_uint8(self.ByteCount - 1) != self.CRC[1]:
+			print('Ошибка CRC!')
+			return
+
+		self.ByteCount -= 2		# Два байта CRC.
 		self.NewData = 0
 		self.PacketType = self.get_uint8(0)
 		ByteNumber = 1
@@ -251,7 +274,7 @@ class _uart:
 		# 	print(self.PacketType, self.ByteCount)
 		# 	print(self.DataArray)
 		# 	print(self.PacketType, self.get_uint8(ByteNumber) , self.ByteCount, self.DataPacketSize)
-		#print(self.PacketType, CommandBytes['TCU_DATA_PACKET'], self.ByteCount, self.DataPacketSize)
+		# print(self.PacketType, CommandBytes['TCU_DATA_PACKET'], self.ByteCount, self.DataPacketSize)
 
 		# 0x71 - Пакет с параметрами ЭБУ.
 		if self.PacketType == CommandBytes['TCU_DATA_PACKET'] and self.ByteCount == self.DataPacketSize:
@@ -351,28 +374,26 @@ class _uart:
 		Command = CommandBytes[Command]
 		SendBuffer = []
 
-		#print(hex(Command))
-
-		SendBuffer.append(0x40)	# Начало исходящего пакета.
-		SendBuffer.append(Command)	# Тип пакета.
-		self.add_byte(SendBuffer, N)	# Номер таблицы.
+		SendBuffer.append(0x40)			# Начало исходящего пакета.
+		SendBuffer.append(Command)		# Тип пакета.
+		SendBuffer.append(N)			# Номер таблицы.
 
 		Signed = False
 		if Tables.TablesData[N]['Type']	 == 'int16_t' or Tables.TablesData[N]['Type']	 == 'int8_t':
 			Signed = True
 
 		ValSize = 2
-		if Tables.TablesData[N]['Type']	 == 'uint8_t' or Tables.TablesData[N]['Type']	 == 'int8_t':
+		if Tables.TablesData[N]['Type']	 == 'uint8_t' or Tables.TablesData[N]['Type'] == 'int8_t':
 			ValSize = 1
 
 		if Command == CommandBytes['NEW_TABLE_DATA']:
 			for Val in Data:
 				for Byte in Val.to_bytes(ValSize, 'big', signed = Signed):
-					self.add_byte(SendBuffer, Byte)
+					SendBuffer.append(Byte)
 		elif Command == CommandBytes['GEAR_LIMIT_COMMAND']:
 			for Val in Data:
 				for Byte in Val.to_bytes(1, 'big', signed = False):
-					self.add_byte(SendBuffer, Byte)
+					SendBuffer.append(Byte)
 
 		elif Command == CommandBytes['NEW_CONFIG_DATA']:
 			for Key in Tables.ConfigData:
@@ -386,10 +407,21 @@ class _uart:
 					Signed = True
 
 				for Byte in Value.to_bytes(ValSize, 'little', signed = Signed):
-					self.add_byte(SendBuffer, Byte)
+					SendBuffer.append(Byte)
 
 		else:
 			SendBuffer.append(Command)	# Дополнительно вставляем тип пакета.
+
+		# Добавляем CRC.
+		self.CRC = [0, 0]
+		for i in range(1, len(SendBuffer)):	# Исключаем первый байт начала пакета 0x40.
+			self.crc_add(SendBuffer[i])
+		self.crc_add(len(SendBuffer) - 1)
+
+		SendBuffer.append(self.CRC[0])
+		SendBuffer.append(self.CRC[1])
+
+		SendBuffer = self.format_send_packet(SendBuffer)
 
 		SendBuffer.append(0x0d)	# Конец пакета.
 
@@ -402,18 +434,22 @@ class _uart:
 		SendBuffer = bytes(SendBuffer)
 		self.Serial.write(SendBuffer)
 
-	def add_byte(self, Array, Byte):	# Добавление байта с подменой.
-		if Byte == 0x40:
-			Array.append(0x0A)
-			Array.append(0x82)
-		elif Byte == 0x0D:
-			Array.append(0x0A)
-			Array.append(0x83)
-		elif Byte == 0x0A:
-			Array.append(0x0A)
-			Array.append(0x84)
-		else:
-			Array.append(Byte)
+	def format_send_packet(self, Array):	# проверка пакета на наличие спецсимволов.
+		Result = []
+		Result.append(Array[0])
+		for i in range(1, len(Array)):
+			if Array[i] == 0x40:
+				Result.append(0x0A)
+				Result.append(0x82)
+			elif Array[i] == 0x0D:
+				Result.append(0x0A)
+				Result.append(0x83)
+			elif Array[i] == 0x0A:
+				Result.append(0x0A)
+				Result.append(0x84)
+			else:
+				Result.append(Array[i])
+		return Result
 
 	def read_port(self):
 		while True:
