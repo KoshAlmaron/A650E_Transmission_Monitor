@@ -1,5 +1,8 @@
 from tkinter import *
+from tkinter import font
+from tkinter import ttk
 from tkinter import filedialog
+from tkinter import messagebox
 
 import tkinter as tk
 

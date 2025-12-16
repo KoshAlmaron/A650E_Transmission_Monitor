@@ -228,6 +228,8 @@ class _uart:
 		self.LogFile = self.LogFolder + 'AT_log_' + datetime.now().strftime("%Y-%m-%d_%H-%M") + '.log'
 		self.to_log(1)
 		self.PortReading = 1
+		# Шлём несколько байт после открытия порта, чтобы МК переключился на нужный UART.
+		self.Serial.write(bytes((0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff)))
 
 	def port_close(self):
 		self.PortReading = 0
@@ -453,7 +455,7 @@ class _uart:
 
 	def read_port(self):
 		while True:
-			if self.PortReading == 1:
+			if self.PortReading == 1 and self.Serial.is_open:
 				Byte = self.Serial.read()
 				#print(Byte)
 				if self.Begin == 0:

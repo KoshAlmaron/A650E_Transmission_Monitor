@@ -63,7 +63,7 @@ class _ConfigEditWindow:
 		self.Uart = Uart
 
 		self.Width = 1180
-		self.Height = 610
+		self.Height = 620
 		self.OffsetX = 20
 		self.OffsetY = 0
 
