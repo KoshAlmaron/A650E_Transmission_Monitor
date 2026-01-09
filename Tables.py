@@ -48,6 +48,11 @@ ConfigData = {'AfterChangeMinRPM' :		{'Block': 0, 'Element' : 'Spinbox',		'Type'
 
 			, 'SpeedImpulsPerKM' :		{'Block': 8, 'Element' : 'Spinbox',		'Type': 'uint16_t',	'Value': None, 'Min': 0,	'Max': 20000,	'Step' : 1,		'Name': 'Количество импульсов на 1 км'}
 			, 'SpeedCalcCoef' :			{'Block': 8, 'Element' : 'Spinbox',		'Type': 'uint16_t',	'Value': None, 'Min': 0,	'Max': 300,		'Step' : 1,		'Name': 'Коэффициент для расчета скорости авто'}
+
+			, 'BaroCorrEnable' :		{'Block': 9, 'Element' : 'CheckButton',	'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 1,		'Step' : 1,		'Name': 'Барокоррекция'}
+			, 'DefaultBaroPressure' :	{'Block': 9, 'Element' : 'Spinbox',		'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 120,		'Step' : 1,		'Name': 'Базовое атмосферное давление, кПа'}
+			, 'TiptronicEnable' :		{'Block': 10, 'Element' : 'CheckButton','Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 1,		'Step' : 1,		'Name': 'Типтроник'}
+			, 'TiptronicTimer' :		{'Block': 10, 'Element' : 'Spinbox',	'Type': 'uint16_t',	'Value': None, 'Min': 0,	'Max': 6000,	'Step' : 10,	'Name': 'Время работы, шаг - 0.1с'}
 }
 
 TablesData = [{'N': 0,	'Menu': 0,	'Table': 'SLTGraph',					'ArrayX': TPSGrid,		'Type': 'uint16_t',	'Size' : 0,	'Min': 100,		'Max': 800,		'Step': 4,	'Parameter': 'GearChangeSLT',	'Name': 'SLT - Линейное давление от ДПДЗ'}

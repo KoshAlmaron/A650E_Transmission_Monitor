@@ -20,6 +20,8 @@ GraphNames = (('---', 100)
 	, ('CarSpeed' , 150)
 	, ('InstTPS', 100)
 	, ('TPS', 100)
+	, ('Load', 100)
+	, ('Barometer', 1200)
 	, ('SLT', 1023)
 	, ('SLN', 1023)
 	, ('SLU', 1023)
@@ -213,6 +215,8 @@ class _MainWindow:
 		self.LCK.update(self.Uart.TCU['Glock'])
 		self.SLP.update(self.Uart.TCU['SlipDetected'])
 		
+		if self.Uart.TCU['GearManualMode'] > 0:
+			self.Uart.TCU['ATMode'] = 10
 		self.Selector.update(ATModeChar[self.Uart.TCU['Selector']])
 		self.ATMode.update(ATModeChar[self.Uart.TCU['ATMode']])
 		
@@ -223,8 +227,8 @@ class _MainWindow:
 			Gear = 'R'
 		self.Gear.update(Gear)
 
-		self.AdaptTPS.update(self.Uart.TCU['AdaptationTPS'])
-		self.AdaptTemp.update(self.Uart.TCU['AdaptationTemp'])
+		self.AdaptTPS.update(self.Uart.TCU['AdaptationFlagTPS'])
+		self.AdaptTemp.update(self.Uart.TCU['AdaptationFlagTemp'])
 
 		self.MainGraph.update()
 
