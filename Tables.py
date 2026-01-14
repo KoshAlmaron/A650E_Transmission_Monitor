@@ -6,6 +6,50 @@ TPSGrid = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85,
 TempGrid = [-30, -25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120]
 DeltaRPMGrid = [0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340, 360, 380, 400]
 
+PacketData =  {'EngineRPM' :			{'Type': 'uint16_t',	'Min': 0,	'Max': 6000,	'Factor': 1}
+			, 'DrumRPM' :				{'Type': 'uint16_t',	'Min': 0,	'Max': 6000,	'Factor': 1}
+			, 'DrumRPMDelta' :			{'Type': 'int16_t',		'Min': 0,	'Max': 1200,	'Factor': 1}
+			, 'OutputRPM' :				{'Type': 'uint16_t',	'Min': 0,	'Max': 6000,	'Factor': 1}
+			, 'CarSpeed' :				{'Type': 'uint8_t',		'Min': 0,	'Max': 150,		'Factor': 1}
+			, 'OilTemp' :				{'Type': 'int16_t',		'Min': -30,	'Max': 120,		'Factor': 1}
+			, 'TPS' :					{'Type': 'uint16_t',	'Min': 0,	'Max': 100,		'Factor': 1}
+			, 'InstTPS' :				{'Type': 'uint16_t',	'Min': 0,	'Max': 100,		'Factor': 1}
+			, 'Load' :					{'Type': 'uint16_t',	'Min': 0,	'Max': 100,		'Factor': 1}
+			, 'Barometer' :				{'Type': 'uint16_t',	'Min': 0,	'Max': 1200,	'Factor': 0.1}
+			, 'SLT' :					{'Type': 'uint16_t',	'Min': 0,	'Max': 1023,	'Factor': 1}
+			, 'SLN' :					{'Type': 'uint16_t',	'Min': 0,	'Max': 1023,	'Factor': 1}
+			, 'SLU' :					{'Type': 'uint16_t',	'Min': 0,	'Max': 1023,	'Factor': 1}
+			, 'S1' :					{'Type': 'uint8_t',		'Min': 0,	'Max': 1,		'Factor': 1}
+			, 'S2' :					{'Type': 'uint8_t',		'Min': 0,	'Max': 1,		'Factor': 1}
+			, 'S3' :					{'Type': 'uint8_t',		'Min': 0,	'Max': 1,		'Factor': 1}
+			, 'S4' :					{'Type': 'uint8_t',		'Min': 0,	'Max': 1,		'Factor': 1}
+			, 'Selector' :				{'Type': 'uint8_t',		'Min': 0,	'Max': 10,		'Factor': 1}
+			, 'ATMode' :				{'Type': 'uint8_t',		'Min': 0,	'Max': 10,		'Factor': 1}
+			, 'Gear' :					{'Type': 'int8_t',		'Min': -1,	'Max': 5,		'Factor': 1}
+			, 'GearChange' :			{'Type': 'int8_t',		'Min': -1,	'Max': 1,		'Factor': 1}
+			, 'GearStep' :				{'Type': 'uint8_t',		'Min': 0,	'Max': 20,		'Factor': 1}
+			, 'LastStep' :				{'Type': 'uint8_t',		'Min': 0,	'Max': 20,		'Factor': 1}
+			, 'Gear2State' :			{'Type': 'uint8_t',		'Min': 0,	'Max': 8,		'Factor': 1}
+			, 'Break' :					{'Type': 'uint8_t',		'Min': 0,	'Max': 1,		'Factor': 1}
+			, 'EngineWork' :			{'Type': 'uint8_t',		'Min': 0,	'Max': 1,		'Factor': 1}
+			, 'SlipDetected' :			{'Type': 'uint8_t',		'Min': 0,	'Max': 1,		'Factor': 1}
+			, 'Glock' :					{'Type': 'uint8_t',		'Min': 0,	'Max': 1,		'Factor': 1}
+			, 'GearUpSpeed' :			{'Type': 'uint8_t',		'Min': 0,	'Max': 150,		'Factor': 1}
+			, 'GearDownSpeed' :			{'Type': 'uint8_t',		'Min': 0,	'Max': 150,		'Factor': 1}
+			, 'GearChangeTPS' :			{'Type': 'uint8_t',		'Min': 0,	'Max': 100,		'Factor': 1}
+			, 'GearChangeSLT' :			{'Type': 'uint16_t',	'Min': 0,	'Max': 1023,	'Factor': 1}
+			, 'GearChangeSLN' :			{'Type': 'uint16_t',	'Min': 0,	'Max': 1023,	'Factor': 1}
+			, 'GearChangeSLU' :			{'Type': 'uint16_t',	'Min': 0,	'Max': 1023,	'Factor': 1}
+			, 'LastPDRTime' :			{'Type': 'uint16_t',	'Min': 0,	'Max': 1500,	'Factor': 1}
+			, 'CycleTime_x10' :			{'Type': 'uint16_t',	'Min': 0,	'Max': 100,		'Factor': 10}
+			, 'DebugMode' :				{'Type': 'uint8_t',		'Min': 0,	'Max': 1,		'Factor': 1}
+			, 'RawTPS' :				{'Type': 'uint16_t',	'Min': 0,	'Max': 1023,	'Factor': 1}
+			, 'RawOIL' :				{'Type': 'uint16_t',	'Min': 0,	'Max': 1023,	'Factor': 1}
+			, 'AdaptationFlagTPS' :		{'Type': 'int8_t',		'Min': 0,	'Max': 50,		'Factor': 1}
+			, 'AdaptationFlagTemp' :	{'Type': 'int8_t',		'Min': 0,	'Max': 50,		'Factor': 1}
+			, 'GearManualMode' :		{'Type': 'uint16_t',	'Min': 0,	'Max': 6000,	'Factor': 0.1}
+}
+
 Configuration = {'LastUsedPort' : ''}
 
 ConfigData = {'AfterChangeMinRPM' :		{'Block': 0, 'Element' : 'Spinbox',		'Type': 'uint16_t',	'Value': None, 'Min': 0,	'Max': 3000,	'Step' : 50,	'Name': 'Минимальные'}

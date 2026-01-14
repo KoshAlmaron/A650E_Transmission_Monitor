@@ -12,25 +12,6 @@ import ToolTip
 
 ConfigFilePath = os.path.join(os.getcwd(), "Config.json")
 
-GraphNames = (('---', 100)
-	, ('EngineRPM', 6000)
-	, ('DrumRPM', 6000)
-	, ('DrumRPMDelta', 1200)
-	, ('OutputRPM', 6000)
-	, ('CarSpeed' , 150)
-	, ('InstTPS', 100)
-	, ('TPS', 100)
-	, ('Load', 100)
-	, ('Barometer', 1200)
-	, ('SLT', 1023)
-	, ('SLN', 1023)
-	, ('SLU', 1023)
-	, ('S1', 2)
-	, ('S2', 2)
-	, ('S3', 2)
-	, ('S4', 2)
-	, ('Gear', 5))
-
 ATModeChar = ('I', 'P', 'R', 'N', 'D', 'D4', 'D3', 'L2', 'L', 'E', 'M')
 BackGroundColor = "#d0d0d0"
 
@@ -465,8 +446,9 @@ class _Graph:
 		self.Box.place(x = self.x, y = self.y)
 		
 		Names = []
-		for Name in GraphNames:
-			Names.append(Name[0])
+		Names.append('---')
+		for Key in Tables.PacketData:
+			Names.append(Key)
 			
 		self.Colors = ('green', 'blue', 'brown','red' ,'purple')
 		self.GraphArrays = []
@@ -501,17 +483,20 @@ class _Graph:
 			self.Box.create_text(self.w + Leght + len(Str) * 5 + 4, ly, font = "Verdana 12", justify = CENTER, fill = 'black', text = Str)
 
 	def update_data(self):
+		self.Uart.TCU['Barometer'] = 1016
+
 		for i in range(len(self.Colors)):
 			Name = self.ComboboxArray[i].get()
-			Index = self.ComboboxArray[i].current()
 			
 			if Name != '---':
 				if len(self.GraphArrays[i]) >= self.w - self.Border * 2:
 					self.GraphArrays[i].pop(0)
 				TCUValue = self.Uart.TCU[Name]
-				if Name == 'DrumRPMDelta':
-					TCUValue += GraphNames[Index][1] / 2
-				CurrentY = round(TCUValue / GraphNames[Index][1] * (self.h - self.Border * 2))
+
+				if Tables.PacketData[Name]['Min'] < 0:
+					TCUValue -= Tables.PacketData[Name]['Min']
+
+				CurrentY = round(TCUValue / (Tables.PacketData[Name]['Max'] - Tables.PacketData[Name]['Min']) * (self.h - self.Border * 2))
 				self.GraphArrays[i].append(CurrentY)
 				
 	def update(self):
@@ -539,8 +524,6 @@ class _Graph:
 			Name = self.ComboboxArray[i].get()
 			if Name != '---':
 
-				#for lx, ly in enumerate(self.GraphArrays[i]):
-				
 				for lx in range(len(self.GraphArrays[i]) // Scale):
 					if lx > 0:
 						x1 = lx * Scale + self.Border - 1 * Scale
@@ -550,12 +533,17 @@ class _Graph:
 						self.Box.create_line(x1, y1, x2, y2, fill = self.Colors[i], width = 2)
 
 				x = self.w - 20
-				y = self.h - self.GraphArrays[i][-1] - 20
+				y = self.h - self.GraphArrays[i][-1] - 30
 				
 				y = y // 2
 				y = y * 2
-				
-				self.Box.create_text(x, y, font = "Verdana 10", justify = CENTER, fill = self.Colors[i], text = str(self.Uart.TCU[Name]))
+
+				if y < 10:
+					y += 30
+		
+				Text = str(round(self.Uart.TCU[Name] * Tables.PacketData[Name]['Factor'], 1))
+
+				self.Box.create_text(x, y, font = "Verdana 10", justify = CENTER, fill = self.Colors[i], text = Text)
 
 # Светофор.
 class _LightIndicator:

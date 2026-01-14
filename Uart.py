@@ -8,50 +8,6 @@ import codecs
 
 import Tables
 
-Parameters = (	  ('uint16_t', 'EngineRPM')
-				, ('uint16_t', 'DrumRPM')
-				, ('int16_t', 'DrumRPMDelta')
-				, ('uint16_t', 'OutputRPM')
-				, ('uint8_t', 'CarSpeed')
-				, ('int16_t', 'OilTemp')
-				, ('uint16_t', 'TPS')
-				, ('uint16_t', 'InstTPS')
-				, ('uint16_t', 'Load')
-				, ('uint16_t', 'Barometer')
-				, ('uint16_t', 'SLT')
-				, ('uint16_t', 'SLN')
-				, ('uint16_t', 'SLU')
-				, ('uint8_t', 'S1')
-				, ('uint8_t', 'S2')
-				, ('uint8_t', 'S3')
-				, ('uint8_t', 'S4')
-				, ('uint8_t', 'Selector')
-				, ('uint8_t', 'ATMode')
-				, ('int8_t', 'Gear')
-				, ('int8_t', 'GearChange')
-				, ('uint8_t', 'GearStep')
-				, ('uint8_t', 'LastStep')
-				, ('uint8_t', 'Gear2State')
-				, ('uint8_t', 'Break')
-				, ('uint8_t', 'EngineWork')
-				, ('uint8_t', 'SlipDetected')
-				, ('uint8_t', 'Glock')
-				, ('uint8_t', 'GearUpSpeed')
-				, ('uint8_t', 'GearDownSpeed')
-				, ('uint8_t', 'GearChangeTPS')
-				, ('uint16_t', 'GearChangeSLT')
-				, ('uint16_t', 'GearChangeSLN')
-				, ('uint16_t', 'GearChangeSLU')
-				, ('uint16_t', 'LastPDRTime')
-				, ('uint16_t', 'CycleTime_x10')
-				, ('uint8_t', 'DebugMode')
-				, ('uint16_t', 'RawTPS')
-				, ('uint16_t', 'RawOIL')
-				, ('int8_t', 'AdaptationFlagTPS')
-				, ('int8_t', 'AdaptationFlagTemp')
-				, ('uint16_t', 'GearManualMode')
-				)
-
 CommandBytes = {'TCU_DATA_PACKET' :		0x71
 				, 'GET_TABLE_COMMAND' :	0xc1
 				, 'TCU_TABLE_ANSWER' :	0xc2
@@ -134,18 +90,18 @@ class _uart:
 
 	def dictionary_init(self):
 		# Первоначальное заполнение словаря с параметрами.
-		for Key in Parameters:
-			self.TCU[Key[1]] = 0
+		for Key in Tables.PacketData:
+			self.TCU[Key] = 0
 			
 		# Определение длины пакета.
-		for Key in Parameters:
-			if Key[0] == 'int8_t':
+		for Key in Tables.PacketData:
+			if Tables.PacketData[Key]['Type'] == 'int8_t':
 				self.DataPacketSize += 1
-			elif Key[0] == 'uint8_t':
+			elif Tables.PacketData[Key]['Type'] == 'uint8_t':
 				self.DataPacketSize += 1
-			elif Key[0] == 'int16_t':
+			elif Tables.PacketData[Key]['Type'] == 'int16_t':
 				self.DataPacketSize += 2
-			elif Key[0] == 'uint16_t':
+			elif Tables.PacketData[Key]['Type'] == 'uint16_t':
 				self.DataPacketSize += 2
 
 		self.ConfigPacketSize = 1 		# +1 байт типа пакета.
@@ -176,8 +132,8 @@ class _uart:
 		Time = datetime.now().strftime("%H:%M:%S")
 		Time += datetime.now().strftime(".%f")[:4]
 		LogLine = Date + '\t' + Time + '\t'
-		for Key in Parameters:
-			LogLine += str(self.TCU[Key[1]]) + '\t'
+		for Key in Tables.PacketData:
+			LogLine += str(self.TCU[Key]) + '\t'
 		self.LogBuffer.append(LogLine)
 		if len(self.LogBuffer) > LogLen:
 			self.LogBuffer.pop(0)
@@ -194,8 +150,8 @@ class _uart:
 				File = codecs.open(FileName, 'w', 'utf8')
 				LogTitle = ''
 				LogTitle = 'Date\tTime\t'
-				for Key in Parameters:
-					LogTitle += Key[1] + '\t'
+				for Key in Tables.PacketData:
+					LogTitle += Key + '\t'
 				File.write(LogTitle + '\n')
 
 				# Если запись была вызвана по кнопке, то записываем кольцевой буфер.
@@ -283,21 +239,21 @@ class _uart:
 
 		# 0x71 - Пакет с параметрами ЭБУ.
 		if self.PacketType == CommandBytes['TCU_DATA_PACKET'] and self.ByteCount == self.DataPacketSize:
-			for Key in Parameters:
+			for Key in Tables.PacketData:
 				Value = 0
-				if Key[0] == 'int8_t':
+				if Tables.PacketData[Key]['Type'] == 'int8_t':
 					Value = self.get_int8(ByteNumber)
 					ByteNumber += 1
-				elif Key[0] == 'uint8_t':
+				elif Tables.PacketData[Key]['Type'] == 'uint8_t':
 					Value = self.get_uint8(ByteNumber)
 					ByteNumber += 1
-				elif Key[0] == 'int16_t':
+				elif Tables.PacketData[Key]['Type'] == 'int16_t':
 					Value = self.get_int16(ByteNumber)
 					ByteNumber += 2
-				elif Key[0] == 'uint16_t':
+				elif Tables.PacketData[Key]['Type'] == 'uint16_t':
 					Value = self.get_uint16(ByteNumber)
 					ByteNumber += 2
-				self.TCU[Key[1]] = Value
+				self.TCU[Key] = Value
 			self.to_log()
 			self.NewData = 1
 
