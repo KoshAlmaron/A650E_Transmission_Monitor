@@ -27,6 +27,8 @@ class _MainWindow:
 		self.DataExport = 0
 		self.PortState = 0
 
+		self.GetVesionTimer = -30
+
 		Width = 1300
 		Height = 700
 		OffsetX = (self.root.winfo_screenwidth() - Width) // 2
@@ -116,9 +118,43 @@ class _MainWindow:
 		self.AdaptTemp = _AdaptationIndicator(self.root, 680 , 80)
 		self.AdaptTPS = _AdaptationIndicator(self.root, 980 , 80)
 
+		self.VersionFW = ttk.Label(text = "FW: ???", width = 15, anchor = 'w', background = BackGroundColor)
+		self.VersionFW.place(x = 580, y = Height - 92)
+
 		self.add_tooltip()
 
 		self.set_log_status()
+
+	def get_fw_version(self):
+		if self.Uart.FirmwareVersion == -5:
+			messagebox.showinfo('Ошибка', 'Нет ответа ЭБУ!', parent=self.root)
+			self.VersionFW.config(foreground = 'red')
+			self.Uart.FirmwareVersion = -16
+		else:
+			self.GetVesionTimer += 1
+			if self.GetVesionTimer >= 20:
+				self.Uart.FirmwareVersion -= 1
+				self.GetVesionTimer = 0
+				self.Uart.send_command('GET_VERSION_COMMAND', 0, [], self.root)
+
+	def update_firmware_version(self):
+		Version = self.Uart.FirmwareVersion
+		
+		Year = int(Version >> 11)
+		Month = int((Version & 0b0000011111111111) >> 7)
+		Day =   int((Version & 0b0000000001111111) >> 2)
+		Add =   int((Version & 0b0000000000000011) >> 2)
+		self.Uart.FirmwareVersionText = str(2026 + Year) + '-' + ('0' + str(Month))[-2:] + '-' + ('0' + str(Day))[-2:] + '.' + str(Add)
+
+		print('SoftVersion:', self.Uart.SoftVersion)
+		print('FirmwareVersionText:', self.Uart.FirmwareVersionText)
+
+		self.VersionFW.config(text = 'FW: ' + self.Uart.FirmwareVersionText, foreground = 'green')
+
+		if self.Uart.FirmwareVersionText != self.Uart.SoftVersion:
+			self.VersionFW.config(foreground = 'red')
+			print('Версия софта и прошивки не совпадают!')
+			messagebox.showinfo('Ошибка', 'Версия софта и прошивки не совпадают!\n\nSoft: ' + self.Uart.SoftVersion + '\nFW: ' + self.Uart.FirmwareVersionText + '\n\nОтправка команд заблокирована.', parent=self.root)
 
 	def set_log_status(self):
 		if self.WriteLog.get() == 1:
@@ -173,6 +209,8 @@ class _MainWindow:
 
 		ToolTip.ToolTip(self.AdaptTPS.Box, "Индикатор срабатывания адаптации по ДПДЗ.")
 		ToolTip.ToolTip(self.AdaptTemp.Box, "Индикатор срабатывания адаптации по температуре.")
+
+		ToolTip.ToolTip(self.VersionFW, "Версия прошивки в формате <Год-Месяц-День-Патч>. Версия софта указана в заголовке окна. При несовпадении версий блокируется отправка команд в ЭБУ для предотващения порчи конфинурации.")
 
 	def update(self):
 		self.SLT.update(self.Uart.TCU['SLT'])
@@ -235,9 +273,15 @@ class _MainWindow:
 		self.PortState = 1
 
 	def speed_test(self):
-		self.Uart.send_command('SPEED_TEST_COMMAND', 0, [])
+		self.Uart.send_command('SPEED_TEST_COMMAND', 0, [], self.root)
 
 	def port_start_stop(self):
+		self.Uart.FirmwareVersion = -1		# Сброс версии прошивки.
+		self.Uart.FirmwareVersionText = '???'
+		self.VersionFW.config(text = 'FW: ' + self.Uart.FirmwareVersionText, foreground = 'black')
+		self.GetVesionTimer = -30
+		self.Uart.Begin = 0
+
 		if self.Uart.port_status():
 			self.Uart.port_close()
 			for key in self.Uart.TCU:
@@ -266,7 +310,7 @@ class _MainWindow:
 			File = open(ConfigFilePath, "r", encoding="utf-8")
 			Tables.Configuration = json.load(File)
 		except Exception as error:
-			messagebox.showerror('Загрузка конфигурации', 'Не удалось прочитать файл конфигурации:\n' + str(error))
+			messagebox.showerror('Загрузка конфигурации', 'Не удалось прочитать файл конфигурации:\n' + str(error), parent = self.root)
 			return
 
 	def save_config(self):

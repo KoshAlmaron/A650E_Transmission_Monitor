@@ -6,7 +6,6 @@ import tkinter as tk
 import time
 from functools import partial
 
-
 import ToolTip
 import Tables
 
@@ -193,7 +192,7 @@ class _TableEditWindow:
 		if Name in Tables.ApplyAdaptationCommands:
 			self.Answer.update(1)
 			Command = Tables.ApplyAdaptationCommands[Name]
-			self.Uart.send_command(Command, Number, [])
+			self.Uart.send_command(Command, Number, [], self.root)
 
 	def build_line(self):
 		Start = self.MainGraph.CursorPositionL
@@ -217,22 +216,18 @@ class _TableEditWindow:
 		self.value_check('')
 
 	def reset_tables(self):	# Команда сброса таблиц в ЭБУ.
-		if messagebox.askyesno('Сброс таблиц', 'Перезаписать EEPROM ВСЕX таблицы текущего окна значениями из прошивки?'):
+		if messagebox.askyesno('Сброс таблиц', 'Перезаписать EEPROM ВСЕX таблицы текущего окна значениями из прошивки?', parent = self.root):
 			self.table_select_event(FirstTable)
-			self.root.lift()
-
 			time.sleep(0.5)
 			self.Answer.update(1)
-			self.Uart.send_command('TABLES_INIT_MAIN_COMMAND', self.CurrentTable, [])
-		else:
-			self.root.lift()
+			self.Uart.send_command('TABLES_INIT_MAIN_COMMAND', self.CurrentTable, [], self.root)
 
 	def set_gear_limit(self):	# Команда установки ограничения передач.
 		MinGear = int(self.MinGearBox.get())
 		MaxGear = int(self.MaxGearBox.get())
 
 		self.Answer.update(1)
-		self.Uart.send_command('GEAR_LIMIT_COMMAND', self.CurrentTable, [MinGear, MaxGear])
+		self.Uart.send_command('GEAR_LIMIT_COMMAND', self.CurrentTable, [MinGear, MaxGear], self.root)
 
 	def min_gear_selected_event(self, event):	# Событие смены ограничения передачи (min).
 		if self.MaxGearBox.current() < self.MinGearBox.current():
@@ -337,7 +332,7 @@ class _TableEditWindow:
 	def get_table(self):	# Команда на получение таблицы из ЭБУ.
 		self.Answer.update(1)
 		self.GetNewTable = 1
-		self.Uart.send_command('GET_TABLE_COMMAND', self.CurrentTable, [])
+		self.Uart.send_command('GET_TABLE_COMMAND', self.CurrentTable, [], self.root)
 
 	def read_table(self):	# Событие при получении данных из ЭБУ.
 		#print('Получена таблица', self.Uart.TableNumber)
@@ -362,16 +357,16 @@ class _TableEditWindow:
 		Data = []
 		for Cell in self.Cells:
 			Data.append(int(Cell.get()))
-		self.Uart.send_command('NEW_TABLE_DATA', self.CurrentTable, Data)
+		self.Uart.send_command('NEW_TABLE_DATA', self.CurrentTable, Data, self.root)
 
 	def read_eeprom(self):	# Команда на чтение EEPROM.
 
 		self.Answer.update(1)
-		self.Uart.send_command('READ_EEPROM_MAIN_COMMAND', self.CurrentTable, [])
+		self.Uart.send_command('READ_EEPROM_MAIN_COMMAND', self.CurrentTable, [], self.root)
 
 	def write_eeprom(self):	# Команда на запись EEPROM.
 		self.Answer.update(1)
-		self.Uart.send_command('WRITE_EEPROM_MAIN_COMMAND', self.CurrentTable, [])
+		self.Uart.send_command('WRITE_EEPROM_MAIN_COMMAND', self.CurrentTable, [], self.root)
 
 	def value_check(self, event):	# Проверка и исправление значений таблицы.
 		N = self.CurrentTable

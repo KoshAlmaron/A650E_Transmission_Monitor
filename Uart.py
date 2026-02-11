@@ -5,6 +5,7 @@ from datetime import datetime
 import time
 import serial.tools.list_ports
 import codecs
+from tkinter import messagebox
 
 import Tables
 
@@ -12,6 +13,9 @@ CommandBytes = {'TCU_DATA_PACKET' :		0x71
 				, 'GET_TABLE_COMMAND' :	0xc1
 				, 'TCU_TABLE_ANSWER' :	0xc2
 				, 'NEW_TABLE_DATA' :	0xc3
+
+				, 'GET_VERSION_COMMAND' :	0xb0
+				, 'TCU_VERSION_ANSWER' :	0xb1
 
 				, 'GET_CONFIG_COMMAND' :	0xc4
 				, 'TCU_CONFIG_ANSWER' :		0xc5
@@ -49,7 +53,7 @@ CommandBytes = {'TCU_DATA_PACKET' :		0x71
 
 # Прием данных по UART
 class _uart:
-	def __init__(self, Folder, Baudrate):
+	def __init__(self, Folder, Baudrate, Version):
 		self.TCU = {}				# Словарь с параметрами.
 		self.CFG = {}				# Словарь с настройками.
 		self.TableData = []			# Буфер для таблицы.
@@ -58,6 +62,10 @@ class _uart:
 		self.DataArray = []			# Массив байт.
 		self.LogFolder = Folder		# Папка с логами.
 		self.LogFile = ''
+
+		self.FirmwareVersion = -1		# Версия прошивки.
+		self.FirmwareVersionText = '???'
+		self.SoftVersion = Version		# Версия софта.
 
 		self.CRC = [0, 0]			# Контрольная сумма.
 		
@@ -74,8 +82,7 @@ class _uart:
 		self.LogNumber = 0		# Номер куска.
 		
 		self.PortReading = 0
-		self.SerialRead = threading.Thread(target = self.read_port, daemon = True).start()
-		
+				
 		self.PacketType = 0
 		self.TableNumber = -1		# Флаг и номер, получена новая таблица (TCU_TABLE_ANSWER).
 		self.ByteCount = 0
@@ -87,6 +94,7 @@ class _uart:
 		self.NewData = 1			# Флаг, получен новый пакет данных (TCU_DATA_PACKET).
 		self.NewConfig = 0			# Флаг, получен новый пакет настроек (TCU_CONFIG_ANSWER).
 		self.NewPortState = 0		# Флаг, получен новый пакет с портами (PORTS_STATE_PACKET).
+		self.NewVersion = 0			# Флаг, получен новый пакет с версией (TCU_VERSION_ANSWER).
 
 	def dictionary_init(self):
 		# Первоначальное заполнение словаря с параметрами.
@@ -187,8 +195,9 @@ class _uart:
 		self.LogFile = self.LogFolder + 'AT_log_' + datetime.now().strftime("%Y-%m-%d_%H-%M") + '.log'
 		self.to_log(1)
 		self.PortReading = 1
-		# Шлём несколько байт после открытия порта, чтобы МК переключился на нужный UART.
-		self.Serial.write(bytes((0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff)))
+		threading.Thread(target = self.read_port, daemon = True).start()
+		# Шлём запрос версии прошивки.
+		#self.send_command('GET_VERSION_COMMAND', 0, [])
 
 	def port_close(self):
 		self.PortReading = 0
@@ -236,6 +245,8 @@ class _uart:
 		# 	print(self.DataArray)
 		# 	print(self.PacketType, self.get_uint8(ByteNumber) , self.ByteCount, self.DataPacketSize)
 		# print(self.PacketType, CommandBytes['TCU_DATA_PACKET'], self.ByteCount, self.DataPacketSize)
+		#if self.PacketType == CommandBytes['TCU_VERSION_ANSWER']:
+		#	print(self.DataArray)
 
 		# 0x71 - Пакет с параметрами ЭБУ.
 		if self.PacketType == CommandBytes['TCU_DATA_PACKET'] and self.ByteCount == self.DataPacketSize:
@@ -264,6 +275,11 @@ class _uart:
 			for i in range(0, self.PortPacketSize - 1):
 				self.PortData.append(self.get_uint8(ByteNumber + i))
 			self.NewPortState = 1
+
+		# Пакет с версией прошивки.
+		if self.PacketType == CommandBytes['TCU_VERSION_ANSWER'] and self.ByteCount == 3:
+			self.FirmwareVersion = self.get_uint16(ByteNumber)
+			self.NewVersion = 1
 
 		# Пакет с настройками ЭБУ.
 		elif self.PacketType == CommandBytes['TCU_CONFIG_ANSWER'] and self.ByteCount == self.ConfigPacketSize:
@@ -327,7 +343,11 @@ class _uart:
 	def get_uint16(self, N):
 		return int.from_bytes(self.DataArray[N] + self.DataArray[N + 1], byteorder = 'little', signed = False)
 	
-	def send_command(self, Command, Table, Data):
+	def send_command(self, Command, Table, Data, RootWindow):
+		if self.FirmwareVersionText != self.SoftVersion and Command[:4] != 'GET_':
+			messagebox.showinfo('Ошибка', 'Версия софта и прошивки не совпадают!' + '\n\nОтправка команд заблокирована', parent = RootWindow)
+			return
+
 		if self.PortReading != 1:
 			return
 
@@ -440,4 +460,5 @@ class _uart:
 						self.DataArray.append(Byte)
 						self.ByteCount += 1
 			else:
-				time.sleep(0.2)
+				#time.sleep(0.2)
+				break

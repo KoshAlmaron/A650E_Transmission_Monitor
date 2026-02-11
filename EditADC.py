@@ -241,34 +241,31 @@ class _ADCEditWindow:
 	def get_table(self):	# Команда на получение таблицы из ЭБУ.
 		self.Answer.update(1)
 		self.GetNewTable = 1
-		self.Uart.send_command('GET_TABLE_COMMAND', self.get_table_number(), [])
+		self.Uart.send_command('GET_TABLE_COMMAND', self.get_table_number(), [], self.root)
 
 	def write_table(self):	# Команда на запись таблицы в ОЗУ ЭБУ.
 		self.Answer.update(1)
 		Data = []
 		for Cell in self.Cells:
 			Data.append(int(Cell.get()))
-		self.Uart.send_command('NEW_TABLE_DATA', self.get_table_number(), Data)
+		self.Uart.send_command('NEW_TABLE_DATA', self.get_table_number(), Data, self.root)
 
 	def read_eeprom(self):	# Команда на чтение EEPROM.
 		self.Answer.update(1)
-		self.Uart.send_command('READ_EEPROM_ADC_COMMAND', self.get_table_number(), [])
+		self.Uart.send_command('READ_EEPROM_ADC_COMMAND', self.get_table_number(), [], self.root)
 
 	def write_eeprom(self):	# Команда на запись EEPROM.
 		self.Answer.update(1)
-		self.Uart.send_command('WRITE_EEPROM_ADC_COMMAND', self.get_table_number(), [])
+		self.Uart.send_command('WRITE_EEPROM_ADC_COMMAND', self.get_table_number(), [], self.root)
 	
 	def reset_tables(self):	# Команда сброса таблиц в ЭБУ.
-		if messagebox.askyesno('Сброс таблиц', 'Перезаписать EEPROM ВСЕX таблицы текущего окна значениями из прошивки?'):
+		if messagebox.askyesno('Сброс таблиц', 'Перезаписать EEPROM ВСЕX таблицы текущего окна значениями из прошивки?', parent = self.root):
 			self.TableBox.current(0)
 			self.table_selected_event('')
-			self.root.lift()
 
 			time.sleep(0.5)
 			self.Answer.update(1)
-			self.Uart.send_command('TABLES_INIT_ADC_COMMAND', self.get_table_number(), [])
-		else:
-			self.root.lift()
+			self.Uart.send_command('TABLES_INIT_ADC_COMMAND', self.get_table_number(), [], self.root)
 
 	def value_check(self, event):	# Проверка и исправление значений таблицы.
 		N = self.get_table_number()

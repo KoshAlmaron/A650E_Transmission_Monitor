@@ -1,4 +1,4 @@
-Ver = '2026-01-14'
+Version = '2026-02-11.0'
 
 import os
 
@@ -9,6 +9,7 @@ import EditADC
 import EditSpeed
 import EditConfig
 import PortState
+from tkinter import messagebox
 
 import DataExport
 
@@ -16,8 +17,8 @@ LogFolder = os.getcwd() + os.sep + 'LOGS' + os.sep
 
 Baudrate = 115200
 
-Uart = Uart._uart(LogFolder, Baudrate)
-MainWindow = MainWindow._MainWindow(Ver, Uart)
+Uart = Uart._uart(LogFolder, Baudrate, Version)
+MainWindow = MainWindow._MainWindow(Version, Uart)
 
 PortUpdate = 0
 WindowUpdate = 0
@@ -54,7 +55,7 @@ def loop():
 	if MainWindow.DataExport == 1:
 		MainWindow.DataExport = 0
 		close_window(EditWindow)
-		EditWindow = DataExport._DataExportEditWindow(Uart, Ver)
+		EditWindow = DataExport._DataExportEditWindow(Uart, Version)
 	if MainWindow.PortState == 1:
 		MainWindow.PortState = 0
 		close_window(EditWindow)
@@ -86,6 +87,10 @@ def loop():
 		MainWindow.update_graph_data()
 		Uart.NewData = 0
 
+	if Uart.NewVersion == 1:
+		MainWindow.update_firmware_version()
+		Uart.NewVersion = 0
+
 	PortUpdate += 1
 	if PortUpdate >= 25:
 		PortUpdate = 0
@@ -108,6 +113,10 @@ def loop():
 				EditWindow.table_auto_update()
 			if hasattr(EditWindow, 'get_port_packet'):
 				EditWindow.get_port_packet()
+
+	# Запрос версии прошивки.
+	if Uart.PortReading == 1 and Uart.FirmwareVersion < 0:
+		MainWindow.get_fw_version()
 
 	MainWindow.root.after(40, loop)
 

@@ -165,7 +165,7 @@ class _SpeedEditWindow:
 	def get_table(self):	# Команда на получение таблицы из ЭБУ.
 		self.Answer.update(1)
 		self.GetNewTable = 1
-		self.Uart.send_command('GET_TABLE_COMMAND', TableN, [])
+		self.Uart.send_command('GET_TABLE_COMMAND', TableN, [], self.root)
 
 	def key_pressed(self, event):	# Событие по нажатию кнопки на клавиатуре.
 		State = event.state
@@ -256,25 +256,21 @@ class _SpeedEditWindow:
 			for k in range(Rows):
 				Data.append(self.SpeedData[k][j])
 
-		self.Uart.send_command('NEW_TABLE_DATA', TableN, Data)
+		self.Uart.send_command('NEW_TABLE_DATA', TableN, Data, self.root)
 
 	def read_eeprom(self):	# Команда на чтение EEPROM.
 		self.Answer.update(1)
-		self.Uart.send_command('READ_EEPROM_SPEED_COMMAND', TableN, [])
+		self.Uart.send_command('READ_EEPROM_SPEED_COMMAND', TableN, [], self.root)
 
 	def write_eeprom(self):	# Команда на запись EEPROM.
 		self.Answer.update(1)
-		self.Uart.send_command('WRITE_EEPROM_SPEED_COMMAND', TableN, [])
+		self.Uart.send_command('WRITE_EEPROM_SPEED_COMMAND', TableN, [], self.root)
 	
 	def reset_tables(self):	# Команда сброса таблиц в ЭБУ.
-		if messagebox.askyesno('Сброс таблиц', 'Перезаписать EEPROM ВСЕX таблицы текущего окна значениями из прошивки?'):
-			self.root.lift()
-
+		if messagebox.askyesno('Сброс таблиц', 'Перезаписать EEPROM ВСЕX таблицы текущего окна значениями из прошивки?', parent = self.root):
 			time.sleep(0.5)
 			self.Answer.update(1)
-			self.Uart.send_command('TABLES_INIT_SPEED_COMMAND', TableN, [])
-		else:
-			self.root.lift()
+			self.Uart.send_command('TABLES_INIT_SPEED_COMMAND', TableN, [], self.root)
 
 	def value_check(self, event):	# Проверка и исправление значений таблицы.
 		for k in range(0, 8, 1):

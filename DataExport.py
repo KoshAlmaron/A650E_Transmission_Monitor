@@ -154,6 +154,10 @@ class _DataExportEditWindow:
 				self.Parameters[Key]['Var'].set(self.SelectAllVar.get())
 
 	def import_from_file(self):
+		if self.Uart.FirmwareVersionText != self.Uart.SoftVersion:
+			messagebox.showinfo('Ошибка', 'Версия софта и прошивки не совпадают!' + '\n\nИмпорт заблокирован.', parent = self.root)
+			return
+
 		# Выбор файла для загрузки.
 		FilePath = tk.filedialog.askopenfilename (
 			initialdir = self.get_backup_folder(),
@@ -174,7 +178,7 @@ class _DataExportEditWindow:
 			File = open(FilePath, "r", encoding="utf-8")
 			Content = json.load(File)
 		except Exception as error:
-			messagebox.showerror('Импорт бэкапа', 'Не удалось прочитать файл:\n' + str(error))
+			messagebox.showerror('Импорт бэкапа', 'Не удалось прочитать файл:\n' + str(error), parent = self.root)
 			return
 
 		ConfigWarn = ''
@@ -238,10 +242,9 @@ class _DataExportEditWindow:
 			self.ESaveBtn.configure(state = 'disabled')
 
 		if Report == '':
-			messagebox.showinfo('Проверка файла', 'Файл успешно загружен.')
+			messagebox.showinfo('Проверка файла', 'Файл успешно загружен.', parent = self.root)
 		else:
-			messagebox.showwarning('Проверка файла', Report)
-		self.root.lift()
+			messagebox.showwarning('Проверка файла', Report, parent = self.root)
 
 	def write_to_ram(self, EE = 0):
 		for Config in Tables.ConfigData:
@@ -259,29 +262,29 @@ class _DataExportEditWindow:
 
 						# Отправляем конфигурацию в ЭБУ.
 						self.Answer.update(1)
-						self.Uart.send_command('NEW_CONFIG_DATA', 0, [])
+						self.Uart.send_command('NEW_CONFIG_DATA', 0, [], self.root)
 
 						# Ждем ответ ЭБУ.
 						Result = self.wait_for_config()
 						if Result == 1:
-							messagebox.showwarning('Импорт бэкапа', 'Нет ответа от ЭБУ (Config)')
+							messagebox.showwarning('Импорт бэкапа', 'Нет ответа от ЭБУ (Config)', parent = self.root)
 							return -1
 						elif Result == 2:
-							messagebox.showwarning('Импорт бэкапа', 'ЭБУ вернул неправильный данные (Config)')
+							messagebox.showwarning('Импорт бэкапа', 'ЭБУ вернул неправильный данные (Config)', parent = self.root)
 							return -1
 
 					else:
 						TableN = self.get_table_number(Key)
 						self.Answer.update(1)
-						self.Uart.send_command('NEW_TABLE_DATA', TableN, self.BackupData['Tables'][Key])
+						self.Uart.send_command('NEW_TABLE_DATA', TableN, self.BackupData['Tables'][Key], self.root)
 
 						# Ждем ответ ЭБУ.
 						Result = self.wait_for_table(Key)
 						if Result == 1:
-							messagebox.showwarning('Импорт бэкапа', 'Нет ответа от ЭБУ (' + Key + ')')
+							messagebox.showwarning('Импорт бэкапа', 'Нет ответа от ЭБУ (' + Key + ')', parent = self.root)
 							return -1
 						elif Result == 2:
-							messagebox.showwarning('Импорт бэкапа', 'ЭБУ вернул неправильный данные (' + Key + ')')
+							messagebox.showwarning('Импорт бэкапа', 'ЭБУ вернул неправильный данные (' + Key + ')', parent = self.root)
 							return -1
 
 			self.Parameters[Key]['Var'].set(0)	# Убираем галочку для отображения прогресса.
@@ -289,9 +292,9 @@ class _DataExportEditWindow:
 
 		if EE == 0:
 			if Count > 0:
-				messagebox.showinfo('Импорт бэкапа', 'Данные успешно отправленны в ЭБУ.\n(Без записи в EEPROM)')
+				messagebox.showinfo('Импорт бэкапа', 'Данные успешно отправленны в ЭБУ.\n(Без записи в EEPROM)', parent = self.root)
 			else:
-				messagebox.showinfo('Импорт бэкапа', 'Не выбран ни один пункт для записи')
+				messagebox.showinfo('Импорт бэкапа', 'Не выбран ни один пункт для записи', parent = self.root)
 			self.root.lift()
 		return 0
 
@@ -320,57 +323,57 @@ class _DataExportEditWindow:
 		# Сохраняем по очереди каждый блок данных.
 		if ConfigBlock:
 			self.Answer.update(1)
-			self.Uart.send_command('WRITE_EEPROM_CONFIG_COMMAND', 0, [])
+			self.Uart.send_command('WRITE_EEPROM_CONFIG_COMMAND', 0, [], self.root)
 
 			# Ждем ответ ЭБУ.
 			Result = self.wait_for_config()
 			if Result == 1:
-				messagebox.showwarning('Сохранение в EEPROM', 'Нет ответа от ЭБУ (Конфигурация)')
+				messagebox.showwarning('Сохранение в EEPROM', 'Нет ответа от ЭБУ (Конфигурация)', parent = self.root)
 				return
 			elif Result == 2:
-				messagebox.showwarning('Сохранение в EEPROM', 'ЭБУ вернул неправильный ответ (Конфигурация)')
+				messagebox.showwarning('Сохранение в EEPROM', 'ЭБУ вернул неправильный ответ (Конфигурация)', parent = self.root)
 				return
 
 		if SpeedBlock:
 			self.Answer.update(1)
-			self.Uart.send_command('WRITE_EEPROM_SPEED_COMMAND', self.get_table_number('GearSpeedGraphs'), [])
+			self.Uart.send_command('WRITE_EEPROM_SPEED_COMMAND', self.get_table_number('GearSpeedGraphs'), [], self.root)
 			# Ждем ответ ЭБУ.
 			Result = self.wait_for_table('GearSpeedGraphs')
 			if Result == 1:
-				messagebox.showwarning('Сохранение в EEPROM', 'Нет ответа от ЭБУ (Скорости переключения)')
+				messagebox.showwarning('Сохранение в EEPROM', 'Нет ответа от ЭБУ (Скорости переключения)', parent = self.root)
 				return
 			elif Result == 2:
-				messagebox.showwarning('Сохранение в EEPROM', 'ЭБУ вернул неправильный ответ (Скорости переючения)')
+				messagebox.showwarning('Сохранение в EEPROM', 'ЭБУ вернул неправильный ответ (Скорости переючения)', parent = self.root)
 				return
 
 		if ADCBlock:
 			self.Answer.update(1)
-			self.Uart.send_command('WRITE_EEPROM_ADC_COMMAND', self.get_table_number('TPSGraph'), [])
+			self.Uart.send_command('WRITE_EEPROM_ADC_COMMAND', self.get_table_number('TPSGraph'), [], self.root)
 			# Ждем ответ ЭБУ.
 			Result = self.wait_for_table('TPSGraph')
 			if Result == 1:
-				messagebox.showwarning('Сохранение в EEPROM', 'Нет ответа от ЭБУ (АЦП)')
+				messagebox.showwarning('Сохранение в EEPROM', 'Нет ответа от ЭБУ (АЦП)', parent = self.root)
 				return
 			elif Result == 2:
-				messagebox.showwarning('Сохранение в EEPROM', 'ЭБУ вернул неправильный ответ (АЦП)')
+				messagebox.showwarning('Сохранение в EEPROM', 'ЭБУ вернул неправильный ответ (АЦП)', parent = self.root)
 				return
 
 		if TablesBlock:
 			self.Answer.update(1)
-			self.Uart.send_command('WRITE_EEPROM_MAIN_COMMAND', self.get_table_number('SLTGraph'), [])
+			self.Uart.send_command('WRITE_EEPROM_MAIN_COMMAND', self.get_table_number('SLTGraph'), [], self.root)
 			# Ждем ответ ЭБУ.
 			Result = self.wait_for_table('SLTGraph', 100)
 			if Result == 1:
-				messagebox.showwarning('Сохранение в EEPROM', 'Нет ответа от ЭБУ (Таблицы)')
+				messagebox.showwarning('Сохранение в EEPROM', 'Нет ответа от ЭБУ (Таблицы)', parent = self.root)
 				return
 			elif Result == 2:
-				messagebox.showwarning('Сохранение в EEPROM', 'ЭБУ вернул неправильный ответ (Таблицы)')
+				messagebox.showwarning('Сохранение в EEPROM', 'ЭБУ вернул неправильный ответ (Таблицы)', parent = self.root)
 				return
 
 		if ConfigBlock == 1 or SpeedBlock == 1 or ADCBlock == 1 or TablesBlock == 1:
-			messagebox.showinfo('Сохранение в EEPROM', 'Данные успешно сохранены в EEPROM)')
+			messagebox.showinfo('Сохранение в EEPROM', 'Данные успешно сохранены в EEPROM)', parent = self.root)
 		else:
-			messagebox.showinfo('Сохранение в EEPROM', 'Не выбран ни один пункт для сохранения')
+			messagebox.showinfo('Сохранение в EEPROM', 'Не выбран ни один пункт для сохранения', parent = self.root)
 		self.root.lift()
 
 	def wait_for_config(self):
@@ -417,6 +420,10 @@ class _DataExportEditWindow:
 		return 0
 
 	def export_to_file(self):
+		if self.Uart.FirmwareVersionText != self.Uart.SoftVersion:
+			messagebox.showinfo('Ошибка', 'Версия софта и прошивки не совпадают!' + '\n\nЭкспорт заблокирован.', parent = self.root)
+			return
+
 		self.ESaveBtn.configure(state = 'disabled')
 
 		for Key in self.Parameters:
@@ -424,7 +431,7 @@ class _DataExportEditWindow:
 			self.Parameters[Key]['Element'].configure(state = 'disabled')
 
 		if not self.Uart.port_status():
-			messagebox.showwarning('Экспорт бэкапа', 'Порт не открыт, экспорт невозможен.')
+			messagebox.showwarning('Экспорт бэкапа', 'Порт не открыт, экспорт невозможен.', parent = self.root)
 			return
 
 		self.clear_backup_data()
@@ -432,7 +439,7 @@ class _DataExportEditWindow:
 		self.Answer.update(1)
 		self.root.update_idletasks()
 		self.Uart.NewConfig = 0
-		self.Uart.send_command('GET_CONFIG_COMMAND', 0, [])
+		self.Uart.send_command('GET_CONFIG_COMMAND', 0, [], self.root)
 
 		DataReceived = 0
 		for T in range(0, self.SleepStepCount):
@@ -449,13 +456,13 @@ class _DataExportEditWindow:
 			self.Parameters['Config']['Var'].set(1)
 			self.root.update_idletasks()
 		else:
-			messagebox.showwarning('Экспорт бэкапа', 'Нет ответа от ЭБУ (Config)')
+			messagebox.showwarning('Экспорт бэкапа', 'Нет ответа от ЭБУ (Config)', parent = self.root)
 			return
 
 		for Table in Tables.TablesData:
 			self.Answer.update(1)
 			self.root.update_idletasks()
-			self.Uart.send_command('GET_TABLE_COMMAND', Table['N'], [])
+			self.Uart.send_command('GET_TABLE_COMMAND', Table['N'], [], self.root)
 
 			DataReceived = 0
 			for T in range(0, self.SleepStepCount):
@@ -476,7 +483,7 @@ class _DataExportEditWindow:
 				self.Parameters[Table['Table']]['Var'].set(1)
 				self.root.update_idletasks()
 			else:
-				messagebox.showwarning('Экспорт бэкапа', 'Нет ответа от ЭБУ (' + Table['Table'] + ')')
+				messagebox.showwarning('Экспорт бэкапа', 'Нет ответа от ЭБУ (' + Table['Table'] + ')', parent = self.root)
 				return
 
 		FileName = 'Backup_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '.json'
@@ -486,9 +493,9 @@ class _DataExportEditWindow:
 			DumpText = self.format_backup_data(json.dumps(self.BackupData, ensure_ascii = False, indent = '\t'))
 			File = open(FilePath, 'w', encoding = 'utf-8')
 			File.write(DumpText)
-			messagebox.showinfo('Экспорт бэкапа', 'Бэкап успешно сохранён в файл:\n' + FileName)
+			messagebox.showinfo('Экспорт бэкапа', 'Бэкап успешно сохранён в файл:\n' + FileName, parent = self.root)
 		except Exception as error:
-			messagebox.showerror('Экспорт бэкапа', 'Не удалось сохранить бэкап:\n' + str(error))
+			messagebox.showerror('Экспорт бэкапа', 'Не удалось сохранить бэкап:\n' + str(error), parent = self.root)
 
 	def clear_backup_data(self):
 

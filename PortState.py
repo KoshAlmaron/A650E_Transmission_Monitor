@@ -2,9 +2,6 @@ from tkinter import *
 from tkinter import font
 from tkinter import ttk
 
-from tkinter import filedialog
-from tkinter import messagebox
-
 import tkinter as tk
 
 from datetime import datetime
@@ -154,7 +151,7 @@ class _PortStateEditWindow:
 	def get_port_packet(self):
 		if self.Uart.PortReading == 1:
 			self.Answer.update(1)
-			self.Uart.send_command('GET_PORTS_STATE', 0, [])
+			self.Uart.send_command('GET_PORTS_STATE', 0, [], self.root)
 
 	def on_closing(self):	# Событие по закрытию окна.
 		self.WindowOpen = 0
