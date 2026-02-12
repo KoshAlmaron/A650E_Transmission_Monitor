@@ -16,6 +16,7 @@ CommandBytes = {'TCU_DATA_PACKET' :		0x71
 
 				, 'GET_VERSION_COMMAND' :	0xb0
 				, 'TCU_VERSION_ANSWER' :	0xb1
+				, 'NEW_REV_COUNTER' :		0xb2
 
 				, 'GET_CONFIG_COMMAND' :	0xc4
 				, 'TCU_CONFIG_ANSWER' :		0xc5
@@ -111,6 +112,10 @@ class _uart:
 				self.DataPacketSize += 2
 			elif Tables.PacketData[Key]['Type'] == 'uint16_t':
 				self.DataPacketSize += 2
+			elif Tables.PacketData[Key]['Type'] == 'int32_t':
+				self.DataPacketSize += 4
+			elif Tables.PacketData[Key]['Type'] == 'uint32_t':
+				self.DataPacketSize += 4
 
 		self.ConfigPacketSize = 1 		# +1 байт типа пакета.
 		# Первоначальное заполнение словаря с настройками.
@@ -141,7 +146,13 @@ class _uart:
 		Time += datetime.now().strftime(".%f")[:4]
 		LogLine = Date + '\t' + Time + '\t'
 		for Key in Tables.PacketData:
-			LogLine += str(self.TCU[Key]) + '\t'
+			Value = self.TCU[Key] * Tables.PacketData[Key]['Factor']
+			if Tables.PacketData[Key]['Factor'] < 1:
+				Value = round(Value, 1)
+			else:
+				Value = round(Value, 0)
+
+			LogLine += str(Value) + '\t'
 		self.LogBuffer.append(LogLine)
 		if len(self.LogBuffer) > LogLen:
 			self.LogBuffer.pop(0)
@@ -264,6 +275,13 @@ class _uart:
 				elif Tables.PacketData[Key]['Type'] == 'uint16_t':
 					Value = self.get_uint16(ByteNumber)
 					ByteNumber += 2
+				elif Tables.PacketData[Key]['Type'] == 'int32_t':
+					Value = self.get_uint32(ByteNumber)
+					ByteNumber += 4
+				elif Tables.PacketData[Key]['Type'] == 'uint32_t':
+					Value = self.get_uint32(ByteNumber)
+					ByteNumber += 4
+
 				self.TCU[Key] = Value
 			self.to_log()
 			self.NewData = 1
@@ -342,13 +360,20 @@ class _uart:
 		return int.from_bytes(self.DataArray[N] + self.DataArray[N + 1], byteorder = 'little', signed = True)
 	def get_uint16(self, N):
 		return int.from_bytes(self.DataArray[N] + self.DataArray[N + 1], byteorder = 'little', signed = False)
-	
+
+	def get_int32(self, N):
+		return int.from_bytes(self.DataArray[N] + self.DataArray[N + 1] + self.DataArray[N + 2] + self.DataArray[N + 3], byteorder = 'little', signed = True)
+	def get_uint32(self, N):
+		return int.from_bytes(self.DataArray[N] + self.DataArray[N + 1] + self.DataArray[N + 2] + self.DataArray[N + 3], byteorder = 'little', signed = False)
+
+
 	def send_command(self, Command, Table, Data, RootWindow):
-		if self.FirmwareVersionText != self.SoftVersion and Command[:4] != 'GET_':
-			messagebox.showinfo('Ошибка', 'Версия софта и прошивки не совпадают!' + '\n\nОтправка команд заблокирована', parent = RootWindow)
+		if self.PortReading != 1:
+			messagebox.showinfo('Ошибка', 'Нет связи с ЭБУ', parent = RootWindow)
 			return
 
-		if self.PortReading != 1:
+		if self.FirmwareVersionText != self.SoftVersion and Command[:4] != 'GET_':
+			messagebox.showinfo('Ошибка', 'Версия софта и прошивки не совпадают!' + '\n\nОтправка команд заблокирована', parent = RootWindow)
 			return
 
 		N = Table
@@ -360,11 +385,11 @@ class _uart:
 		SendBuffer.append(N)			# Номер таблицы.
 
 		Signed = False
-		if Tables.TablesData[N]['Type']	 == 'int16_t' or Tables.TablesData[N]['Type']	 == 'int8_t':
+		if Tables.TablesData[N]['Type'] == 'int16_t' or Tables.TablesData[N]['Type'] == 'int8_t':
 			Signed = True
 
 		ValSize = 2
-		if Tables.TablesData[N]['Type']	 == 'uint8_t' or Tables.TablesData[N]['Type'] == 'int8_t':
+		if Tables.TablesData[N]['Type'] == 'uint8_t' or Tables.TablesData[N]['Type'] == 'int8_t':
 			ValSize = 1
 
 		if Command == CommandBytes['NEW_TABLE_DATA']:
@@ -382,14 +407,16 @@ class _uart:
 				ValSize = 1
 				Signed = False
 
-				if Tables.ConfigData[Key]['Type'] == 'uint16_t' or Tables.ConfigData[Key]['Type']	 == 'int16_t':
+				if Tables.ConfigData[Key]['Type'] == 'uint16_t' or Tables.ConfigData[Key]['Type'] == 'int16_t':
 					ValSize = 2
-				if Tables.ConfigData[Key]['Type'] == 'int8_t' or Tables.ConfigData[Key]['Type']	 == 'int16_t':
+				if Tables.ConfigData[Key]['Type'] == 'int8_t' or Tables.ConfigData[Key]['Type'] == 'int16_t':
 					Signed = True
 
 				for Byte in Value.to_bytes(ValSize, 'little', signed = Signed):
 					SendBuffer.append(Byte)
-
+		elif Command == CommandBytes['NEW_REV_COUNTER']:
+			for Byte in Data[0].to_bytes(4, 'big', signed = False):
+				SendBuffer.append(Byte)
 		else:
 			SendBuffer.append(Command)	# Дополнительно вставляем тип пакета.
 

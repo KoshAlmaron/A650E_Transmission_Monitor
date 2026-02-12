@@ -11,6 +11,7 @@ PacketData =  {'EngineRPM' :			{'Type': 'uint16_t',	'Min': 0,	'Max': 6000,	'Fact
 			, 'DrumRPMDelta' :			{'Type': 'int16_t',		'Min': 0,	'Max': 1200,	'Factor': 1}
 			, 'OutputRPM' :				{'Type': 'uint16_t',	'Min': 0,	'Max': 6000,	'Factor': 1}
 			, 'CarSpeed' :				{'Type': 'uint8_t',		'Min': 0,	'Max': 150,		'Factor': 1}
+			, 'MeterCounter' :			{'Type': 'uint32_t',	'Min': 0,	'Max': 0,		'Factor': 0.001}
 			, 'OilTemp' :				{'Type': 'int16_t',		'Min': -30,	'Max': 120,		'Factor': 1}
 			, 'TPS' :					{'Type': 'uint16_t',	'Min': 0,	'Max': 100,		'Factor': 1}
 			, 'InstTPS' :				{'Type': 'uint16_t',	'Min': 0,	'Max': 100,		'Factor': 1}

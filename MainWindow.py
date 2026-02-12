@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import font
 from tkinter import messagebox
+from tkinter import simpledialog
 
 import math
 import json
@@ -67,7 +68,7 @@ class _MainWindow:
 		self.ExportBtn.place(x = 925, y = Height-55)
 
 		self.ExitBtn = Button(text = "Выход", width = 6, height = 2, bg = "#f1e71f", command = self.quit)
-		self.ExitBtn.place(x = 1188, y = Height-80)
+		self.ExitBtn.place(x = 1180, y = Height-80)
 
 		# Галка "Записывать лог".
 		self.WriteLog = IntVar()
@@ -91,6 +92,11 @@ class _MainWindow:
 		self.OIL = _RoundMeter(self.root, 'OIL', 400, 20, -30, 150, 'white')
 		self.TPS = _RoundMeter(self.root, 'TPS', 700, 20, 0, 100, 'white')
 		self.SPD = _RoundMeter(self.root, 'SPD', 1000, 20, 0, 160, 'white')
+		self.SPD.Box.bind("<Button-1>", self.speed_test)	# Событие по нажатию.
+
+		self.MeterCounterLabel = ttk.Label(text = "0.0", width = 9, anchor = CENTER, background = BackGroundColor)
+		self.MeterCounterLabel.place(x = 1082, y = 185)
+		self.MeterCounterLabel.bind("<Button-1>", self.set_meter_counter)	# Событие по нажатию.
 
 		self.ADCBtn = Button(text = "АЦП", width = 4, bg = "#0080a0", command = self.edit_adc, state='normal')
 		self.ADCBtn.place(x = 655, y = 10)
@@ -111,9 +117,6 @@ class _MainWindow:
 		self.Gear = _TextIndicator(self.root, 245, 430, '#efffef')
 		
 		self.MainGraph = _Graph(self.root, 450, 230, Uart)
-
-		self.SpdTest = Button(text = "Тест", width = 4, bg = "#e0ffe0", command = self.speed_test, state='normal', font = ("Helvetica", 12, 'bold'))
-		self.SpdTest.place(x = 1115, y = 185)
 
 		self.AdaptTemp = _AdaptationIndicator(self.root, 680 , 80)
 		self.AdaptTPS = _AdaptationIndicator(self.root, 980 , 80)
@@ -156,6 +159,13 @@ class _MainWindow:
 			print('Версия софта и прошивки не совпадают!')
 			messagebox.showinfo('Ошибка', 'Версия софта и прошивки не совпадают!\n\nSoft: ' + self.Uart.SoftVersion + '\nFW: ' + self.Uart.FirmwareVersionText + '\n\nОтправка команд заблокирована.', parent=self.root)
 
+	def set_meter_counter(self, event):
+		NewValue = simpledialog.askfloat("Пробег", "Новое значение пробега в км:")
+		if NewValue is not None:
+			NewValue = int(NewValue * 1000 + 150)
+			print(NewValue)
+			self.Uart.send_command('NEW_REV_COUNTER', 0, [NewValue], self.root)
+
 	def set_log_status(self):
 		if self.WriteLog.get() == 1:
 			self.Uart.WriteLog = 1
@@ -191,8 +201,9 @@ class _MainWindow:
 
 		ToolTip.ToolTip(self.OIL.Box, "Температура масла.")
 		ToolTip.ToolTip(self.TPS.Box, "Текущее значение ДПДЗ.")
-		ToolTip.ToolTip(self.SPD.Box, "Скорость автомобиля.\nСиние стрелки - это пороги переключения текущей передачи.")
-		
+		ToolTip.ToolTip(self.SPD.Box, "Скорость автомобиля.\nСиние стрелки - это пороги переключения текущей передачи.\nПо клику устанавливается скорость 100 км/ч для теста.")
+		ToolTip.ToolTip(self.MeterCounterLabel, "Пробег АКПП в км.\nПо клику можно установить новое значение.")
+				
 		ToolTip.ToolTip(self.BRK.Box, "Состояние педали тормоза. Без тормоза при переключении N->R задняя передача не включится. При нажатии тормоза на ходу происходит разблокировка ГТ")
 		ToolTip.ToolTip(self.ENG.Box, "Флаг работы двигателя. При неработающем двигателе отключаются все соленоиды и сбрасывается состояние АКПП.")
 
@@ -202,8 +213,6 @@ class _MainWindow:
 		ToolTip.ToolTip(self.Selector.Box, "Положение селектора. I - инициализация при старте, E - ошибка")
 		ToolTip.ToolTip(self.ATMode.Box, "Состояние АКПП. I - инициализация при старте, E - ошибка")
 		ToolTip.ToolTip(self.Gear.Box, "Текущая передача.")
-
-		ToolTip.ToolTip(self.SpdTest, " Устанавливает скорость 100 км/ч для теста.")
 
 		ToolTip.ToolTip(self.LogBtn, "Запись части лога (+- 10 секунд от нажатия) в отдельный файл. Работает даже при отключенном основном логировании.")
 
@@ -225,6 +234,7 @@ class _MainWindow:
 		self.OIL.update(self.Uart.TCU['OilTemp'])
 		self.TPS.update(self.Uart.TCU['InstTPS'])
 		self.SPD.update(self.Uart.TCU['CarSpeed'])
+		self.MeterCounterLabel.config(text = str(round(self.Uart.TCU['MeterCounter'] * Tables.PacketData['MeterCounter']['Factor'], 1)))
 
 		self.SPD.update_markers(self.SPD.MarkerMin, self.Uart.TCU['GearDownSpeed'])
 		self.SPD.update_markers(self.SPD.MarkerMax, self.Uart.TCU['GearUpSpeed'])
@@ -272,7 +282,7 @@ class _MainWindow:
 	def port_state(self):
 		self.PortState = 1
 
-	def speed_test(self):
+	def speed_test(self, event):
 		self.Uart.send_command('SPEED_TEST_COMMAND', 0, [], self.root)
 
 	def port_start_stop(self):
