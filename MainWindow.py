@@ -162,8 +162,8 @@ class _MainWindow:
 	def set_meter_counter(self, event):
 		NewValue = simpledialog.askfloat("Пробег", "Новое значение пробега в км:")
 		if NewValue is not None:
-			NewValue = int(NewValue * 1000 + 150)
-			print(NewValue)
+			NewValue = int(NewValue * 1000 + 0)
+			#print(NewValue)
 			self.Uart.send_command('NEW_REV_COUNTER', 0, [NewValue], self.root)
 
 	def set_log_status(self):
@@ -234,7 +234,7 @@ class _MainWindow:
 		self.OIL.update(self.Uart.TCU['OilTemp'])
 		self.TPS.update(self.Uart.TCU['InstTPS'])
 		self.SPD.update(self.Uart.TCU['CarSpeed'])
-		self.MeterCounterLabel.config(text = str(round(self.Uart.TCU['MeterCounter'] * Tables.PacketData['MeterCounter']['Factor'], 1)))
+		self.MeterCounterLabel.config(text = str(round((self.Uart.TCU['MeterCounter'] + 49) * Tables.PacketData['MeterCounter']['Factor'] , 1)))
 
 		self.SPD.update_markers(self.SPD.MarkerMin, self.Uart.TCU['GearDownSpeed'])
 		self.SPD.update_markers(self.SPD.MarkerMax, self.Uart.TCU['GearUpSpeed'])

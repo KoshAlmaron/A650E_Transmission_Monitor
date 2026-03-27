@@ -92,7 +92,8 @@ ConfigData = {'AfterChangeMinRPM' :		{'Block': 0, 'Element' : 'Spinbox',		'Type'
 			, 'G3AdaptTempMaxTPS' :		{'Block': 7, 'Element' : 'Spinbox',		'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 50,		'Step' : 1,		'Name': 'Лимит ДПДЗ'}
 
 			, 'SpeedImpulsPerKM' :		{'Block': 8, 'Element' : 'Spinbox',		'Type': 'uint16_t',	'Value': None, 'Min': 0,	'Max': 20000,	'Step' : 1,		'Name': 'Количество импульсов на 1 км'}
-			, 'SpeedCalcCoef' :			{'Block': 8, 'Element' : 'Spinbox',		'Type': 'uint16_t',	'Value': None, 'Min': 0,	'Max': 300,		'Step' : 1,		'Name': 'Коэффициент для расчета скорости авто'}
+			, 'SpeedCalcCoef' :			{'Block': 8, 'Element' : 'Spinbox',		'Type': 'uint16_t',	'Value': None, 'Min': 0,	'Max': 500,		'Step' : 1,		'Name': 'Коэффициент для расчета скорости авто'}
+			, 'MeterCalcCoef' :			{'Block': 8, 'Element' : 'Spinbox',		'Type': 'uint16_t',	'Value': None, 'Min': 0,	'Max': 500,		'Step' : 1,		'Name': 'Коэффициент для расчета пробега авто'}
 
 			, 'BaroCorrEnable' :		{'Block': 9, 'Element' : 'CheckButton',	'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 1,		'Step' : 1,		'Name': 'Барокоррекция'}
 			, 'DefaultBaroPressure' :	{'Block': 9, 'Element' : 'Spinbox',		'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 120,		'Step' : 1,		'Name': 'Базовое атмосферное давление, кПа'}
