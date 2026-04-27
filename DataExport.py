@@ -30,7 +30,7 @@ class _DataExportEditWindow:
 		self.Version = Ver
 
 		self.SleepStepTime = 0.010
-		self.SleepStepCount = 30
+		self.SleepStepCount = 80
 
 		self.Width = 860
 		self.Height = 710
