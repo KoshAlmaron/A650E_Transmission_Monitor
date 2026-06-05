@@ -3,10 +3,14 @@ from tkinter import ttk
 from tkinter import font
 from tkinter import messagebox
 from tkinter import simpledialog
+from tkinter import filedialog
 
 import math
 import json
 import os
+
+import platform
+import subprocess
 
 import Tables
 import ToolTip
@@ -20,6 +24,7 @@ BackGroundColor = "#d0d0d0"
 class _MainWindow:
 	def __init__(self, Ver, Uart):
 		self.root = Tk()
+
 		self.Uart = Uart
 		self.EditTables = 0
 		self.EditADC = 0
@@ -31,7 +36,7 @@ class _MainWindow:
 		self.GetVesionTimer = -30
 
 		Width = 1300
-		Height = 700
+		Height = 730
 		OffsetX = (self.root.winfo_screenwidth() - Width) // 2
 		OffsetY = 0
 
@@ -55,8 +60,8 @@ class _MainWindow:
 		if ActivePort >= 0:
 			self.PortBox.current(ActivePort)
 
-		self.PortBtn = Button(text = "Старт", width = 10, bg = "#fb7b72", command = self.port_start_stop)
-		self.PortBtn.place(x = 25, y = Height-100)
+		self.PortBtn = Button(text = "Старт", width = 8, bg = "#fb7b72", command = self.port_start_stop)
+		self.PortBtn.place(x = 25, y = Height-105)
 
 		self.ConfigBtn = Button(text = "Настройки", width = 9, bg = "#3CB371", command = self.edit_config, state='normal')
 		self.ConfigBtn.place(x = 580, y = Height-55)
@@ -70,14 +75,8 @@ class _MainWindow:
 		self.ExitBtn = Button(text = "Выход", width = 6, height = 2, bg = "#f1e71f", command = self.quit)
 		self.ExitBtn.place(x = 1180, y = Height-80)
 
-		# Галка "Записывать лог".
-		self.WriteLog = IntVar()
-		self.WriteLogChk = Checkbutton(self.root, text='Записывать лог', command = self.set_log_status, variable = self.WriteLog, onvalue = 1, offvalue = 0, background = BackGroundColor, font = ("Helvetica", 14, 'bold'))
-		self.WriteLogChk.place(x = 200, y = Height-90)
-		self.WriteLog.set(0)
-
-		self.LogBtn = Button(text = "Лог-метка", width = 8, bg = "#D2B48C", command = self.write_log)
-		self.LogBtn.place(x = 400, y = Height-85, height = 30)
+		self.UpdateFrm = Button(text = "Записать\nпрошивку", width = 8, height = 2, bg = "#B8860B", command = self.write_firmware)
+		self.UpdateFrm.place(x = 220, y = Height-130)
 
 		#				       			  Name  x,  y min max, 	color
 		self.SLT = _LineMeter(self.root, 'SLT', 30, 30, 0, 1023, '#1000fd')
@@ -122,7 +121,16 @@ class _MainWindow:
 		self.AdaptTPS = _AdaptationIndicator(self.root, 980 , 80)
 
 		self.VersionFW = ttk.Label(text = "FW: ???", width = 15, anchor = 'w', background = BackGroundColor)
-		self.VersionFW.place(x = 580, y = Height - 92)
+		self.VersionFW.place(x = 580, y = Height - 100)
+
+		# Галка "Записывать лог".
+		self.WriteLog = IntVar()
+		self.WriteLogChk = Checkbutton(self.root, text='Логирование', command = self.set_log_status, variable = self.WriteLog, onvalue = 1, offvalue = 0, background = BackGroundColor, font = ("Helvetica", 14, 'bold'))
+		self.WriteLogChk.place(x = 808, y = Height-100)
+		self.WriteLog.set(0)
+
+		self.LogBtn = Button(text = "Метка", width = 8, bg = "#D2B48C", command = self.write_log)
+		self.LogBtn.place(x = 1008, y = Height-105, height = 30)
 
 		self.add_tooltip()
 
@@ -158,6 +166,38 @@ class _MainWindow:
 			self.VersionFW.config(foreground = 'red')
 			print('Версия софта и прошивки не совпадают!')
 			messagebox.showinfo('Ошибка', 'Версия софта и прошивки не совпадают!\n\nSoft: ' + self.Uart.SoftVersion + '\nFW: ' + self.Uart.FirmwareVersionText + '\n\nОтправка команд заблокирована.', parent=self.root)
+
+	def write_firmware(self):
+		self.Uart.port_close()
+		self.update()
+		self.port_update()
+
+		Port = self.PortBox.get().split(' - ')[0]
+
+		if Port == '':
+			messagebox.showinfo('Ошибка', 'Не выбран порт', parent = self.root)
+			return
+
+		FilePath = filedialog.askopenfilename(initialdir = os.getcwd() + os.sep + 'Firmware'
+												, title = 'Выбор файла прошивки'
+												, filetypes = (("Файлы прошивки", "*.bin"),))
+		if FilePath == '':
+			messagebox.showinfo('Ошибка', 'Не выбран файл прошики', parent = self.root)
+			return			
+
+		Dude = 'cmd /c ' + os.getcwd() + os.sep + 'avrdude' +  os.sep + 'avrdude.exe'
+		if platform.system() == 'Linux':
+			Dude = 'avrdude'
+
+		Command = Dude + ' -p atmega2560 -D -c wiring -P ' + Port + ' -b 115200 -U flash:w:"' + FilePath + '":r'
+		Result = subprocess.run(Command, shell = True, text=True)
+
+		if Result.returncode == 0:
+			messagebox.showinfo('Успех', 'Прошивка успешно записана в ЭБУ', parent = self.root)
+		else:
+			messagebox.showinfo('Ошибка', 'При записи прошивки произошла ошибка', parent = self.root)
+
+		self.port_start_stop()
 
 	def set_meter_counter(self, event):
 		NewValue = simpledialog.askfloat("Пробег", "Новое значение пробега в км:")
@@ -219,7 +259,7 @@ class _MainWindow:
 		ToolTip.ToolTip(self.AdaptTPS.Box, "Индикатор срабатывания адаптации по ДПДЗ.")
 		ToolTip.ToolTip(self.AdaptTemp.Box, "Индикатор срабатывания адаптации по температуре.")
 
-		ToolTip.ToolTip(self.VersionFW, "Версия прошивки в формате <Год-Месяц-День-Патч>. Версия софта указана в заголовке окна. При несовпадении версий блокируется отправка команд в ЭБУ для предотващения порчи конфинурации.")
+		ToolTip.ToolTip(self.VersionFW, "Версия прошивки в формате <Год-Месяц-День-Патч>. Версия софта указана в заголовке окна. При несовпадении версий блокируется отправка команд в ЭБУ для предотващения порчи конфигурации.")
 
 	def update(self):
 		self.SLT.update(self.Uart.TCU['SLT'])
@@ -321,6 +361,7 @@ class _MainWindow:
 			Tables.Configuration = json.load(File)
 		except Exception as error:
 			messagebox.showerror('Загрузка конфигурации', 'Не удалось прочитать файл конфигурации:\n' + str(error), parent = self.root)
+			self.save_config()
 			return
 
 	def save_config(self):

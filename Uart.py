@@ -366,7 +366,6 @@ class _uart:
 	def get_uint32(self, N):
 		return int.from_bytes(self.DataArray[N] + self.DataArray[N + 1] + self.DataArray[N + 2] + self.DataArray[N + 3], byteorder = 'little', signed = False)
 
-
 	def send_command(self, Command, Table, Data, RootWindow):
 		if self.PortReading != 1:
 			messagebox.showinfo('Ошибка', 'Нет связи с ЭБУ', parent = RootWindow)
