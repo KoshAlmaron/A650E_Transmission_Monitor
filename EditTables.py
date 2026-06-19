@@ -55,7 +55,7 @@ class _TableEditWindow:
 
 		self.MainFont = font.Font(size = 10)
 		self.root.option_add("*Font", self.MainFont)
-		self.root.title('Редакирование таблиц')
+		self.root.title('Редакирование графиков')
 		self.root.minsize(self.Width, self.Height)
 		self.root.configure(background = BackGroundColor)
 
@@ -102,7 +102,7 @@ class _TableEditWindow:
 		self.GearSetLimitBtn.place(x = 695, y = 45)
 
 		# Сброс таблиц.
-		self.TableResetBtn = Button(self.root, text = "Сброс\nтаблиц", width = 8, bg = "#B44444", command = self.reset_tables, font = ("Helvetica", 12, 'bold'))
+		self.TableResetBtn = Button(self.root, text = "Сброс\nграфиков", width = 8, bg = "#B44444", command = self.reset_tables, font = ("Helvetica", 12, 'bold'))
 		self.TableResetBtn.place(x = 850, y = 8)
 
 		# Выход.
@@ -138,29 +138,29 @@ class _TableEditWindow:
 
 	def add_tooltip(self):	# Вставка подсказок.
 		ToolTip.ToolTip(self.OnLineChk, "Онлайн режим. Изменения сразу отсылаются в ЭБУ.")
-		ToolTip.ToolTip(self.AutoUpdateChk, "Автообновление таблицы. Период - 1с, доступно только для таблиц адаптации.")
+		ToolTip.ToolTip(self.AutoUpdateChk, "Автообновление графика. Период - 1с, доступно только для графиков адаптации.")
 		
-		ToolTip.ToolTip(self.ReadBtn, "Считать таблицу из оперативной памяти ЭБУ")
-		ToolTip.ToolTip(self.WriteBtn, "Отправить таблицу в ЭБУ. Таблица будет записана в ОЗУ, для сохранения изменений необходимо перенести таблицу в EEPROM.")
+		ToolTip.ToolTip(self.ReadBtn, "Считать график из оперативной памяти ЭБУ")
+		ToolTip.ToolTip(self.WriteBtn, "Отправить график в ЭБУ. График будет записана в ОЗУ, для сохранения изменений необходимо перенести график в EEPROM.")
 		
 		ToolTip.ToolTip(self.Answer.Box, "Индикатор ответа ЭБУ на команду. Красный - команда не принята. Зелёный - команда успешно обработана.")
 
-		ToolTip.ToolTip(self.EReadBtn, "Считать все таблицы из EEPROM в ОЗУ")
-		ToolTip.ToolTip(self.ESaveBtn, "Сохранить все таблицы из ОЗУ в EEPROM")
+		ToolTip.ToolTip(self.EReadBtn, "Считать все графики из EEPROM в ОЗУ")
+		ToolTip.ToolTip(self.ESaveBtn, "Сохранить все графики из ОЗУ в EEPROM")
 
-		ToolTip.ToolTip(self.ExportBtn, "Экспорт текущей таблицы в буфер обмена. Значения передаюся в буфер с разделителем-табуляцией для дальнейшей вставки в Excel.")
-		ToolTip.ToolTip(self.ImportBtn, "Импорт таблицы из буфер обмена. Значения должны быть с разделителем-табуляцией и в таком же количестве.")
+		ToolTip.ToolTip(self.ExportBtn, "Экспорт текущго графика в буфер обмена. Значения передаюся в буфер с разделителем-табуляцией для дальнейшей вставки в Excel.")
+		ToolTip.ToolTip(self.ImportBtn, "Импорт графика из буфер обмена. Значения должны быть с разделителем-табуляцией и в таком же количестве.")
 		
 		ToolTip.ToolTip(self.MinGearBox, "Минимальная допустимая передача. Используется для настройки переключений.")
 		ToolTip.ToolTip(self.MaxGearBox, "Максимальная допустимая передача. Используется для настройки переключений.")
 		ToolTip.ToolTip(self.GearSetLimitBtn, "Установить ограничения по передачам в ЭБУ")
 
-		ToolTip.ToolTip(self.TableResetBtn, "Сброс всех таблиц текущего окна. Значения заменяются на начальные из прошивки и производтся запись в EEPROM. Можно использовать в том числе для первоначальной записи таблиц в EEPROM.")
+		ToolTip.ToolTip(self.TableResetBtn, "Сброс всех графиков текущего окна. Значения заменяются на начальные из прошивки и производтся запись в EEPROM. Можно использовать в том числе для первоначальной записи графиков в EEPROM.")
 		ToolTip.ToolTip(self.ExitBtn, "Закрыть окно.")
 
 		ToolTip.ToolTip(self.BtnBuildLine, "Построить линию по двум точкам")
 		ToolTip.ToolTip(self.BtnZero, "Обнуление графика")
-		ToolTip.ToolTip(self.BtnApplyAdapt, "Применение адаптации к текущей таблице. После применения таблица адаптации обнуляется. Все изменения производятся в ОЗУ ЭБУ, для сохранения изменений необходимо произвести запись в EEPROM.")
+		ToolTip.ToolTip(self.BtnApplyAdapt, "Применение адаптации к текущему графику. После применения график адаптации обнуляется. Все изменения производятся в ОЗУ ЭБУ, для сохранения изменений необходимо произвести запись в EEPROM.")
 
 	def add_menu(self):
 		self.root.option_add("*tearOff", FALSE)
@@ -216,7 +216,7 @@ class _TableEditWindow:
 		self.value_check('')
 
 	def reset_tables(self):	# Команда сброса таблиц в ЭБУ.
-		if messagebox.askyesno('Сброс таблиц', 'Перезаписать EEPROM ВСЕX таблицы текущего окна значениями из прошивки?', parent = self.root):
+		if messagebox.askyesno('Сброс графиков', 'Перезаписать EEPROM ВСЕX графиков текущего окна значениями из прошивки?', parent = self.root):
 			self.table_select_event(FirstTable)
 			time.sleep(0.5)
 			self.Answer.update(1)

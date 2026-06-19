@@ -16,6 +16,7 @@ import Tables
 import ToolTip
 
 ConfigFilePath = os.path.join(os.getcwd(), "Config.json")
+HelpFilePath = os.path.join(os.getcwd(), "Инструкция к ЭБУ А650Е (Kosh).chm")
 
 ATModeChar = ('I', 'P', 'R', 'N', 'D', 'D4', 'D3', 'L2', 'L', 'E', 'M')
 BackGroundColor = "#d0d0d0"
@@ -66,7 +67,7 @@ class _MainWindow:
 		self.ConfigBtn = Button(text = "Настройки", width = 9, bg = "#3CB371", command = self.edit_config, state='normal')
 		self.ConfigBtn.place(x = 580, y = Height-55)
 
-		self.TablesBtn = Button(text = "Таблицы", width = 8, bg = "#1e90ff", command = self.edit_tables, state='normal')
+		self.TablesBtn = Button(text = "Графики", width = 8, bg = "#1e90ff", command = self.edit_tables, state='normal')
 		self.TablesBtn.place(x = 760, y = Height-55)
 
 		self.ExportBtn = Button(text = "Экспорт/Импорт", width = 14, bg = "#a0522d", command = self.data_export, state='normal')
@@ -132,6 +133,10 @@ class _MainWindow:
 		self.LogBtn = Button(text = "Метка", width = 8, bg = "#D2B48C", command = self.write_log)
 		self.LogBtn.place(x = 1008, y = Height-105, height = 30)
 
+		self.HelpBtn = Button(text = "Справка", width = 6, bg = "#BC8F8F", command = self.open_help_file)
+		self.HelpBtn.place(x = 400, y = Height - 105)
+
+
 		self.add_tooltip()
 
 		self.set_log_status()
@@ -190,7 +195,7 @@ class _MainWindow:
 			Dude = 'avrdude'
 
 		Command = Dude + ' -p atmega2560 -D -c wiring -P ' + Port + ' -b 115200 -U flash:w:"' + FilePath + '":r'
-		Result = subprocess.run(Command, shell = True, text=True)
+		Result = subprocess.run(Command, shell = True)
 
 		if Result.returncode == 0:
 			messagebox.showinfo('Успех', 'Прошивка успешно записана в ЭБУ', parent = self.root)
@@ -198,6 +203,14 @@ class _MainWindow:
 			messagebox.showinfo('Ошибка', 'При записи прошивки произошла ошибка', parent = self.root)
 
 		self.port_start_stop()
+
+	def open_help_file(self):
+		if sys.platform.startswith('darwin'):
+			subprocess.call(('open', HelpFilePath))
+		elif os.name == 'nt':
+			os.startfile(HelpFilePath)
+		elif os.name == 'posix':
+			subprocess.call(('xdg-open', HelpFilePath))
 
 	def set_meter_counter(self, event):
 		NewValue = simpledialog.askfloat("Пробег", "Новое значение пробега в км:")
@@ -225,7 +238,7 @@ class _MainWindow:
 		ToolTip.ToolTip(self.SpeedBtn, "Открыть окно настройки скоростей переключения передач")
 		ToolTip.ToolTip(self.ConfigBtn, "Открыть окно настроек")
 
-		ToolTip.ToolTip(self.ExportBtn, "Открыть окно экспорта/импорта ккалибровок")
+		ToolTip.ToolTip(self.ExportBtn, "Открыть окно экспорта/импорта калибровок")
 		ToolTip.ToolTip(self.IOBtn, "Открыть окно просмотра состояний портов МК")
 
 		ToolTip.ToolTip(self.ExitBtn, "Закрыть программу")
@@ -248,7 +261,7 @@ class _MainWindow:
 		ToolTip.ToolTip(self.ENG.Box, "Флаг работы двигателя. При неработающем двигателе отключаются все соленоиды и сбрасывается состояние АКПП.")
 
 		ToolTip.ToolTip(self.LCK.Box, "Состояние блокировки ГТ.")
-		ToolTip.ToolTip(self.SLP.Box, "Обнаружение проскальзывание фрикционов. Контроль производится по оборотам входного/выходного валов и передаточного числа текущей передачи")
+		ToolTip.ToolTip(self.SLP.Box, "Индикатор проскальзывания фрикционов. Контроль производится по оборотам входного/выходного валов и передаточного числа текущей передачи")
 
 		ToolTip.ToolTip(self.Selector.Box, "Положение селектора. I - инициализация при старте, E - ошибка")
 		ToolTip.ToolTip(self.ATMode.Box, "Состояние АКПП. I - инициализация при старте, E - ошибка")
@@ -259,7 +272,8 @@ class _MainWindow:
 		ToolTip.ToolTip(self.AdaptTPS.Box, "Индикатор срабатывания адаптации по ДПДЗ.")
 		ToolTip.ToolTip(self.AdaptTemp.Box, "Индикатор срабатывания адаптации по температуре.")
 
-		ToolTip.ToolTip(self.VersionFW, "Версия прошивки в формате <Год-Месяц-День-Патч>. Версия софта указана в заголовке окна. При несовпадении версий блокируется отправка команд в ЭБУ для предотващения порчи конфигурации.")
+		ToolTip.ToolTip(self.VersionFW, "Версия прошивки в формате <Год-Месяц-День-Патч>. Версия софта указана в заголовке окна. При несовпадении версий блокируется отправка команд в ЭБУ для предотвращения порчи конфигурации.")
+		ToolTip.ToolTip(self.HelpBtn, "Открывает файл справки.")
 
 	def update(self):
 		self.SLT.update(self.Uart.TCU['SLT'])
@@ -348,10 +362,10 @@ class _MainWindow:
 		self.PortBox.config(values = ComPorts)
 
 		if self.Uart.port_status():
-			self.PortBtn.config(background = "#54fa9b", text = 'Стоп')
+			self.PortBtn.config(background = "#fb7b72", text = 'Стоп')
 			#self.TablesBtn.config(state='normal')
 		else:
-			self.PortBtn.config(background = "#fb7b72", text = 'Старт')
+			self.PortBtn.config(background = "#54fa9b", text = 'Старт')
 			#self.TablesBtn.config(state='disabled')
 
 	def load_config(self):

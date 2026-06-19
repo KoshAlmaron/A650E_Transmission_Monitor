@@ -210,15 +210,15 @@ class _DataExportEditWindow:
 						ExpectedTableSize *= 8
 
 					if len(Content['Tables'][Name]) != ExpectedTableSize:
-						TablesErr += ' - Таблица %s имеет неправильную длину\n' % (Name)
+						TablesErr += ' - График %s имеет неправильную длину\n' % (Name)
 						TableOk = 0
 					else:
 						for Value in Content['Tables'][Name]:
 							if (Value < Table['Min']
 							or Value > Table['Max']):
-								TablesWarn += ' - Значение %s таблицы %s не попадает в диапазон от %s до %s\n' % (Value, Name, Table['Min'], Table['Max'])
+								TablesWarn += ' - Значение %s графика %s не попадает в диапазон от %s до %s\n' % (Value, Name, Table['Min'], Table['Max'])
 				else:
-					TablesWarn += ' - В бэкапе отсутствует таблица %s\n' % (Name)
+					TablesWarn += ' - В бэкапе отсутствует график %s\n' % (Name)
 					TableOk = 0
 				if TableOk:
 					self.BackupData['Tables'][Name] = Content['Tables'][Name].copy()
@@ -232,7 +232,7 @@ class _DataExportEditWindow:
 			Report += ConfigErr
 
 		if TablesWarn != '' or TablesErr != '':
-			Report += '\n\tТаблицы:\n'
+			Report += '\n\tГрафики:\n'
 			Report += TablesWarn
 			Report += TablesErr
 
@@ -364,10 +364,10 @@ class _DataExportEditWindow:
 			# Ждем ответ ЭБУ.
 			Result = self.wait_for_table('SLTGraph', 100)
 			if Result == 1:
-				messagebox.showwarning('Сохранение в EEPROM', 'Нет ответа от ЭБУ (Таблицы)', parent = self.root)
+				messagebox.showwarning('Сохранение в EEPROM', 'Нет ответа от ЭБУ (Графики)', parent = self.root)
 				return
 			elif Result == 2:
-				messagebox.showwarning('Сохранение в EEPROM', 'ЭБУ вернул неправильный ответ (Таблицы)', parent = self.root)
+				messagebox.showwarning('Сохранение в EEPROM', 'ЭБУ вернул неправильный ответ (Графики)', parent = self.root)
 				return
 
 		if ConfigBlock == 1 or SpeedBlock == 1 or ADCBlock == 1 or TablesBlock == 1:
