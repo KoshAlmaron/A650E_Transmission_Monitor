@@ -6,8 +6,11 @@ import tkinter as tk
 import time
 from functools import partial
 
+import os
+import json
+
 import ToolTip
-import Tables
+import Tables as TABLES
 
 BackGroundColor = "#d0d0d0"
 
@@ -161,6 +164,8 @@ class _TableEditWindow:
 		ToolTip.ToolTip(self.BtnBuildLine, "Построить линию по двум точкам")
 		ToolTip.ToolTip(self.BtnZero, "Обнуление графика")
 		ToolTip.ToolTip(self.BtnApplyAdapt, "Применение адаптации к текущему графику. После применения график адаптации обнуляется. Все изменения производятся в ОЗУ ЭБУ, для сохранения изменений необходимо произвести запись в EEPROM.")
+		ToolTip.ToolTip(self.BtnApplyBackup, "Скопировать график из резервной копии (зелёная линия)")
+		ToolTip.ToolTip(self.BtnCompareBackup, "Сравнить текущий график с файлом (фиолетовая линия).")
 
 	def add_menu(self):
 		self.root.option_add("*tearOff", FALSE)
@@ -172,7 +177,7 @@ class _TableEditWindow:
 		for Key in TablesMenuNames:
 			SubMenu = Menu(font = MenuFont)
 			K = 1
-			for Table in Tables.TablesData:
+			for Table in TABLES.TablesData:
 				if Table['Menu'] == Key:
 					N = Table['N']
 					LabelName = str(Key + 1) + '.' + str(K) + '. ' + Table['Name']
@@ -185,14 +190,72 @@ class _TableEditWindow:
 
 		self.root.config(menu = self.MainMenu)
 
-	def apply_adaptation(self): # Применение адаптации к текущему графику.
+	def apply_adaptation(self):		# Применение адаптации к текущему графику.
 		Number = self.CurrentTable
-		Name = Tables.TablesData[Number]['Table']
+		Name = TABLES.TablesData[Number]['Table']
 
-		if Name in Tables.ApplyAdaptationCommands:
+		if Name in TABLES.ApplyAdaptationCommands:
 			self.Answer.update(1)
-			Command = Tables.ApplyAdaptationCommands[Name]
+			Command = TABLES.ApplyAdaptationCommands[Name]
 			self.Uart.send_command(Command, Number, [], self.root)
+
+	def apply_backup_data(self):	# Применение данных из бэкапа к текущему графику.
+		CurrTableName = TABLES.TablesData[self.CurrentTable]['Table']
+		if CurrTableName in TABLES.BackupData['Tables']:
+			for n, Cell in enumerate(self.Cells):
+				Cell.delete(0, END)
+				Cell.insert(0, str(TABLES.BackupData['Tables'][CurrTableName][n]))
+			self.value_check('')
+
+	def compare_to_backup(self):		# Загрузить текущую таблицу из файла для сравнения.
+		# Выбор файла для загрузки.
+		FilePath = tk.filedialog.askopenfilename (
+			initialdir = self.get_backup_folder(),
+			title = 'Выбор файла бэкапа',
+			filetypes = (('Backup (*.json)', '*.json'), ),
+			parent = self.root
+		)
+		if not FilePath:
+			return
+
+		# Обработка файла.
+		try:
+			File = open(FilePath, "r", encoding="utf-8")
+			Content = json.load(File)
+		except Exception as error:
+			messagebox.showerror('Импорт бэкапа', 'Не удалось прочитать файл:\n' + str(error), parent = self.root)
+			return
+
+		CurrTableName = TABLES.TablesData[self.CurrentTable]['Table']
+		Error = ''
+		if 'Tables' in Content:
+			Tables = Content['Tables']
+			if CurrTableName in Tables:
+				TABLES.CompareData['Tables'][CurrTableName] = Content['Tables'][CurrTableName].copy()
+
+				CurrTableName = TABLES.TablesData[self.CurrentTable]['Table']
+				if CurrTableName in TABLES.CompareData['Tables']:
+					self.MainGraph.update_data(TABLES.CompareData['Tables'][CurrTableName], 3)
+
+				if CurrTableName in TABLES.BackupData['Tables']:
+					self.MainGraph.update_data(TABLES.BackupData['Tables'][CurrTableName], 2)
+
+				if CurrTableName in TABLES.PrevData['Tables']:
+					self.MainGraph.update_data(TABLES.PrevData['Tables'][CurrTableName], 1)
+				self.MainGraph.update_data(self.Cells, 0)
+			else:
+				Error = 'В файле нет таблицы ' + CurrTableName
+		else:
+			Error = 'В файле нет блока с таблицами'
+
+		if Error != '':
+			messagebox.showerror('Импорт бэкапа', Error, parent = self.root)
+
+	def get_backup_folder(self):
+		Folder = os.path.join(os.getcwd(), "Backups")
+		if not os.path.isdir(Folder):
+			os.makedirs(Folder, exist_ok = True)
+		return Folder
 
 	def build_line(self):
 		Start = self.MainGraph.CursorPositionL
@@ -247,6 +310,12 @@ class _TableEditWindow:
 		self.BtnApplyAdapt = Button(self.root, text = "A", width = 1, bg = "#bcbcbc", command = self.apply_adaptation, font = ("Helvetica", 10, 'bold'), border="2px", state = 'disabled')
 		self.BtnApplyAdapt.place(x = X, y = Y - H - 150, width = 25, height = 25)
 
+		self.BtnApplyBackup = Button(self.root, text = "B", width = 1, bg = "#bcbcbc", command = self.apply_backup_data, font = ("Helvetica", 10, 'bold'), border="2px", state = 'normal')
+		self.BtnApplyBackup.place(x = X, y = Y - H + 95, width = 25, height = 25)
+
+		self.BtnCompareBackup = Button(self.root, text = "C", width = 1, bg = "#bcbcbc", command = self.compare_to_backup, font = ("Helvetica", 10, 'bold'), border="2px", state = 'normal')
+		self.BtnCompareBackup.place(x = X, y = Y - H + 150, width = 25, height = 25)
+
 		self.BtnZero = Button(self.root, text = "0", width = 1, bg = "#bcbcbc", command = lambda: self.move_graph(0), font = ("Helvetica", 10, 'bold'), border="2px")
 		self.BtnZero.place(x = X, y = Y - H, width = 25, height = 25)
 
@@ -255,7 +324,7 @@ class _TableEditWindow:
 
 	def move_graph(self, Where):	# Перемещение точек на графике.
 		N = self.CurrentTable
-		Step = Tables.TablesData[N]['Step']
+		Step = TABLES.TablesData[N]['Step']
 		for Cell in self.Cells:
 			Value = int(Cell.get())
 			if Where == 0:
@@ -289,11 +358,11 @@ class _TableEditWindow:
 			self.value_check('')
 
 	def get_array_x(self):	# Получить сетку по оси X.
-		return Tables.TablesData[self.CurrentTable]['ArrayX']
+		return TABLES.TablesData[self.CurrentTable]['ArrayX']
 
 	def key_pressed(self, event):	# Событие по нажатию кнопки на клавиатуре.
 		State = event.state
-		for Mod in Tables.BadMods:
+		for Mod in TABLES.BadMods:
 			if State >= Mod:
 				State -= Mod
 
@@ -305,7 +374,7 @@ class _TableEditWindow:
 
 	def table_auto_update(self):
 		if self.AutoUpdate.get() == 1:
-			if Tables.TablesData[self.CurrentTable]['Name'][:4] == '    ':
+			if TABLES.TablesData[self.CurrentTable]['Name'][:4] == '    ':
 				self.get_table()
 
 	def command_buttons_disable(self):
@@ -340,15 +409,19 @@ class _TableEditWindow:
 		#print(len(self.Uart.TableData),  len(self.get_array_x()))
 		if self.Uart.TableNumber == self.CurrentTable:
 			if len(self.Uart.TableData) == len(self.get_array_x()):
-				
 				self.WriteBtn.config(state='normal')
-				
+
 				CurrGrid = self.get_array_x()
 				for i in range(0, len(CurrGrid), 1):
 					self.Cells[i].delete(0, END)
 					self.Cells[i].insert(0, self.Uart.TableData[i])
 
-				self.MainGraph.update_data(self.Cells, self.GetNewTable)
+				CurrTableName = TABLES.TablesData[self.CurrentTable]['Table']
+				if CurrTableName not in TABLES.PrevData['Tables']:
+					TABLES.PrevData['Tables'][CurrTableName] = self.Uart.TableData.copy()
+				if CurrTableName in TABLES.PrevData['Tables']:
+					self.MainGraph.update_data(TABLES.PrevData['Tables'][CurrTableName], 1)
+
 				self.GetNewTable = 0
 				self.Answer.update(0)
 
@@ -374,12 +447,12 @@ class _TableEditWindow:
 		for Cell in self.Cells:
 			try:
 				Value = int(Cell.get())
-				if Value < Tables.TablesData[N]['Min']:
+				if Value < TABLES.TablesData[N]['Min']:
 					Cell.delete(0, END)
-					Cell.insert(0, str(Tables.TablesData[N]['Min']))
-				elif Value > Tables.TablesData[N]['Max']:
+					Cell.insert(0, str(TABLES.TablesData[N]['Min']))
+				elif Value > TABLES.TablesData[N]['Max']:
 					Cell.delete(0, END)
-					Cell.insert(0, str(Tables.TablesData[N]['Max']))
+					Cell.insert(0, str(TABLES.TablesData[N]['Max']))
 				else:
 					Cell.delete(0, END)
 					Cell.insert(0, str(Value))
@@ -399,23 +472,33 @@ class _TableEditWindow:
 
 	def table_select_event(self, N):	# Событие при выборе текущей таблицы.
 		self.CurrentTable = N
-
-		self.TableName.config(text = Tables.TablesData[self.CurrentTable]['Name'])
+		self.TableName.config(text = TABLES.TablesData[self.CurrentTable]['Name'])
 
 		self.clear_table()
 		self.draw_table()
 		self.MainGraph.redraw(self.CurrentTable, self.get_array_x())
+
+		CurrTableName = TABLES.TablesData[self.CurrentTable]['Table']
+		if CurrTableName in TABLES.CompareData['Tables']:
+			self.MainGraph.update_data(TABLES.CompareData['Tables'][CurrTableName], 3)
+
+		if CurrTableName in TABLES.BackupData['Tables']:
+			self.MainGraph.update_data(TABLES.BackupData['Tables'][CurrTableName], 2)
+
+		if CurrTableName in TABLES.PrevData['Tables']:
+			self.MainGraph.update_data(TABLES.PrevData['Tables'][CurrTableName], 1)
+
 		self.MainGraph.update_data(self.Cells, 0)
 
 		self.MainGraph.CursorPositionL = 0
 		self.MainGraph.CursorPositionR = 0
 
-		if Tables.TablesData[self.CurrentTable]['Table'] in Tables.ApplyAdaptationCommands:
+		if TABLES.TablesData[self.CurrentTable]['Table'] in TABLES.ApplyAdaptationCommands:
 			self.BtnApplyAdapt.configure(state = 'normal')
 		else:
 			self.BtnApplyAdapt.configure(state = 'disabled')
 
-		if Tables.TablesData[self.CurrentTable]['Name'][:4] == '    ':
+		if TABLES.TablesData[self.CurrentTable]['Name'][:4] == '    ':
 			self.AutoUpdateChk.configure(state = 'normal')
 		else:
 			self.AutoUpdateChk.configure(state = 'disabled')
@@ -442,12 +525,12 @@ class _TableEditWindow:
 		X = 35
 		Y = 630
 		Space = 52.5
-		if self.get_array_x() == Tables.TempGrid:
+		if self.get_array_x() == TABLES.TempGrid:
 			Space = 35
 
 		for Col, Value in enumerate(self.get_array_x()):
 			Cell = Entry(self.root, justify = "center", bg = self.CellColor, width = W)
-			Default = Tables.TablesData[self.CurrentTable]['Min']
+			Default = TABLES.TablesData[self.CurrentTable]['Min']
 			if Default < 0:
 				Default = 0
 
@@ -510,11 +593,13 @@ class _Graph:
 		self.Border = 10
 
 		self.N = 0
-		self.ArrayX = Tables.TPSGrid
+		self.ArrayX = TABLES.TPSGrid
 
-		self.GraphLines = []
+		self.GraphLines = []		# Текущий график
 		self.GraphPoints = []
-		self.PrevGraphLines = []
+		self.PrevGraphLines = []	# Последний график из ЭБУ
+		self.BkpGraphLines = []		# График из Бэкапа
+		self.CompareGraphLines = []	# График сравнения
 
 		self.GraphFocus = 0
 		self.CursorPositionL = 0
@@ -536,12 +621,15 @@ class _Graph:
 		elif event.type == '8':
 			self.GraphFocus = 0
 
-	def get_cell_value(self, Cells, Position):	# Получение значения из графика.
+	def get_cell_value(self, Cells, Position, LineType):	# Получение значения из графика.
 		Value = 0
 		try:
-			Value = int(Cells[Position].get())
+			if LineType == 0:
+				Value = int(Cells[Position].get())
+			else:
+				Value = Cells[Position]
 		except:
-			Value = Tables.TablesData[self.N]['Min']
+			Value = TABLES.TablesData[self.N]['Min']
 			if Value < 0:
 				Value = 0
 		return Value
@@ -553,15 +641,15 @@ class _Graph:
 
 			if Button == 'Up':
 				for i in range(Start, Stop + 1):
-					Value = self.get_cell_value(Cells, i)
-					Value += Tables.TablesData[self.N]['Step']
+					Value = self.get_cell_value(Cells, i, 0)
+					Value += TABLES.TablesData[self.N]['Step']
 					Cells[i].delete(0, END)
 					Cells[i].insert(0, Value)
 
 			elif Button == 'Down':
 				for i in range(Start, Stop + 1):
-					Value = self.get_cell_value(Cells, i)
-					Value -= Tables.TablesData[self.N]['Step']
+					Value = self.get_cell_value(Cells, i, 0)
+					Value -= TABLES.TablesData[self.N]['Step']
 					Cells[i].delete(0, END)
 					Cells[i].insert(0, Value)
 
@@ -613,8 +701,8 @@ class _Graph:
 		MinX = min(self.ArrayX)
 		MaxX = max(self.ArrayX)
 
-		MinY = Tables.TablesData[self.N]['Min']
-		MaxY = Tables.TablesData[self.N]['Max']
+		MinY = TABLES.TablesData[self.N]['Min']
+		MaxY = TABLES.TablesData[self.N]['Max']
 
 		lx1 = self.Border + ((X1 - MinX)  / (MaxX - MinX)) * (self.w - self.Border * 2)
 		ly1 = self.h - ((Y1 - MinY)  / (MaxY - MinY)) * (self.h - self.Border * 2) - self.Border
@@ -627,13 +715,31 @@ class _Graph:
 		if LineType == 1:
 			LineFill = '#ff6666'
 			LineWidth = 2
+		elif LineType == 2:
+			LineFill = '#00cc00'
+			LineWidth = 2
+			ly1 += 1
+			ly2 += 1
+		elif LineType == 3:
+			LineFill = '#aa55ff'
+			LineWidth = 2
+			ly1 -= 1
+			ly2 -= 1
 
 		Line = self.Box.create_line(lx1, ly1, lx2, ly2, fill = LineFill, width = LineWidth)
 
 		if LineType == 0:
 			self.GraphLines.append(Line)
-		else:
+		elif LineType == 1:
 			self.PrevGraphLines.append(Line)
+			return
+		elif LineType == 2:
+			self.BkpGraphLines.append(Line)
+			return
+		elif LineType == 3:
+			self.CompareGraphLines.append(Line)
+			return
+		else:
 			return
 
 		R = 3
@@ -675,14 +781,14 @@ class _Graph:
 	def redraw(self, N, ArrayX):	# Переотрисовка графика.
 		self.N = N
 		self.ArrayX = ArrayX
-		self.w = len(Tables.TempGrid) * 35
+		self.w = len(TABLES.TempGrid) * 35
 		self.CursorPositionL = 0
 
 		self.Box.delete("all")
 		self.Box.create_rectangle(1, 1, self.w - 2, self.h - 2, width = 2, fill = '#fafffd')
 
-		Min = Tables.TablesData[self.N]['Min']
-		Max = Tables.TablesData[self.N]['Max']
+		Min = TABLES.TablesData[self.N]['Min']
+		Max = TABLES.TablesData[self.N]['Max']
 		
 		self.print_h_line(Min, Min, Max, 6)
 		self.print_h_line((Max - Min) * 1 // 4 + Min, Min, Max, 6)
@@ -702,28 +808,34 @@ class _Graph:
 			if X // 10 == X / 10:
 				self.print_v_line(X, Min, Max, 6)
 
-	def update_data(self, ArrayY, DrawPrev):	# Обновление графика.
-		for Element in self.GraphLines:
-			self.Box.delete(Element)
-		for Element in self.GraphPoints:
-			self.Box.delete(Element)
+	def update_data(self, ArrayY, LineType):	# Обновление графика.
+		if LineType == 0:
+			for Element in self.GraphLines:
+				self.Box.delete(Element)
+			for Element in self.GraphPoints:
+				self.Box.delete(Element)
+			self.GraphLines = []
+			self.GraphPoints = []
 
-		if DrawPrev == 1:
+		elif LineType == 1:
 			for Element in self.PrevGraphLines:
 				self.Box.delete(Element)
 			self.PrevGraphLines = []
-
-		self.GraphLines = []
-		self.GraphPoints = []
+		elif LineType == 2:
+			for Element in self.BkpGraphLines:
+				self.Box.delete(Element)
+			self.BkpGraphLines = []
+		elif LineType == 3:
+			for Element in self.CompareGraphLines:
+				self.Box.delete(Element)
+			self.CompareGraphLines = []
 
 		for i in range(1, len(self.ArrayX), 1):
 			x1 = self.ArrayX[i - 1]
-			y1 = self.get_cell_value(ArrayY, i - 1)
+			y1 = self.get_cell_value(ArrayY, i - 1, LineType)
 			x2 = self.ArrayX[i]
-			y2 = self.get_cell_value(ArrayY, i)
-			if DrawPrev == 1:
-				self.print_line(x1, y1, x2, y2, 1)
-			self.print_line(x1, y1, x2, y2, 0)
+			y2 = self.get_cell_value(ArrayY, i, LineType)
+			self.print_line(x1, y1, x2, y2, LineType)
 
 	def update_markers(self):	# Обновление маркеров на графике.
 		for Element in self.Markers:
@@ -731,25 +843,25 @@ class _Graph:
 		self.Markers = []
 
 		ValueX = 0
-		if self.ArrayX == Tables.TPSGrid:
+		if self.ArrayX == TABLES.TPSGrid:
 			ValueX = self.get_tcu_data('InstTPS')
-		elif self.ArrayX == Tables.DeltaRPMGrid:
+		elif self.ArrayX == TABLES.DeltaRPMGrid:
 			ValueX = self.get_tcu_data('DrumRPMDelta')
-		elif self.ArrayX == Tables.TempGrid:
+		elif self.ArrayX == TABLES.TempGrid:
 			ValueX = self.get_tcu_data('OilTemp')
 		else:			
 			return
 
 		MinX = min(self.ArrayX)
 		MaxX = max(self.ArrayX)
-		MinY = Tables.TablesData[self.N]['Min']
-		MaxY = Tables.TablesData[self.N]['Max']
+		MinY = TABLES.TablesData[self.N]['Min']
+		MaxY = TABLES.TablesData[self.N]['Max']
 
 		lx = self.Border + ((ValueX - MinX)  / (MaxX - MinX)) * (self.w - self.Border * 2)
 		Line = self.Box.create_line(lx, 2, lx, self.h - 2, fill = '#ff9999', width = 2)
 		self.Markers.append(Line)
 		
-		Parameter = Tables.TablesData[self.N]['Parameter']
+		Parameter = TABLES.TablesData[self.N]['Parameter']
 		if Parameter != '':
 			R = 6
 			ValueY = self.get_tcu_data(Parameter)

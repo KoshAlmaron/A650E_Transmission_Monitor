@@ -32,8 +32,8 @@ class _DataExportEditWindow:
 		self.SleepStepTime = 0.010
 		self.SleepStepCount = 80
 
-		self.Width = 860
-		self.Height = 710
+		self.Width = 930
+		self.Height = 720
 		self.OffsetX = 20
 		self.OffsetY = 0
 
@@ -57,10 +57,13 @@ class _DataExportEditWindow:
 		self.ImportBtn = Button(self.root, text = "Импорт\nиз файла", width = 8, bg = "#1E90FF", command = self.import_from_file, font = ("Helvetica", 12, 'bold'))
 		self.ImportBtn.place(x = 200, y = 10)
 
+		self.CompareBtn = Button(self.root, text = "Сравнить\nс файлом", width = 8, bg = "#808000", command = self.compare_from_file, font = ("Helvetica", 12, 'bold'))
+		self.CompareBtn.place(x = 315, y = 10)
+
 		self.WriteBtn = Button(self.root, text = "Отправить\nв ЭБУ", width = 9, bg = "#ff8c00", command = self.write_to_ram, font = ("Helvetica", 12, 'bold'), state = 'normal')
-		self.WriteBtn.place(x = 330, y = 10)
+		self.WriteBtn.place(x = 430, y = 10)
 		self.ESaveBtn = Button(self.root, text = "Отправить и\nсохранить в EEPROM", width = 19, bg = "#cd5500", command = self.save_to_eeprom, font = ("Helvetica", 12, 'bold'), state = 'disabled')
-		self.ESaveBtn.place(x = 460, y = 10)
+		self.ESaveBtn.place(x = 560, y = 10)
 
 		# Добавление строк для экспорта/импорта.
 		self.draw_paremeters()
@@ -70,13 +73,6 @@ class _DataExportEditWindow:
 		self.ExitBtn.place(x = self.Width - 145, y = 10)
 
 		self.add_tooltip()
-
-		self.BackupData = {
-			'Version': '',
-			'CreatedDate': '',
-			'Config': {},
-			'Tables': {}
-		}
 
 	def add_tooltip(self):	# Вставка подсказок.
 		ToolTip.ToolTip(self.SelectAll, "Выделить всё / снять выделение.")
@@ -154,15 +150,21 @@ class _DataExportEditWindow:
 				self.Parameters[Key]['Var'].set(self.SelectAllVar.get())
 
 	def import_from_file(self):
-		if self.Uart.FirmwareVersionText != self.Uart.SoftVersion:
-			messagebox.showinfo('Ошибка', 'Версия софта и прошивки не совпадают!' + '\n\nИмпорт заблокирован.', parent = self.root)
-			return
+		self.load_bkp_data(0)
+	def compare_from_file(self):
+		self.load_bkp_data(1)
+
+	def load_bkp_data(self, Compare):
+		#if self.Uart.FirmwareVersionText != self.Uart.SoftVersion:
+		#	messagebox.showinfo('Ошибка', 'Версия софта и прошивки не совпадают!' + '\n\nИмпорт заблокирован.', parent = self.root)
+		#	return
 
 		# Выбор файла для загрузки.
 		FilePath = tk.filedialog.askopenfilename (
 			initialdir = self.get_backup_folder(),
 			title = 'Выбор файла бэкапа',
-			filetypes = (('Backup (*.json)', '*.json'), )
+			filetypes = (('Backup (*.json)', '*.json'), ),
+			parent = self.root
 		)
 		if not FilePath:
 			return
@@ -171,7 +173,11 @@ class _DataExportEditWindow:
 			self.Parameters[Key]['Var'].set(0)
 			self.Parameters[Key]['Element'].configure(state = 'disabled')
 
-		self.clear_backup_data()	# Очищаем структуру с данными.
+		# Очищаем структуру с данными.
+		if Compare == 1:
+			self.clear_compare_data()
+		else:
+			self.clear_backup_data()
 
 		# Обработка файла.
 		try:
@@ -194,9 +200,12 @@ class _DataExportEditWindow:
 				else:
 					ConfigErr += ' - Отсутствует обязательный параметр %s\n' % (Key)
 			if ConfigErr == '':
-				self.BackupData['Config'] = Content['Config'].copy()
-				self.Parameters['Config']['Element'].configure(state = 'normal')
-				self.Parameters['Config']['Var'].set(1)
+				if Compare == 1:
+					Tables.CompareData['Config'] = Content['Config'].copy()
+				else:
+					Tables.BackupData['Config'] = Content['Config'].copy()
+					self.Parameters['Config']['Element'].configure(state = 'normal')
+					self.Parameters['Config']['Var'].set(1)
 
 		TablesWarn = ''
 		TablesErr = ''
@@ -221,9 +230,13 @@ class _DataExportEditWindow:
 					TablesWarn += ' - В бэкапе отсутствует график %s\n' % (Name)
 					TableOk = 0
 				if TableOk:
-					self.BackupData['Tables'][Name] = Content['Tables'][Name].copy()
-					self.Parameters[Name]['Element'].configure(state = 'normal')
-					self.Parameters[Name]['Var'].set(1)
+
+					if Compare == 1:
+						Tables.CompareData['Tables'][Name] = Content['Tables'][Name].copy()
+					else:
+						Tables.BackupData['Tables'][Name] = Content['Tables'][Name].copy()
+						self.Parameters[Name]['Element'].configure(state = 'normal')
+						self.Parameters[Name]['Var'].set(1)
 
 		Report = ''
 		if ConfigWarn != '' or ConfigErr != '':
@@ -236,17 +249,28 @@ class _DataExportEditWindow:
 			Report += TablesWarn
 			Report += TablesErr
 
-		self.ESaveBtn.configure(state = 'normal')
-		if ConfigWarn != '' or TablesWarn != '':
-			Report += '\n\nВ бэкапе есть кривые значения. Запись в EEPROM не доступна.\nПроверьте данные в соответсвующем окне и сохраните в EEPROM вручную.'
-			self.ESaveBtn.configure(state = 'disabled')
+		if Compare == 0:
+			self.ESaveBtn.configure(state = 'normal')
+			if ConfigWarn != '' or TablesWarn != '':
+				Report += '\n\nВ бэкапе есть кривые значения. Запись в EEPROM не доступна.\nПроверьте данные в соответсвующем окне и сохраните в EEPROM вручную.'
+				self.ESaveBtn.configure(state = 'disabled')
 
 		if Report == '':
 			messagebox.showinfo('Проверка файла', 'Файл успешно загружен.', parent = self.root)
 		else:
 			messagebox.showwarning('Проверка файла', Report, parent = self.root)
 
+		# print('\n\n\n\n\n')
+		# print('CompareData')
+		# print(Tables.CompareData['Tables'])
+		# print('BackupData')
+		# print(Tables.BackupData['Tables'])
+
 	def write_to_ram(self, EE = 0):
+		if self.Uart.FirmwareVersionText != self.Uart.SoftVersion:
+			messagebox.showinfo('Ошибка', 'Версия софта и прошивки не совпадают!' + '\n\nИмпорт заблокирован.', parent = self.root)
+			return
+
 		for Config in Tables.ConfigData:
 			Tables.ConfigData[Config]['Value'] = IntVar(value = 0)
 
@@ -258,7 +282,7 @@ class _DataExportEditWindow:
 					if Key == 'Config':
 						# Копируем параметры из временного буфера в структуру конфигурации.
 						for Cfg in Tables.ConfigData:
-							 Tables.ConfigData[Cfg]['Value'].set(self.BackupData['Config'][Cfg])
+							 Tables.ConfigData[Cfg]['Value'].set(Tables.BackupData['Config'][Cfg])
 
 						# Отправляем конфигурацию в ЭБУ.
 						self.Answer.update(1)
@@ -276,7 +300,7 @@ class _DataExportEditWindow:
 					else:
 						TableN = self.get_table_number(Key)
 						self.Answer.update(1)
-						self.Uart.send_command('NEW_TABLE_DATA', TableN, self.BackupData['Tables'][Key], self.root)
+						self.Uart.send_command('NEW_TABLE_DATA', TableN, Tables.BackupData['Tables'][Key], self.root)
 
 						# Ждем ответ ЭБУ.
 						Result = self.wait_for_table(Key)
@@ -299,6 +323,10 @@ class _DataExportEditWindow:
 		return 0
 
 	def save_to_eeprom(self):
+		if self.Uart.FirmwareVersionText != self.Uart.SoftVersion:
+			messagebox.showinfo('Ошибка', 'Версия софта и прошивки не совпадают!' + '\n\nИмпорт заблокирован.', parent = self.root)
+			return
+
 		ConfigBlock = 0
 		SpeedBlock = 0
 		ADCBlock = 0
@@ -389,7 +417,7 @@ class _DataExportEditWindow:
 			time.sleep(self.SleepStepTime)
 
 		if DataReceived:
-			if self.BackupData['Config'] != self.Uart.CFG:
+			if Tables.BackupData['Config'] != self.Uart.CFG:
 				return 2
 		else:
 			return 1
@@ -413,7 +441,7 @@ class _DataExportEditWindow:
 			time.sleep(self.SleepStepTime)
 
 		if DataReceived:
-			if self.BackupData['Tables'][TableName] != self.Uart.TableData:
+			if Tables.BackupData['Tables'][TableName] != self.Uart.TableData:
 				return 2
 		else:
 			return 1
@@ -452,7 +480,7 @@ class _DataExportEditWindow:
 
 		if DataReceived:
 			for Key in Tables.ConfigData:
-				self.BackupData['Config'][Key] = self.Uart.CFG[Key]
+				Tables.BackupData['Config'][Key] = self.Uart.CFG[Key]
 			self.Parameters['Config']['Var'].set(1)
 			self.root.update_idletasks()
 		else:
@@ -478,7 +506,7 @@ class _DataExportEditWindow:
 				ExpectedTableSize *= 8
 
 			if DataReceived and len(self.Uart.TableData) == ExpectedTableSize:
-				self.BackupData['Tables'][Table['Table']] = self.Uart.TableData.copy()
+				Tables.BackupData['Tables'][Table['Table']] = self.Uart.TableData.copy()
 
 				self.Parameters[Table['Table']]['Var'].set(1)
 				self.root.update_idletasks()
@@ -490,7 +518,7 @@ class _DataExportEditWindow:
 		FilePath = os.path.join(self.get_backup_folder(), FileName)
 
 		try:
-			DumpText = self.format_backup_data(json.dumps(self.BackupData, ensure_ascii = False, indent = '\t'))
+			DumpText = self.format_backup_data(json.dumps(Tables.BackupData, ensure_ascii = False, indent = '\t'))
 			File = open(FilePath, 'w', encoding = 'utf-8')
 			File.write(DumpText)
 			messagebox.showinfo('Экспорт бэкапа', 'Бэкап успешно сохранён в файл:\n' + FileName, parent = self.root)
@@ -498,11 +526,16 @@ class _DataExportEditWindow:
 			messagebox.showerror('Экспорт бэкапа', 'Не удалось сохранить бэкап:\n' + str(error), parent = self.root)
 
 	def clear_backup_data(self):
+		Tables.BackupData['Version'] = self.Version
+		Tables.BackupData['CreatedDate'] = datetime.now().isoformat(timespec = 'seconds')
+		Tables.BackupData['Config'] = {}
+		Tables.BackupData['Tables'] = {}
 
-		self.BackupData['Version'] = self.Version
-		self.BackupData['CreatedDate'] = datetime.now().isoformat(timespec = 'seconds')
-		self.BackupData['Config'] = {}
-		self.BackupData['Tables'] = {}
+	def clear_compare_data(self):
+		Tables.CompareData['Version'] = self.Version
+		Tables.CompareData['CreatedDate'] = datetime.now().isoformat(timespec = 'seconds')
+		Tables.CompareData['Config'] = {}
+		Tables.CompareData['Tables'] = {}
 
 	def format_backup_data(self, DumpText):
 		DumpText = DumpText.replace('[\n\t\t\t', '[')

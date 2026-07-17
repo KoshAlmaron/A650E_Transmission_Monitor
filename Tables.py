@@ -77,7 +77,7 @@ ConfigData = {'AfterChangeMinRPM' :		{'Block': 0, 'Element' : 'Spinbox',		'Type'
 			, 'G2EnableAdaptTemp' :		{'Block': 5, 'Element' : 'CheckButton',	'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 1,		'Step' : 1,		'Name': 'Адаптация по температуре'}
 			, 'G2AdaptTempMaxTPS' :		{'Block': 5, 'Element' : 'Spinbox',		'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 50,		'Step' : 1,		'Name': 'Лимит ДПДЗ'}
 
-			, 'G2EnableAdaptReact' :	{'Block': 6, 'Element' : 'CheckButton',	'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 1,		'Step' : 1,		'Name': 'Адаптация по ДПДЗ'}
+			, 'G2EnableAdaptReact' :	{'Block': 6, 'Element' : 'CheckButton',	'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 1,		'Step' : 1,		'Name': 'Адаптация по ускорению'}
 			, 'G2AdaptReactMinDRPM' :	{'Block': 6, 'Element' : 'Spinbox',		'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 255,		'Step' : 1,		'Name': 'Минимальное ускорение'}
 			, 'G2AdaptReactTempMin' :	{'Block': 6, 'Element' : 'Spinbox',		'Type': 'int8_t',	'Value': None, 'Min': 0,	'Max': 80,		'Step' : 1,		'Name': 'Минимальная температура'}
 			, 'G2AdaptReactTempMax' :	{'Block': 6, 'Element' : 'Spinbox',		'Type': 'int8_t',	'Value': None, 'Min': 0,	'Max': 80,		'Step' : 1,		'Name': 'Максимальная температура'}
@@ -97,6 +97,7 @@ ConfigData = {'AfterChangeMinRPM' :		{'Block': 0, 'Element' : 'Spinbox',		'Type'
 
 			, 'BaroCorrEnable' :		{'Block': 9, 'Element' : 'CheckButton',	'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 1,		'Step' : 1,		'Name': 'Барокоррекция'}
 			, 'DefaultBaroPressure' :	{'Block': 9, 'Element' : 'Spinbox',		'Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 120,		'Step' : 1,		'Name': 'Базовое атмосферное давление, кПа'}
+			
 			, 'TiptronicEnable' :		{'Block': 10, 'Element' : 'CheckButton','Type': 'uint8_t',	'Value': None, 'Min': 0,	'Max': 1,		'Step' : 1,		'Name': 'Типтроник'}
 			, 'TiptronicTimer' :		{'Block': 10, 'Element' : 'Spinbox',	'Type': 'uint16_t',	'Value': None, 'Min': 0,	'Max': 6000,	'Step' : 10,	'Name': 'Время работы, шаг - 0.1с'}
 }
@@ -218,4 +219,23 @@ ArduinoPins = {
 		'A13': {'Port': 'PK5', 'Functions': 'ADC13', 'State': 0},
 		'A14': {'Port': 'PK6', 'Functions': 'ADC14', 'State': 0},
 		'A15': {'Port': 'PK7', 'Functions': 'ADC15', 'State': 0},
+}
+
+PrevData = {
+	'Config': {},
+	'Tables': {}
+}
+
+CompareData = {
+	'Version': '',
+	'CreatedDate': '',
+	'Config': {},
+	'Tables': {}
+}
+
+BackupData = {
+	'Version': '',
+	'CreatedDate': '',
+	'Config': {},
+	'Tables': {}
 }
