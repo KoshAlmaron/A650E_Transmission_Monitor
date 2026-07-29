@@ -159,7 +159,7 @@ class _MainWindow:
 		Year = int(Version >> 11)
 		Month = int((Version & 0b0000011111111111) >> 7)
 		Day =   int((Version & 0b0000000001111111) >> 2)
-		Add =   int((Version & 0b0000000000000011) >> 2)
+		Add =   int(Version & 0b0000000000000011)
 		self.Uart.FirmwareVersionText = str(2026 + Year) + '-' + ('0' + str(Month))[-2:] + '-' + ('0' + str(Day))[-2:] + '.' + str(Add)
 
 		print('SoftVersion:', self.Uart.SoftVersion)
